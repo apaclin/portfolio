@@ -2,35 +2,63 @@
 import type { GetStaticPaths } from 'astro';
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import TranslationNotice from '../../../components/TranslationNotice.astro';
 
-// Один статический путь на каждый кейс из коллекции cases-ru.
+// RU-роуты кейсов рендерят ОБЪЕДИНЕНИЕ слагов обеих коллекций.
+// Направление фоллбэка асимметричное: RU отсутствует → показываем EN
+// (английский — основной и полный). Обратного фоллбэка нет.
 export const getStaticPaths = (async () => {
-  const cases = await getCollection('cases-ru');
-  cases.sort((a, b) => a.data.order - b.data.order);
-  return cases.map((entry) => ({
-    params: { slug: entry.id },
-    props: { entry },
-  }));
+  const [ru, en] = await Promise.all([
+    getCollection('cases-ru'),
+    getCollection('cases-en'),
+  ]);
+
+  const ruById = new Map(ru.map((entry) => [entry.id, entry]));
+  const enById = new Map(en.map((entry) => [entry.id, entry]));
+  const allIds = new Set([...ruById.keys(), ...enById.keys()]);
+
+  const paths = [...allIds].map((id) => {
+    const ruEntry = ruById.get(id);
+    if (ruEntry) {
+      // Перевод есть — рендерим русскую запись, баннер не нужен.
+      return { params: { slug: id }, props: { entry: ruEntry, isFallback: false } };
+    }
+    // Перевода нет — фоллбэк на английскую запись (id взят из объединения,
+    // так что enEntry гарантированно существует).
+    const enEntry = enById.get(id)!;
+    return { params: { slug: id }, props: { entry: enEntry, isFallback: true } };
+  });
+
+  // Стабильный порядок по полю order.
+  paths.sort((a, b) => a.props.entry.data.order - b.props.entry.data.order);
+  return paths;
 }) satisfies GetStaticPaths;
 
-const { entry } = Astro.props;
+const { entry, isFallback } = Astro.props;
 const { Content } = await render(entry);
+
+// Локаль контента кейса: при фоллбэке тело английское, иначе русское.
+// Интерфейс страницы (баннер, хедер, <html lang>) остаётся русским.
+const contentLocale = isFallback ? 'en' : 'ru';
 ---
 
 <BaseLayout title={entry.data.title} description={entry.data.description}>
   <main class="mx-auto max-w-2xl p-8">
-    <h1 class="text-3xl font-bold text-accent">{entry.data.title}</h1>
-    <p class="mt-2 text-sm opacity-70">
-      {
-        entry.data.date.toLocaleDateString('ru', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
-      }
-    </p>
-    <article class="mt-6 space-y-4">
-      <Content />
+    {isFallback && <TranslationNotice />}
+    <article lang={isFallback ? 'en' : undefined}>
+      <h1 class="text-3xl font-bold text-accent">{entry.data.title}</h1>
+      <p class="mt-2 text-sm opacity-70">
+        {
+          entry.data.date.toLocaleDateString(contentLocale, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        }
+      </p>
+      <div class="mt-6 space-y-4">
+        <Content />
+      </div>
     </article>
   </main>
 </BaseLayout>

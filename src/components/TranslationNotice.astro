@@ -1,0 +1,14 @@
+---
+import { useTranslations } from '../i18n/ui';
+
+// Текст баннера — в локали страницы (на /ru/ это русский).
+// Намеренно НЕ принимаем lang пропом: баннер всегда на языке посетителя.
+const t = useTranslations(Astro.currentLocale);
+---
+
+<aside
+  role="note"
+  class="mb-6 rounded-md border border-black/10 bg-black/[0.03] px-4 py-3 text-sm text-black/60"
+>
+  {t('notice.untranslated')}
+</aside>

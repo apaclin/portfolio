@@ -10,6 +10,10 @@ export const ui = {
     'action.switchLang': 'Русский',
     'meta.siteName': 'Portfolio',
     'meta.description': 'Personal portfolio',
+    // Показывается на EN-странице только теоретически (EN-роуты не фоллбэчат),
+    // но нужен для типобезопасности: набор ключей задаётся английским словарём.
+    'notice.untranslated':
+      'This page has not been translated yet — showing the English version.',
   },
   ru: {
     'nav.home': 'Главная',
@@ -19,6 +23,8 @@ export const ui = {
     'action.switchLang': 'English',
     'meta.siteName': 'Портфолио',
     'meta.description': 'Персональное портфолио',
+    'notice.untranslated':
+      'Эта страница ещё не переведена — показана английская версия.',
   },
 } as const;
 
