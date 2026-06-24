@@ -1,0 +1,38 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+// Один статический путь на каждый кейс из коллекции cases-en.
+// Сортируем по order (на генерацию не влияет, но единый паттерн сортировки).
+export const getStaticPaths = (async () => {
+  const cases = await getCollection('cases-en');
+  cases.sort((a, b) => a.data.order - b.data.order);
+  return cases.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+// render() — текущий способ рендера контента коллекции (не entry.render()).
+const { Content } = await render(entry);
+---
+
+<BaseLayout title={entry.data.title} description={entry.data.description}>
+  <main class="mx-auto max-w-2xl p-8">
+    <h1 class="text-3xl font-bold text-accent">{entry.data.title}</h1>
+    <p class="mt-2 text-sm opacity-70">
+      {
+        entry.data.date.toLocaleDateString('en', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      }
+    </p>
+    <article class="mt-6 space-y-4">
+      <Content />
+    </article>
+  </main>
+</BaseLayout>
