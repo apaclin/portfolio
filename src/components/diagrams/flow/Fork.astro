@@ -1,0 +1,68 @@
+---
+import NodeCell from './NodeCell.astro';
+import type { FlowNode, Localized } from './types';
+
+interface Props {
+  targets: FlowNode[];
+  caption?: Localized;
+  locale: 'en' | 'ru';
+}
+const { targets, caption, locale } = Astro.props;
+const n = targets.length;
+---
+
+<div class="flex shrink-0 flex-col items-center">
+  <div class="flex items-stretch">
+    {/* Коннектор: вход по центру + вертикальный хребет + ветви к каждой цели. */}
+    <div class="relative w-12" style={`--n:${n}`}>
+      {/* Горизонтальный вход от источника к хребту (по центру группы). */}
+      <span
+        class="absolute left-0 top-1/2 h-px w-6 -translate-y-1/2"
+        style="background:var(--color-diagram-line)"
+      ></span>
+      {/* Вертикальный хребет: от центра первой ветви до центра последней. */}
+      <span
+        class="absolute w-px"
+        style="left:1.5rem;top:calc(50% / var(--n));bottom:calc(50% / var(--n));background:var(--color-diagram-line)"
+      ></span>
+      {/* Ветви: равные доли высоты, стрелка по центру каждой → попадает в цель. */}
+      <div class="flex h-full flex-col">
+        {
+          targets.map(() => (
+            <div class="flex flex-1 items-center">
+              <span class="ml-6 h-px w-3" style="background:var(--color-diagram-line)" />
+              <svg
+                width="8"
+                height="12"
+                viewBox="0 0 8 12"
+                fill="none"
+                aria-hidden="true"
+                stroke="var(--color-diagram-line)"
+                stroke-width="var(--flow-stroke)"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M2 2 6 6 2 10" />
+              </svg>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+    {/* Цели развилки: равная высота ячеек → корректное совпадение со стрелками. */}
+    <div class="flex flex-col">
+      {
+        targets.map((t) => (
+          <div class="py-2">
+            <NodeCell node={t} locale={locale} />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  {
+    caption && (
+      <p class="mt-3 max-w-[14rem] text-center text-sm text-black/55">{caption[locale]}</p>
+    )
+  }
+</div>

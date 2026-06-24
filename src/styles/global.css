@@ -11,4 +11,18 @@
 
   /* Единственный акцентный цвет → утилиты bg-accent / text-accent / border-accent. */
   --color-accent: #6c5cff;
+
+  /* Варианты узлов схем (featured-icon): мягкий фон + насыщенный цвет иконки.
+     Компонент маппит NodeVariant → пару node-<variant>-bg / -fg. */
+  --color-node-default-bg: #f1f5f9; /* slate-100  */
+  --color-node-default-fg: #475569; /* slate-600  */
+  --color-node-active-bg: #eff6ff; /* blue-50    */
+  --color-node-active-fg: #2563eb; /* blue-600   */
+  --color-node-warning-bg: #fffbeb; /* amber-50   */
+  --color-node-warning-fg: #d97706; /* amber-600  */
+  --color-node-success-bg: #ecfdf5; /* emerald-50 */
+  --color-node-success-fg: #059669; /* emerald-600*/
+
+  /* Линии стрелок / коннекторов схем. */
+  --color-diagram-line: #cbd5e1; /* slate-300 */
 }
