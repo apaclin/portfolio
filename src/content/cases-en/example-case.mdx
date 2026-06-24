@@ -5,10 +5,15 @@ date: 2026-06-01
 order: 1
 ---
 
+import FlowDiagram from '../../components/diagrams/flow/FlowDiagram.astro';
+import { traditionalAp } from '../../components/diagrams/flow/examples/traditional-ap';
+
 ## Overview
 
 This is a placeholder case study written in **MDX**. It demonstrates that the
 `cases-en` collection loads, validates against the schema, and renders.
+
+<FlowDiagram data={traditionalAp} />
 
 ## Outcome
 

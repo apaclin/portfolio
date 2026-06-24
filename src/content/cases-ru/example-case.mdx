@@ -5,10 +5,15 @@ date: 2026-06-01
 order: 1
 ---
 
+import FlowDiagram from '../../components/diagrams/flow/FlowDiagram.astro';
+import { traditionalAp } from '../../components/diagrams/flow/examples/traditional-ap';
+
 ## Обзор
 
 Это placeholder-кейс на **MDX**. Он показывает, что коллекция `cases-ru`
 загружается, проходит валидацию по схеме и рендерится.
+
+<FlowDiagram data={traditionalAp} />
 
 ## Результат
 
