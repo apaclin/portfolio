@@ -7,11 +7,11 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   // Нативный i18n Astro (astro:i18n), без сторонних библиотек.
   i18n: {
-    defaultLocale: 'ru',
-    locales: ['ru', 'en'],
+    defaultLocale: 'en',
+    locales: ['en', 'ru'],
     routing: {
-      // Русский (язык по умолчанию) — без префикса в URL: «/», «/about».
-      // Английский — с префиксом: «/en/», «/en/about».
+      // Английский (язык по умолчанию) — без префикса: «/», «/about».
+      // Русский — с префиксом: «/ru/», «/ru/about».
       prefixDefaultLocale: false,
       // ВНИМАНИЕ: redirectToDefaultLocale здесь НЕ ставим.
       // В Astro 6 он имеет смысл только при prefixDefaultLocale: true;

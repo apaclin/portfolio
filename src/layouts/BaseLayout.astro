@@ -12,8 +12,8 @@ const { title, description } = Astro.props;
 
 // Astro.currentLocale вычисляется из URL по конфигу i18n.
 // Если в пути нет языкового сегмента (например, на «/»), он может быть
-// undefined — тогда подставляем язык по умолчанию.
-const lang = Astro.currentLocale ?? 'ru';
+// undefined — тогда подставляем язык по умолчанию (теперь английский).
+const lang = Astro.currentLocale ?? 'en';
 ---
 
 <!doctype html>
