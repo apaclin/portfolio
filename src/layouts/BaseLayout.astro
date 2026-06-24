@@ -1,6 +1,8 @@
 ---
+import { getRelativeLocaleUrl } from 'astro:i18n';
 import '../styles/global.css';
 import LangSwitcher from '../components/LangSwitcher.astro';
+import { stripLocale } from '../i18n/paths';
 
 interface Props {
   /** Содержимое <title>. */
@@ -15,6 +17,14 @@ const { title, description } = Astro.props;
 // Если в пути нет языкового сегмента (например, на «/»), он может быть
 // undefined — тогда подставляем язык по умолчанию (теперь английский).
 const lang = Astro.currentLocale ?? 'en';
+
+// hreflang: alternate-ссылки на en/ru версии ТЕКУЩЕЙ страницы + x-default → en.
+const basePath = stripLocale(Astro.url.pathname);
+const enUrl = getRelativeLocaleUrl('en', basePath);
+const ruUrl = getRelativeLocaleUrl('ru', basePath);
+// Относительные ссылки сейчас; станут абсолютными автоматически, когда в
+// astro.config будет задан `site` (Google рекомендует абсолютные hreflang).
+const toAbs = (url: string) => (Astro.site ? new URL(url, Astro.site).href : url);
 ---
 
 <!doctype html>
@@ -25,6 +35,9 @@ const lang = Astro.currentLocale ?? 'en';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     {description && <meta name="description" content={description} />}
+    <link rel="alternate" hreflang="en" href={toAbs(enUrl)} />
+    <link rel="alternate" hreflang="ru" href={toAbs(ruUrl)} />
+    <link rel="alternate" hreflang="x-default" href={toAbs(enUrl)} />
     <title>{title}</title>
   </head>
   <body class="font-sans">
