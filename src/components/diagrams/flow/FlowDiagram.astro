@@ -83,7 +83,7 @@ const swipeHint = locale === 'ru' ? 'Свайп' : 'Swipe';
       {data.title && (
         <figcaption class="mb-4 flex items-center gap-2">
           <span class="h-4 w-1 rounded-full" style="background:var(--flow-accent)" />
-          <span class="text-base font-semibold text-black/80">{data.title[locale]}</span>
+          <span class="text-base font-semibold text-[var(--color-text)]">{data.title[locale]}</span>
         </figcaption>
       )}
 
@@ -97,7 +97,7 @@ const swipeHint = locale === 'ru' ? 'Свайп' : 'Swipe';
             ) : (
               <div class="flex shrink-0 flex-col items-center">
                 {step.caption && (
-                  <span class="mb-1 max-w-[8rem] text-center text-xs text-black/55">
+                  <span class="mb-1 max-w-[8rem] text-center text-xs text-[var(--color-text-muted)]">
                     {step.caption[locale]}
                   </span>
                 )}
@@ -129,7 +129,7 @@ const swipeHint = locale === 'ru' ? 'Свайп' : 'Swipe';
         >
         </div>
         <span
-          class="pointer-events-none absolute bottom-0 right-1 text-xs text-black/40 md:hidden"
+          class="pointer-events-none absolute bottom-0 right-1 text-xs text-[var(--color-text-faint)] md:hidden"
         >
           {swipeHint} →
         </span>
