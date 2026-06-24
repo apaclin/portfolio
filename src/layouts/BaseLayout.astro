@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import LangSwitcher from '../components/LangSwitcher.astro';
 
 interface Props {
   /** Содержимое <title>. */
@@ -27,6 +28,9 @@ const lang = Astro.currentLocale ?? 'en';
     <title>{title}</title>
   </head>
   <body class="font-sans">
+    <header class="mx-auto flex max-w-2xl justify-end p-8 pb-0">
+      <LangSwitcher />
+    </header>
     <slot />
   </body>
 </html>

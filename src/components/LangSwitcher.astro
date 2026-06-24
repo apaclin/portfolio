@@ -1,0 +1,29 @@
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { useTranslations, type Locale } from '../i18n/ui';
+
+const locales: readonly Locale[] = ['en', 'ru'];
+
+const current: Locale = (Astro.currentLocale ?? 'en') as Locale;
+const other: Locale = current === 'en' ? 'ru' : 'en';
+
+// Вычисляем «логический путь» без языкового префикса.
+// Пример: '/ru/about' → ['ru','about'] → отбрасываем 'ru' → 'about'.
+//         '/about'    → ['about']               → 'about'.
+//         '/ru/'      → ['ru']     → отбрасываем → '' (главная).
+const segments = Astro.url.pathname.split('/').filter(Boolean);
+if (segments[0] && locales.includes(segments[0] as Locale)) {
+  segments.shift();
+}
+const basePath = segments.join('/');
+
+// Строим ссылку на ТУ ЖЕ страницу в другой локали.
+// getRelativeLocaleUrl сам добавит/уберёт префикс по конфигу i18n.
+const href = getRelativeLocaleUrl(other, basePath);
+
+const t = useTranslations(current);
+---
+
+<a href={href} hreflang={other} class="text-sm underline underline-offset-4">
+  {t('action.switchLang')}
+</a>
