@@ -1,0 +1,32 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  /** Содержимое <title>. */
+  title: string;
+  /** Необязательное meta-описание для <head>. */
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+
+// Astro.currentLocale вычисляется из URL по конфигу i18n.
+// Если в пути нет языкового сегмента (например, на «/»), он может быть
+// undefined — тогда подставляем язык по умолчанию.
+const lang = Astro.currentLocale ?? 'ru';
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    {description && <meta name="description" content={description} />}
+    <title>{title}</title>
+  </head>
+  <body class="font-sans">
+    <slot />
+  </body>
+</html>

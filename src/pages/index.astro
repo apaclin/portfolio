@@ -1,14 +1,10 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Портфолио</title>
-  </head>
-  <body>
-    <h1>Скелет работает</h1>
-  </body>
-</html>
+<BaseLayout title="Портфолио" description="Персональное портфолио">
+  <main class="mx-auto max-w-2xl p-8">
+    <h1 class="text-3xl font-bold text-accent">Скелет работает</h1>
+    <p class="mt-2">Astro 6 · Tailwind v4 · MDX · i18n (ru/en)</p>
+  </main>
+</BaseLayout>
