@@ -1,5 +1,8 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+// z импортируем из 'astro/zod' (не из 'astro:content' — там реэкспорт z
+// помечен @deprecated). Той же зод-зависимости astro, без новых пакетов.
+import { z } from 'astro/zod';
 
 // Строгая схема кейса. Общая для обеих локалей — различаются только
 // каталоги-источники. cover — единственное опциональное поле.
