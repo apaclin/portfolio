@@ -1,27 +1,24 @@
 ---
-// Аннотированный скриншот с интерактивными точками.
-// Нативный Popover API даёт toggle/закрытие/Esc/light-dismiss и доступность
-// без JS (точка = настоящий <button>). Крошечный скрипт ниже — ТОЛЬКО для
-// позиционирования поповера у точки и клампинга в пределах экрана.
+// Аннотированный скриншот. Точки скрыты, проявляются при наведении на картинку,
+// при hover/focus морфятся в annotation pill (title + опц. description) и
+// сворачиваются обратно. Без кликов, без Popover API, без модальных слоёв.
+// Ядро — чистый CSS; крошечный скрипт только для надёжного закрытия по тапу-вне
+// на touch. Координаты — проценты.
 interface Hotspot {
   x: number; // % по горизонтали
   y: number; // % по вертикали
   title: string;
-  content: string;
+  description?: string;
 }
 interface Props {
   src: string;
   alt: string;
   hotspots: Hotspot[];
-  /** Интринсик-размеры картинки — резервируют место против CLS (Lighthouse). */
+  /** Интринсик-размеры картинки — резервируют место против CLS. */
   width?: number;
   height?: number;
 }
 const { src, alt, hotspots, width, height } = Astro.props as Props;
-
-// Уникальный префикс инстанса — чтобы id поповеров не конфликтовали при
-// нескольких <Hotspots> на странице.
-const uid = `hs-${Math.random().toString(36).slice(2, 9)}`;
 ---
 
 <figure class="full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6">
@@ -36,25 +33,23 @@ const uid = `hs-${Math.random().toString(36).slice(2, 9)}`;
       class="hotspots-img"
     />
     {
-      hotspots.map((h, i) => {
-        const pid = `${uid}-${i}`;
+      hotspots.map((h) => {
+        // Сторона роста pill считается на сборке: всегда внутрь картинки,
+        // поэтому позиционирующий JS/кламп не нужен.
+        const side = h.x > 50 ? 'left' : 'right';
         return (
-          <>
-            <button
-              type="button"
-              popovertarget={pid}
-              aria-label={h.title}
-              aria-details={pid}
-              class="hotspot-dot"
-              style={`left:${h.x}%;top:${h.y}%`}
-            >
-              {i + 1}
-            </button>
-            <div id={pid} popover="auto" data-hotspot-popover class="hotspot-popover">
-              <strong class="hs-title">{h.title}</strong>
-              <p class="hs-content">{h.content}</p>
-            </div>
-          </>
+          <button
+            type="button"
+            class="hotspot"
+            data-side={side}
+            style={`left:${h.x}%;top:${h.y}%`}
+          >
+            <span class="hotspot__label">
+              <span class="hotspot__title">{h.title}</span>
+              {h.description && <span class="hotspot__desc">{h.description}</span>}
+            </span>
+            <span class="hotspot__dot" aria-hidden="true" />
+          </button>
         );
       })
     }
@@ -64,7 +59,7 @@ const uid = `hs-${Math.random().toString(36).slice(2, 9)}`;
 <style>
   .hotspots-stage {
     position: relative;
-    line-height: 0; /* убираем щель под inline-img */
+    line-height: 0; /* убрать щель под inline-img */
   }
   .hotspots-img {
     display: block;
@@ -74,108 +69,148 @@ const uid = `hs-${Math.random().toString(36).slice(2, 9)}`;
     border: 1px solid var(--color-border);
   }
 
-  .hotspot-dot {
+  /* Точка-кнопка: прозрачная hit-зона ~28px (комфортный тач-таргет),
+     центр привязан к координате. transform создаёт containing block
+     для абсолютного лейбла. */
+  .hotspot {
     position: absolute;
-    transform: translate(-50%, -50%);
     width: 1.75rem;
     height: 1.75rem;
-    display: grid;
-    place-items: center;
-    border-radius: 9999px;
-    background-color: var(--color-accent);
-    color: var(--color-bg);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    line-height: 1;
-    border: 2px solid var(--color-bg);
-    box-shadow: 0 1px 4px color-mix(in oklab, var(--color-text) 35%, transparent);
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
     cursor: pointer;
-    transition: transform 0.12s ease;
+    opacity: 1; /* базово видимы (touch / без hover / fail-safe) */
+    transition: opacity 0.25s ease;
+    z-index: 1;
   }
-  .hotspot-dot:hover {
-    transform: translate(-50%, -50%) scale(1.12);
+  /* На pointer-устройствах точки скрыты и проявляются при наведении на
+     картинку или при заходе фокуса с клавиатуры. */
+  @media (hover: hover) {
+    .hotspot {
+      opacity: 0;
+    }
+    .hotspots-stage:hover .hotspot,
+    .hotspots-stage:focus-within .hotspot {
+      opacity: 1;
+    }
   }
-  .hotspot-dot:focus-visible {
+  .hotspot:hover,
+  .hotspot:focus {
+    z-index: 3; /* активная поверх соседей */
+  }
+  .hotspot:focus {
+    outline: none;
+  }
+  .hotspot:focus-visible .hotspot__dot {
     outline: 2px solid var(--color-text);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
 
-  .hotspot-popover {
-    position: fixed;
-    margin: 0;
-    inset: auto; /* отключаем дефолтное центрирование поповера; позицию ставит JS */
-    max-width: min(18rem, calc(100vw - 1rem));
-    padding: 0.75rem 0.875rem;
+  /* Видимая точка */
+  .hotspot__dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.75rem;
+    height: 0.75rem;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    border: 2px solid var(--color-bg);
+    box-shadow: 0 1px 3px color-mix(in oklab, var(--color-text) 35%, transparent);
+    transition: transform 0.18s ease;
+    z-index: 1; /* поверх лейбла-pill */
+  }
+  .hotspot:hover .hotspot__dot,
+  .hotspot:focus .hotspot__dot {
+    transform: translate(-50%, -50%) scale(1.18);
+  }
+
+  /* Annotation pill: вырастает из точки в одну сторону (внутрь картинки) */
+  .hotspot__label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    width: max-content; /* тянемся до естественной ширины, но не шире max-width */
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
     background-color: var(--color-bg);
-    color: var(--color-text);
     border: 1px solid var(--color-border-strong);
-    border-radius: 0.5rem;
-    box-shadow: 0 8px 24px color-mix(in oklab, var(--color-text) 18%, transparent);
+    border-radius: 0.75rem;
+    box-shadow: 0 6px 20px color-mix(in oklab, var(--color-text) 16%, transparent);
+    padding-block: 0.4rem;
+    transition:
+      max-width 0.28s ease,
+      opacity 0.2s ease;
   }
-  .hs-title {
-    display: block;
-    font-size: 0.875rem;
+  /* Левая половина картинки → растём вправо (точка слева внутри pill). */
+  .hotspot[data-side="right"] .hotspot__label {
+    left: 0;
+    padding-left: 1.6rem;
+    padding-right: 0.8rem;
+    text-align: left;
+  }
+  /* Правая половина → растём влево (точка справа внутри pill). */
+  .hotspot[data-side="left"] .hotspot__label {
+    right: 0;
+    padding-right: 1.6rem;
+    padding-left: 0.8rem;
+    text-align: right;
+  }
+  .hotspot:hover .hotspot__label,
+  .hotspot:focus .hotspot__label {
+    max-width: 16rem;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .hotspot__title {
+    font-size: 0.8125rem;
     font-weight: 600;
+    line-height: 1.3;
     color: var(--color-text);
+    white-space: nowrap;
   }
-  .hs-content {
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
+  .hotspot__desc {
+    font-size: 0.75rem;
+    line-height: 1.35;
     color: var(--color-text-muted);
+    white-space: normal;
+  }
+
+  /* Уважаем настройку «меньше движения». */
+  @media (prefers-reduced-motion: reduce) {
+    .hotspot,
+    .hotspot__dot,
+    .hotspot__label {
+      transition: none;
+    }
   }
 </style>
 
 <script>
-  // Позиционируем каждый поповер у его точки и держим в пределах экрана.
-  // Toggle/закрытие/Esc/клик-вне — нативные (Popover API), здесь только позиция.
-  const popovers =
-    document.querySelectorAll<HTMLElement>('[data-hotspot-popover]');
-
-  for (const pop of popovers) {
-    const invoker = document.querySelector<HTMLElement>(
-      `[popovertarget="${CSS.escape(pop.id)}"]`
-    );
-
-    const place = () => {
-      if (!invoker) return;
-      const a = invoker.getBoundingClientRect();
-      const r = pop.getBoundingClientRect();
-      const pad = 8;
-      const gap = 10;
-
-      // По умолчанию под точкой; если не влезает снизу, а сверху влезает — над.
-      let top = a.bottom + gap;
-      if (top + r.height > window.innerHeight - pad && a.top - gap - r.height > pad) {
-        top = a.top - gap - r.height;
+  // Единственный JS: на touch tap по пустому месту снимает фокус с раскрытой
+  // точки (на iOS Safari :focus иначе «залипает»). Десктоп/клавиатуре не мешает.
+  document.addEventListener(
+    'touchstart',
+    (event) => {
+      const target = event.target as Element | null;
+      const active = document.activeElement as HTMLElement | null;
+      if (
+        active &&
+        active.classList.contains('hotspot') &&
+        !(target && target.closest('.hotspot'))
+      ) {
+        active.blur();
       }
-      top = Math.max(pad, Math.min(top, window.innerHeight - r.height - pad));
-
-      // По центру точки, с клампом по горизонтали.
-      let left = a.left + a.width / 2 - r.width / 2;
-      left = Math.max(pad, Math.min(left, window.innerWidth - r.width - pad));
-
-      pop.style.left = `${left}px`;
-      pop.style.top = `${top}px`;
-    };
-
-    // Прячем на время измерения, чтобы не мигнуло из дефолтной позиции.
-    pop.addEventListener('beforetoggle', (event) => {
-      if ((event as ToggleEvent).newState === 'open') {
-        pop.style.visibility = 'hidden';
-      }
-    });
-
-    pop.addEventListener('toggle', (event) => {
-      if ((event as ToggleEvent).newState === 'open') {
-        place();
-        pop.style.visibility = 'visible';
-        window.addEventListener('scroll', place, { passive: true });
-        window.addEventListener('resize', place);
-      } else {
-        window.removeEventListener('scroll', place);
-        window.removeEventListener('resize', place);
-      }
-    });
-  }
+    },
+    { passive: true }
+  );
 </script>
