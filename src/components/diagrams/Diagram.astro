@@ -1,0 +1,86 @@
+---
+// Сценарий A: инлайн статичной Figma-SVG-схемы по локали страницы.
+// Ноль клиентского JS, ноль сетевых запросов за SVG (встраивается на сборке).
+type Localized = { en: string; ru: string };
+
+interface Props {
+  /** Базовое имя схемы — резолвит <name>.en.svg / <name>.ru.svg в src/diagrams/. */
+  name: string;
+  /** Доступное имя схемы (обязательно) — озвучивается скринридером. */
+  alt: Localized;
+  /** Опциональная видимая подпись. */
+  caption?: Localized;
+}
+const { name, alt, caption } = Astro.props as Props;
+
+// Реестр всех SVG из src/diagrams/ как сырые строки (инлайнятся на сборке).
+// ?raw — берём разметку как есть, БЕЗ переоптимизации, чтобы произвольный
+// Figma-SVG не ломался. eager — нужно синхронно во фронтматтере.
+const rawSvgs = import.meta.glob('../../diagrams/*.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+// Индекс по имени файла (basename), чтобы не зависеть от формы пути.
+const byFile = new Map<string, string>();
+for (const [path, content] of Object.entries(rawSvgs)) {
+  const file = path.split('/').pop();
+  if (file) byFile.set(file, content);
+}
+
+const locale: 'en' | 'ru' = Astro.currentLocale === 'ru' ? 'ru' : 'en';
+
+// Резолв с фоллбэком по схеме (согласован с общим RU→EN фоллбэком сайта):
+// 1) есть <name>.<locale>.svg → используем;
+// 2) нет, но есть <name>.en.svg → EN-версия + build-warning;
+// 3) нет вообще ничего → понятная ошибка сборки с именем схемы.
+const wantFile = `${name}.${locale}.svg`;
+const enFile = `${name}.en.svg`;
+
+let svg = byFile.get(wantFile);
+if (svg === undefined) {
+  const enSvg = byFile.get(enFile);
+  if (enSvg !== undefined) {
+    console.warn(
+      `[Diagram] "${wantFile}" не найден — фоллбэк на "${enFile}". ` +
+        `Добавь локализованный экспорт для полноты.`
+    );
+    svg = enSvg;
+  } else {
+    throw new Error(
+      `[Diagram] схема "${name}" не найдена: нет ни "${wantFile}", ни "${enFile}" ` +
+        `в src/diagrams/. Проверь имя и наличие экспорта.`
+    );
+  }
+}
+---
+
+<figure
+  class="full-bleed mx-auto my-8 max-w-[60rem] px-5 sm:px-6"
+  role="img"
+  aria-label={alt[locale]}
+>
+  {/* role="img"+aria-label на figure: скринридер озвучивает имя схемы и
+      игнорирует внутренности SVG — хирургия над строкой SVG не нужна. */}
+  <div class="diagram-svg">
+    <Fragment set:html={svg} />
+  </div>
+  {
+    caption && (
+      <figcaption class="mt-3 text-center text-sm text-[var(--color-text-faint)]">
+        {caption[locale]}
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  /* Инлайненный SVG адаптивен: заполняет контейнер, сохраняя пропорции.
+     :global — SVG вставлен через set:html и не получает scoped-атрибут. */
+  .diagram-svg :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>
