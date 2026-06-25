@@ -197,6 +197,37 @@
   border-left: 3px solid var(--color-border-strong);
   color: var(--color-text-muted);
 }
+/* blockquote — grid-элемент (.prose > *): нижний margin его последнего
+   потомка не схлопывается наружу, а растит высоту контейнера, из-за чего
+   border-left уходит ниже текста. Обнуляем, чтобы линия кончалась по контенту. */
+.prose :where(blockquote > :last-child):not(:where(.not-prose, .not-prose *)) {
+  margin-bottom: 0;
+}
+
+/* ----------------------------------------------------------------------------
+   Таблицы. Tailwind v4 preflight сбрасывает границы/отступы и выравнивание th,
+   поэтому markdown-таблицы без явных правил выглядят «голыми». Аккуратная
+   таблица для UX-кейсов: все цвета — через семантические токены, без raw hex.
+   ---------------------------------------------------------------------------- */
+.prose :where(table):not(:where(.not-prose, .not-prose *)) {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.prose :where(th, td):not(:where(.not-prose, .not-prose *)) {
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  text-align: left;
+}
+.prose :where(th):not(:where(.not-prose, .not-prose *)) {
+  font-weight: 600;
+  color: var(--color-text);
+  background-color: var(--color-bg-subtle);
+  border-bottom-color: var(--color-border-strong);
+}
 
 /* Дата кейса под заголовком — приглушённая мета. */
 .prose :where(.case-date) {
