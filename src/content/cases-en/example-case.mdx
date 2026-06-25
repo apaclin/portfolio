@@ -9,6 +9,7 @@ import FlowDiagram from '../../components/diagrams/flow/FlowDiagram.astro';
 import { traditionalAp } from '../../components/diagrams/flow/examples/traditional-ap';
 import Diagram from '../../components/diagrams/Diagram.astro';
 import Hotspots from '../../components/diagrams/Hotspots.astro';
+import Carousel from '../../components/diagrams/Carousel.astro';
 
 ## Overview
 
@@ -35,6 +36,16 @@ This is a placeholder case study written in **MDX**. It demonstrates that the
   hotspots={[
     { x: 28, y: 34, title: "Risk Score", description: "Anomaly confidence for the selected invoice." },
     { x: 72, y: 58, title: "Vendor Panel", description: "Vendor history and context." }
+  ]}
+/>
+
+### Screens (Carousel)
+
+<Carousel
+  label="Product screens"
+  items={[
+    { src: "/images/screen-1.svg", alt: "Dashboard", caption: "Main dashboard" },
+    { src: "/images/screen-2.svg", alt: "Invoice review", caption: "Invoice review flow" }
   ]}
 />
 

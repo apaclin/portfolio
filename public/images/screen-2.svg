@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" font-family="Inter, sans-serif">
+  <!-- TEMPORARY placeholder — мок «Invoice review» для демо Carousel. Заменить реальным скриншотом. -->
+  <rect width="1200" height="750" fill="#ffffff"/>
+  <rect x="0" y="0" width="1200" height="64" fill="#f7f6f3"/>
+  <rect x="0" y="63" width="1200" height="1" fill="#eae9e5"/>
+  <circle cx="36" cy="32" r="12" fill="#4f46e5"/>
+  <rect x="60" y="25" width="180" height="14" rx="7" fill="#d8d6cf"/>
+  <rect x="24" y="96" width="540" height="630" rx="14" fill="#f7f6f3" stroke="#eae9e5"/>
+  <rect x="48" y="124" width="220" height="16" rx="8" fill="#37352f"/>
+  <rect x="48" y="180" width="492" height="180" rx="12" fill="#fffbeb" stroke="#fde9b5"/>
+  <text x="72" y="232" font-size="22" font-weight="700" fill="#b45309">PO Mismatch</text>
+  <rect x="72" y="256" width="380" height="12" rx="6" fill="#d8d6cf"/>
+  <rect x="72" y="284" width="300" height="12" rx="6" fill="#eae9e5"/>
+  <rect x="588" y="96" width="588" height="630" rx="14" fill="#f7f6f3" stroke="#eae9e5"/>
+  <rect x="612" y="124" width="200" height="16" rx="8" fill="#37352f"/>
+  <text x="882" y="430" text-anchor="middle" font-size="34" font-weight="700" fill="#37352f">Invoice review</text>
+</svg>
