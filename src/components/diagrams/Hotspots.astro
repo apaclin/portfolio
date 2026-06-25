@@ -1,12 +1,13 @@
 ---
-// Аннотированный скриншот. Точки скрыты, проявляются при наведении на картинку,
-// при hover/focus морфятся в annotation pill (title + опц. description) и
-// сворачиваются обратно. Без кликов, без Popover API, без модальных слоёв.
-// Ядро — чистый CSS; крошечный скрипт только для надёжного закрытия по тапу-вне
-// на touch. Координаты — проценты.
+// Аннотированный скриншот. ОДИН элемент морфится из точки (24×24 indigo-круг)
+// в indigo-pill: тот же элемент растёт по ширине/высоте под свой текст, текст
+// внутри проявляется через opacity (fade, без сдвига). Никаких отдельных
+// плашек/popover/слоёв рядом. Симметричный рост от центра точки. 300ms ease-in-out.
+// Координаты — проценты. Точные размеры pill меряются крошечным скриптом ниже
+// (для гладкого width/height-перехода и чтобы текст не рефлоулил во время морфа).
 interface Hotspot {
-  x: number; // % по горизонтали
-  y: number; // % по вертикали
+  x: number; // %
+  y: number; // %
   title: string;
   description?: string;
 }
@@ -33,25 +34,14 @@ const { src, alt, hotspots, width, height } = Astro.props as Props;
       class="hotspots-img"
     />
     {
-      hotspots.map((h) => {
-        // Сторона роста pill считается на сборке: всегда внутрь картинки,
-        // поэтому позиционирующий JS/кламп не нужен.
-        const side = h.x > 50 ? 'left' : 'right';
-        return (
-          <button
-            type="button"
-            class="hotspot"
-            data-side={side}
-            style={`left:${h.x}%;top:${h.y}%`}
-          >
-            <span class="hotspot__label">
-              <span class="hotspot__title">{h.title}</span>
-              {h.description && <span class="hotspot__desc">{h.description}</span>}
-            </span>
-            <span class="hotspot__dot" aria-hidden="true" />
-          </button>
-        );
-      })
+      hotspots.map((h) => (
+        <button type="button" class="hotspot" style={`left:${h.x}%;top:${h.y}%`}>
+          <span class="hotspot__label">
+            <span class="hotspot__title">{h.title}</span>
+            {h.description && <span class="hotspot__desc">{h.description}</span>}
+          </span>
+        </button>
+      ))
     }
   </div>
 </figure>
@@ -59,7 +49,7 @@ const { src, alt, hotspots, width, height } = Astro.props as Props;
 <style>
   .hotspots-stage {
     position: relative;
-    line-height: 0; /* убрать щель под inline-img */
+    line-height: 0;
   }
   .hotspots-img {
     display: block;
@@ -69,25 +59,35 @@ const { src, alt, hotspots, width, height } = Astro.props as Props;
     border: 1px solid var(--color-border);
   }
 
-  /* Точка-кнопка: прозрачная hit-зона ~28px (комфортный тач-таргет),
-     центр привязан к координате. transform создаёт containing block
-     для абсолютного лейбла. */
+  /* Один морфящийся элемент: коллапс = 24×24 indigo-круг; раскрытие = тот же
+     элемент вырастает до размеров своего текста (var(--pill-w/h) от скрипта),
+     overflow:hidden держит круг в свёрнутом виде. Центрирован на координате,
+     поэтому растёт симметрично от точки (как в видео). */
   .hotspot {
     position: absolute;
-    width: 1.75rem;
-    height: 1.75rem;
     transform: translate(-50%, -50%);
-    margin: 0;
+    display: grid;
+    place-items: center;
+    width: 1.5rem; /* 24px */
+    height: 1.5rem; /* 24px */
     padding: 0;
+    margin: 0;
     border: 0;
-    background: transparent;
+    border-radius: 0.75rem; /* 12px → круг в 24px, мягкие углы в pill */
+    background-color: var(--color-accent); /* Indigo-9 — не меняется при морфе */
+    color: var(--color-bg); /* белый текст */
+    overflow: hidden;
     cursor: pointer;
-    opacity: 1; /* базово видимы (touch / без hover / fail-safe) */
-    transition: opacity 0.25s ease;
+    box-shadow: 0 1px 4px color-mix(in oklab, var(--color-text) 30%, transparent);
+    opacity: 1; /* базово видимы (touch / без hover) */
+    transition:
+      width 300ms ease-in-out,
+      height 300ms ease-in-out,
+      opacity 200ms ease;
     z-index: 1;
   }
-  /* На pointer-устройствах точки скрыты и проявляются при наведении на
-     картинку или при заходе фокуса с клавиатуры. */
+  /* На pointer-устройствах точки скрыты, проявляются при наведении на картинку
+     или при заходе фокуса с клавиатуры. */
   @media (hover: hover) {
     .hotspot {
       opacity: 0;
@@ -99,96 +99,53 @@ const { src, alt, hotspots, width, height } = Astro.props as Props;
   }
   .hotspot:hover,
   .hotspot:focus {
-    z-index: 3; /* активная поверх соседей */
+    z-index: 3;
   }
   .hotspot:focus {
     outline: none;
   }
-  .hotspot:focus-visible .hotspot__dot {
+  .hotspot:focus-visible {
     outline: 2px solid var(--color-text);
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
 
-  /* Видимая точка */
-  .hotspot__dot {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0.75rem;
-    height: 0.75rem;
-    transform: translate(-50%, -50%);
-    border-radius: 999px;
-    background-color: var(--color-accent);
-    border: 2px solid var(--color-bg);
-    box-shadow: 0 1px 3px color-mix(in oklab, var(--color-text) 35%, transparent);
-    transition: transform 0.18s ease;
-    z-index: 1; /* поверх лейбла-pill */
-  }
-  .hotspot:hover .hotspot__dot,
-  .hotspot:focus .hotspot__dot {
-    transform: translate(-50%, -50%) scale(1.18);
+  /* Раскрытие того же элемента до размеров текста. */
+  .hotspot:hover,
+  .hotspot:focus {
+    width: var(--pill-w, max-content);
+    height: var(--pill-h, auto);
   }
 
-  /* Annotation pill: вырастает из точки в одну сторону (внутрь картинки) */
+  /* Текст: уже внутри элемента, фиксированной раскладки (width:max-content),
+     поэтому при морфе не переносится и не «выезжает» — только fade. */
   .hotspot__label {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    width: max-content; /* тянемся до естественной ширины, но не шире max-width */
-    max-width: 0;
-    overflow: hidden;
+    width: max-content;
+    max-width: 18rem;
+    padding: 0.4rem 0.85rem;
+    text-align: center;
+    white-space: normal;
     opacity: 0;
-    pointer-events: none;
-    background-color: var(--color-bg);
-    border: 1px solid var(--color-border-strong);
-    border-radius: 0.75rem;
-    box-shadow: 0 6px 20px color-mix(in oklab, var(--color-text) 16%, transparent);
-    padding-block: 0.4rem;
-    transition:
-      max-width 0.28s ease,
-      opacity 0.2s ease;
-  }
-  /* Левая половина картинки → растём вправо (точка слева внутри pill). */
-  .hotspot[data-side="right"] .hotspot__label {
-    left: 0;
-    padding-left: 1.6rem;
-    padding-right: 0.8rem;
-    text-align: left;
-  }
-  /* Правая половина → растём влево (точка справа внутри pill). */
-  .hotspot[data-side="left"] .hotspot__label {
-    right: 0;
-    padding-right: 1.6rem;
-    padding-left: 0.8rem;
-    text-align: right;
+    transition: opacity 300ms ease-in-out;
   }
   .hotspot:hover .hotspot__label,
   .hotspot:focus .hotspot__label {
-    max-width: 16rem;
     opacity: 1;
-    pointer-events: auto;
   }
   .hotspot__title {
+    display: block;
     font-size: 0.8125rem;
     font-weight: 600;
-    line-height: 1.3;
-    color: var(--color-text);
-    white-space: nowrap;
+    line-height: 1.35;
   }
   .hotspot__desc {
-    font-size: 0.75rem;
+    display: block;
+    font-size: 0.8125rem;
     line-height: 1.35;
-    color: var(--color-text-muted);
-    white-space: normal;
+    opacity: 0.92;
   }
 
-  /* Уважаем настройку «меньше движения». */
   @media (prefers-reduced-motion: reduce) {
     .hotspot,
-    .hotspot__dot,
     .hotspot__label {
       transition: none;
     }
@@ -196,8 +153,26 @@ const { src, alt, hotspots, width, height } = Astro.props as Props;
 </style>
 
 <script>
-  // Единственный JS: на touch tap по пустому месту снимает фокус с раскрытой
-  // точки (на iOS Safari :focus иначе «залипает»). Десктоп/клавиатуре не мешает.
+  // (1) Меряем точные размеры pill (текст + паддинги) и кладём в CSS-переменные,
+  //     чтобы width/height морфились гладко за 300ms, а текст не рефлоулил.
+  //     offsetWidth/Height у лейбла = его собственная раскладка (max-content,
+  //     cap 18rem), не зависит от того, что родитель пока 24px с overflow:hidden.
+  const hotspots = document.querySelectorAll<HTMLElement>('.hotspot');
+  const measure = () => {
+    for (const el of hotspots) {
+      const label = el.querySelector<HTMLElement>('.hotspot__label');
+      if (!label) continue;
+      el.style.setProperty('--pill-w', `${Math.ceil(label.offsetWidth)}px`);
+      el.style.setProperty('--pill-h', `${Math.ceil(label.offsetHeight)}px`);
+    }
+  };
+  measure();
+  // Inter подгружается асинхронно (font-display:swap) — перемеряем после загрузки,
+  // чтобы размеры были точными (метрики фоллбэка близки, но добиваем точно).
+  if (document.fonts?.ready) document.fonts.ready.then(measure);
+
+  // (2) Touch: tap по пустому месту снимает фокус с раскрытой точки (на iOS
+  //     :focus иначе «залипает»). Десктоп/клавиатуре не мешает.
   document.addEventListener(
     'touchstart',
     (event) => {
