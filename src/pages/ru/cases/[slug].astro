@@ -4,6 +4,7 @@ import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import TranslationNotice from '../../../components/TranslationNotice.astro';
 import Prose from '../../../components/Prose.astro';
+import { formatDate } from '../../../lib/date';
 
 // RU-роуты кейсов рендерят ОБЪЕДИНЕНИЕ слагов обеих коллекций.
 // Направление фоллбэка асимметричное: RU отсутствует → показываем EN
@@ -56,15 +57,7 @@ const contentLocale = isFallback ? 'en' : 'ru';
         Схема внутри остаётся прямым ребёнком .prose и выходит в full-bleed. */}
     <Prose as="article" lang={isFallback ? 'en' : undefined}>
       <h1>{entry.data.title}</h1>
-      <p class="case-date">
-        {
-          entry.data.date.toLocaleDateString(contentLocale, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })
-        }
-      </p>
+      <p class="case-date">{formatDate(entry.data.date, contentLocale)}</p>
       <Content />
     </Prose>
   </main>
