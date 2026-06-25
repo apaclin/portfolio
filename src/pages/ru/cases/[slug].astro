@@ -3,6 +3,7 @@ import type { GetStaticPaths } from 'astro';
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import TranslationNotice from '../../../components/TranslationNotice.astro';
+import Prose from '../../../components/Prose.astro';
 
 // RU-роуты кейсов рендерят ОБЪЕДИНЕНИЕ слагов обеих коллекций.
 // Направление фоллбэка асимметричное: RU отсутствует → показываем EN
@@ -43,11 +44,19 @@ const contentLocale = isFallback ? 'en' : 'ru';
 ---
 
 <BaseLayout title={entry.data.title} description={entry.data.description}>
-  <main class="mx-auto max-w-2xl p-8">
-    {isFallback && <TranslationNotice />}
-    <article lang={isFallback ? 'en' : undefined}>
-      <h1 class="text-3xl font-bold text-[var(--color-text)]">{entry.data.title}</h1>
-      <p class="mt-2 text-sm opacity-70">
+  <main class="py-12">
+    {
+      isFallback && (
+        <div class="prose">
+          <TranslationNotice />
+        </div>
+      )
+    }
+    {/* Область кейса: при фоллбэке контент английский → lang="en" на контейнере.
+        Схема внутри остаётся прямым ребёнком .prose и выходит в full-bleed. */}
+    <Prose as="article" lang={isFallback ? 'en' : undefined}>
+      <h1>{entry.data.title}</h1>
+      <p class="case-date">
         {
           entry.data.date.toLocaleDateString(contentLocale, {
             year: 'numeric',
@@ -56,9 +65,7 @@ const contentLocale = isFallback ? 'en' : 'ru';
           })
         }
       </p>
-      <div class="mt-6 space-y-4">
-        <Content />
-      </div>
-    </article>
+      <Content />
+    </Prose>
   </main>
 </BaseLayout>

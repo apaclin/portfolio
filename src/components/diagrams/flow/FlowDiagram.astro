@@ -79,7 +79,7 @@ const swipeHint = locale === 'ru' ? 'Свайп' : 'Swipe';
        Шов оставлен намеренно: тип допускает, рендер появится позже. */
     null
   ) : (
-    <figure class="not-prose my-8" style={rootStyle}>
+    <figure class="full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6" style={rootStyle}>
       {data.title && (
         <figcaption class="mb-4 flex items-center gap-2">
           <span class="h-4 w-1 rounded-full" style="background:var(--flow-accent)" />

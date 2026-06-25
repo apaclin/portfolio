@@ -100,3 +100,24 @@
     color: var(--color-text);
   }
 }
+
+/* ============================================================================
+   ЧИТАЕМЫЙ КОНТЕЙНЕР (.prose) — grid с центральной колонкой ~42rem и боковыми
+   гаттерами. На мобильном гаттер схлопывается до ~1.25rem (отступ от краёв).
+   Слот .full-bleed выходит за колонку — для широких схем (FlowDiagram),
+   чтобы они не были зажаты в 42rem. Типографика контента — в Шаге 4 (ниже).
+   ============================================================================ */
+.prose {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(1.25rem, 1fr)
+    [content-start] min(42rem, 100% - 2.5rem) [content-end]
+    minmax(1.25rem, 1fr) [full-end];
+}
+.prose > * {
+  grid-column: content-start / content-end;
+  min-width: 0; /* чтобы overflow-x внутри (схемы) не распирал grid-колонку */
+}
+.prose > .full-bleed {
+  grid-column: full-start / full-end;
+}

@@ -1,0 +1,17 @@
+---
+// Обёртка читаемого контейнера. Даёт grid-колонку ~42rem + слот .full-bleed
+// для широких схем. Типографика контента описана в global.css (.prose ...).
+// Тег настраивается (по умолчанию div). lang пробрасывается на тег —
+// например lang="en" для области фоллбэк-контента под /ru/.
+interface Props {
+  as?: 'div' | 'article' | 'main' | 'section';
+  class?: string;
+  lang?: string;
+}
+const props: Props = Astro.props;
+const { as: Tag = 'div', class: className, lang } = props;
+---
+
+<Tag class:list={['prose', className]} lang={lang}>
+  <slot />
+</Tag>
