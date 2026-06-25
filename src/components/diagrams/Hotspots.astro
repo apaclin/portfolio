@@ -1,0 +1,181 @@
+---
+// Аннотированный скриншот с интерактивными точками.
+// Нативный Popover API даёт toggle/закрытие/Esc/light-dismiss и доступность
+// без JS (точка = настоящий <button>). Крошечный скрипт ниже — ТОЛЬКО для
+// позиционирования поповера у точки и клампинга в пределах экрана.
+interface Hotspot {
+  x: number; // % по горизонтали
+  y: number; // % по вертикали
+  title: string;
+  content: string;
+}
+interface Props {
+  src: string;
+  alt: string;
+  hotspots: Hotspot[];
+  /** Интринсик-размеры картинки — резервируют место против CLS (Lighthouse). */
+  width?: number;
+  height?: number;
+}
+const { src, alt, hotspots, width, height } = Astro.props as Props;
+
+// Уникальный префикс инстанса — чтобы id поповеров не конфликтовали при
+// нескольких <Hotspots> на странице.
+const uid = `hs-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<figure class="full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6">
+  <div class="hotspots-stage">
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      loading="lazy"
+      decoding="async"
+      class="hotspots-img"
+    />
+    {
+      hotspots.map((h, i) => {
+        const pid = `${uid}-${i}`;
+        return (
+          <>
+            <button
+              type="button"
+              popovertarget={pid}
+              aria-label={h.title}
+              aria-details={pid}
+              class="hotspot-dot"
+              style={`left:${h.x}%;top:${h.y}%`}
+            >
+              {i + 1}
+            </button>
+            <div id={pid} popover="auto" data-hotspot-popover class="hotspot-popover">
+              <strong class="hs-title">{h.title}</strong>
+              <p class="hs-content">{h.content}</p>
+            </div>
+          </>
+        );
+      })
+    }
+  </div>
+</figure>
+
+<style>
+  .hotspots-stage {
+    position: relative;
+    line-height: 0; /* убираем щель под inline-img */
+  }
+  .hotspots-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+  }
+
+  .hotspot-dot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: 9999px;
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    border: 2px solid var(--color-bg);
+    box-shadow: 0 1px 4px color-mix(in oklab, var(--color-text) 35%, transparent);
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .hotspot-dot:hover {
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+  .hotspot-dot:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+  }
+
+  .hotspot-popover {
+    position: fixed;
+    margin: 0;
+    inset: auto; /* отключаем дефолтное центрирование поповера; позицию ставит JS */
+    max-width: min(18rem, calc(100vw - 1rem));
+    padding: 0.75rem 0.875rem;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-strong);
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 24px color-mix(in oklab, var(--color-text) 18%, transparent);
+  }
+  .hs-title {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .hs-content {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+  }
+</style>
+
+<script>
+  // Позиционируем каждый поповер у его точки и держим в пределах экрана.
+  // Toggle/закрытие/Esc/клик-вне — нативные (Popover API), здесь только позиция.
+  const popovers =
+    document.querySelectorAll<HTMLElement>('[data-hotspot-popover]');
+
+  for (const pop of popovers) {
+    const invoker = document.querySelector<HTMLElement>(
+      `[popovertarget="${CSS.escape(pop.id)}"]`
+    );
+
+    const place = () => {
+      if (!invoker) return;
+      const a = invoker.getBoundingClientRect();
+      const r = pop.getBoundingClientRect();
+      const pad = 8;
+      const gap = 10;
+
+      // По умолчанию под точкой; если не влезает снизу, а сверху влезает — над.
+      let top = a.bottom + gap;
+      if (top + r.height > window.innerHeight - pad && a.top - gap - r.height > pad) {
+        top = a.top - gap - r.height;
+      }
+      top = Math.max(pad, Math.min(top, window.innerHeight - r.height - pad));
+
+      // По центру точки, с клампом по горизонтали.
+      let left = a.left + a.width / 2 - r.width / 2;
+      left = Math.max(pad, Math.min(left, window.innerWidth - r.width - pad));
+
+      pop.style.left = `${left}px`;
+      pop.style.top = `${top}px`;
+    };
+
+    // Прячем на время измерения, чтобы не мигнуло из дефолтной позиции.
+    pop.addEventListener('beforetoggle', (event) => {
+      if ((event as ToggleEvent).newState === 'open') {
+        pop.style.visibility = 'hidden';
+      }
+    });
+
+    pop.addEventListener('toggle', (event) => {
+      if ((event as ToggleEvent).newState === 'open') {
+        place();
+        pop.style.visibility = 'visible';
+        window.addEventListener('scroll', place, { passive: true });
+        window.addEventListener('resize', place);
+      } else {
+        window.removeEventListener('scroll', place);
+        window.removeEventListener('resize', place);
+      }
+    });
+  }
+</script>

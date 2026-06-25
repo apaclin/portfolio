@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" font-family="Inter, sans-serif">
+  <!-- TEMPORARY placeholder — мок «Invoice review dashboard» для демо Hotspots.
+       Заменить реальным скриншотом интерфейса. -->
+  <rect width="1200" height="750" fill="#f7f6f3"/>
+  <!-- top bar -->
+  <rect x="0" y="0" width="1200" height="64" fill="#ffffff"/>
+  <rect x="0" y="63" width="1200" height="1" fill="#eae9e5"/>
+  <circle cx="36" cy="32" r="12" fill="#4f46e5"/>
+  <rect x="60" y="25" width="140" height="14" rx="7" fill="#d8d6cf"/>
+  <rect x="1020" y="18" width="150" height="28" rx="14" fill="#eff6ff"/>
+  <!-- left: invoice queue -->
+  <rect x="24" y="96" width="640" height="630" rx="14" fill="#ffffff" stroke="#eae9e5"/>
+  <rect x="48" y="124" width="180" height="16" rx="8" fill="#37352f"/>
+  <!-- risk score card (~28% / 34%) -->
+  <rect x="240" y="200" width="180" height="84" rx="12" fill="#fffbeb" stroke="#fde9b5"/>
+  <rect x="260" y="222" width="90" height="12" rx="6" fill="#d97706"/>
+  <text x="260" y="266" font-size="26" font-weight="700" fill="#b45309">87 / High</text>
+  <!-- queue rows -->
+  <g fill="#f1f0ec">
+    <rect x="48" y="320" width="592" height="56" rx="10"/>
+    <rect x="48" y="388" width="592" height="56" rx="10"/>
+    <rect x="48" y="456" width="592" height="56" rx="10"/>
+    <rect x="48" y="524" width="592" height="56" rx="10"/>
+    <rect x="48" y="592" width="592" height="56" rx="10"/>
+  </g>
+  <!-- right: vendor panel (~72% / 58%) -->
+  <rect x="688" y="96" width="488" height="630" rx="14" fill="#ffffff" stroke="#eae9e5"/>
+  <rect x="712" y="124" width="160" height="16" rx="8" fill="#37352f"/>
+  <rect x="712" y="360" width="440" height="120" rx="12" fill="#f7f6f3" stroke="#eae9e5"/>
+  <circle cx="752" cy="404" r="20" fill="#4f46e5"/>
+  <rect x="788" y="392" width="200" height="12" rx="6" fill="#37352f"/>
+  <rect x="788" y="414" width="300" height="10" rx="5" fill="#9a988f"/>
+  <rect x="712" y="500" width="440" height="10" rx="5" fill="#eae9e5"/>
+  <rect x="712" y="524" width="380" height="10" rx="5" fill="#eae9e5"/>
+  <rect x="712" y="548" width="410" height="10" rx="5" fill="#eae9e5"/>
+</svg>
