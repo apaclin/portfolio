@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   САМОХОСТИНГ INTER (variable woff2, локально — без запроса к Google Fonts).
+   font-display: swap — осознанный выбор: текст виден сразу в фоллбэке, затем
+   подмена на Inter (с preload приходит быстро → FOUT минимален, брендовый
+   шрифт гарантированно показывается). Совпадающие метрики фоллбэка (ниже)
+   убирают сдвиг макета, поэтому swap не даёт CLS — только перерисовку глифов.
+   Два подмножества с unicode-range: браузер качает только нужное на странице.
+   ============================================================================ */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900; /* вариативная ось веса */
+  font-display: swap;
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/inter-cyrillic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+/* Метрически согласованный системный фоллбэк. Пока Inter грузится, текст
+   рисуется этим лицом (Arial с подогнанными метриками), занимая РОВНО столько
+   же места, что и Inter → при подмене нет reflow/CLS. Значения подобраны под
+   метрики Inter относительно Arial (size-adjust + ascent/descent override). */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+  size-adjust: 107.12%;
+}
+
 /* Tailwind v4: дизайн-токены без tailwind.config.js. В @theme держим только
    то, что используется как статичная утилита (например font-sans). */
 @theme {
