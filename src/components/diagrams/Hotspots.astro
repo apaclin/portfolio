@@ -79,23 +79,11 @@ const { src, alt, hotspots, width, height } = Astro.props as Props;
     overflow: hidden;
     cursor: pointer;
     box-shadow: 0 1px 4px color-mix(in oklab, var(--color-text) 30%, transparent);
-    opacity: 1; /* базово видимы (touch / без hover) */
+    opacity: 1; /* точки видны сразу (на всех устройствах) */
     transition:
       width 300ms ease-in-out,
-      height 300ms ease-in-out,
-      opacity 200ms ease;
+      height 300ms ease-in-out;
     z-index: 1;
-  }
-  /* На pointer-устройствах точки скрыты, проявляются при наведении на картинку
-     или при заходе фокуса с клавиатуры. */
-  @media (hover: hover) {
-    .hotspot {
-      opacity: 0;
-    }
-    .hotspots-stage:hover .hotspot,
-    .hotspots-stage:focus-within .hotspot {
-      opacity: 1;
-    }
   }
   .hotspot:hover,
   .hotspot:focus {
