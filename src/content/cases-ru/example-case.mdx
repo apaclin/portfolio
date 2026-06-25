@@ -7,6 +7,7 @@ order: 1
 
 import FlowDiagram from '../../components/diagrams/flow/FlowDiagram.astro';
 import { traditionalAp } from '../../components/diagrams/flow/examples/traditional-ap';
+import Diagram from '../../components/diagrams/Diagram.astro';
 
 ## Обзор
 
@@ -14,6 +15,14 @@ import { traditionalAp } from '../../components/diagrams/flow/examples/tradition
 загружается, проходит валидацию по схеме и рендерится.
 
 <FlowDiagram data={traditionalAp} />
+
+### Статичная версия (Figma SVG)
+
+<Diagram
+  name="traditional-ap"
+  alt={{ en: 'Traditional AP — static diagram', ru: 'Традиционный АР — статичная схема' }}
+  caption={{ en: 'Same flow, exported from Figma as SVG (Scenario A).', ru: 'Тот же поток, экспортирован из Figma в SVG (Сценарий A).' }}
+/>
 
 ## Результат
 

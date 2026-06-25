@@ -7,6 +7,7 @@ order: 1
 
 import FlowDiagram from '../../components/diagrams/flow/FlowDiagram.astro';
 import { traditionalAp } from '../../components/diagrams/flow/examples/traditional-ap';
+import Diagram from '../../components/diagrams/Diagram.astro';
 
 ## Overview
 
@@ -14,6 +15,14 @@ This is a placeholder case study written in **MDX**. It demonstrates that the
 `cases-en` collection loads, validates against the schema, and renders.
 
 <FlowDiagram data={traditionalAp} />
+
+### Static version (Figma SVG)
+
+<Diagram
+  name="traditional-ap"
+  alt={{ en: 'Traditional AP — static diagram', ru: 'Традиционный АР — статичная схема' }}
+  caption={{ en: 'Same flow, exported from Figma as SVG (Scenario A).', ru: 'Тот же поток, экспортирован из Figma в SVG (Сценарий A).' }}
+/>
 
 ## Outcome
 
