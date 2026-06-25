@@ -1,10 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Prose from '../components/Prose.astro';
 ---
 
 <BaseLayout title="Portfolio" description="Personal portfolio">
-  <main class="mx-auto max-w-2xl p-8">
-    <h1 class="text-3xl font-bold text-[var(--color-text)]">Skeleton works</h1>
-    <p class="mt-2">Astro 6 · Tailwind v4 · MDX · i18n (en/ru)</p>
+  <main class="py-12">
+    <Prose>
+      <h1>Skeleton works</h1>
+      <p>Astro 6 · Tailwind v4 · MDX · i18n (en/ru)</p>
+    </Prose>
   </main>
 </BaseLayout>

@@ -1,10 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Prose from '../../components/Prose.astro';
 ---
 
 <BaseLayout title="Обо мне" description="Обо мне">
-  <main class="mx-auto max-w-2xl p-8">
-    <h1 class="text-3xl font-bold text-[var(--color-text)]">Обо мне</h1>
-    <p class="mt-2">Здесь будет короткое представление.</p>
+  <main class="py-12">
+    <Prose>
+      <h1>Обо мне</h1>
+      <p>Здесь будет короткое представление.</p>
+    </Prose>
   </main>
 </BaseLayout>
