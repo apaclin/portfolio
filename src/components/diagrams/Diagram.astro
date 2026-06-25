@@ -1,6 +1,8 @@
 ---
 // Сценарий A: инлайн статичной Figma-SVG-схемы по локали страницы.
 // Ноль клиентского JS, ноль сетевых запросов за SVG (встраивается на сборке).
+import { namespaceSvgIds, svgIdPrefix } from '../../lib/svg';
+
 type Localized = { en: string; ru: string };
 
 interface Props {
@@ -54,6 +56,10 @@ if (svg === undefined) {
     );
   }
 }
+
+// Неймспейсим id по инстансу: две разные схемы на странице не конфликтуют
+// по Figma-id (clipPath/gradient). Префикс — из имени схемы.
+svg = namespaceSvgIds(svg, svgIdPrefix(name));
 ---
 
 <figure
