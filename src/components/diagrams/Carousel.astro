@@ -30,7 +30,7 @@ const slides = await Promise.all(
   items.map(async (item) => ({
     ...item,
     widths: [480, 800, 1200, 1600].filter((w) => w < item.src.width).concat(item.src.width),
-    zoom: (await getImage({ src: item.src, width: Math.min(item.src.width, 2000), format: 'webp' })).src,
+    zoom: (await getImage({ src: item.src, width: item.src.width, format: 'webp' })).src,
   }))
 );
 ---
@@ -135,11 +135,13 @@ const slides = await Promise.all(
     display: block;
     width: 100%;
   }
+  /* Натуральный размер по центру, без растяжения/upscale — как у обычных картинок. */
   .carousel__slide :global(img) {
     display: block;
-    width: 100%;
-    aspect-ratio: var(--carousel-ratio, 16 / 10);
-    object-fit: contain;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    margin-inline: auto;
     background-color: var(--color-bg-subtle);
   }
   .carousel__caption {

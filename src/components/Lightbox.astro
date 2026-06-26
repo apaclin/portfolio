@@ -31,21 +31,22 @@
     background-color: color-mix(in oklab, var(--color-text) 80%, transparent);
   }
   .lightbox__media {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
+    overflow: auto; /* картинка больше вьюпорта → скролл по обеим осям */
     display: grid;
-    place-items: center;
+    place-items: safe center; /* центр, если влезает; иначе скролл от края, без обрезки */
     padding: clamp(1rem, 4vw, 3rem);
     box-sizing: border-box;
   }
   .lightbox__media :global(img),
   .lightbox__media :global(svg) {
     display: block;
-    max-width: min(92vw, 1400px);
-    max-height: 86vh;
+    /* Натуральный размер 1:1: без fit-to-screen и без upscale. */
+    max-width: none;
+    max-height: none;
     width: auto;
     height: auto;
-    object-fit: contain;
     border-radius: 0.5rem;
     background-color: var(--color-bg);
   }
@@ -105,12 +106,19 @@
         img.decoding = 'async';
         media.appendChild(img);
       } else {
-        // SVG-диаграмма (opt-in): клонируем svg из триггера.
+        // SVG-диаграмма (opt-in): клонируем svg из триггера в натуральном размере.
         const svg = trigger.querySelector('svg');
         if (svg) {
           const clone = svg.cloneNode(true) as SVGElement;
-          clone.removeAttribute('width');
-          clone.removeAttribute('height');
+          // Если у svg нет явных width/height — берём натуральный размер из viewBox,
+          // чтобы он показался 1:1, а не растянулся/сжался.
+          if (!clone.getAttribute('width') || !clone.getAttribute('height')) {
+            const vb = (svg.getAttribute('viewBox') ?? '').split(/[\s,]+/).map(Number);
+            if (vb.length === 4) {
+              clone.setAttribute('width', String(vb[2]));
+              clone.setAttribute('height', String(vb[3]));
+            }
+          }
           media.appendChild(clone);
         }
       }

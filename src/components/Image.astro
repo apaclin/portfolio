@@ -24,9 +24,9 @@ const {
 
 const widths = [480, 800, 1200, 1600].filter((w) => w < src.width).concat(src.width);
 
-// Hi-res вариант для лайтбокса (тот же кадр крупнее, webp).
+// Для лайтбокса — полное натуральное разрешение (1:1), webp.
 const zoom = zoomable
-  ? await getImage({ src, width: Math.min(src.width, 2000), format: 'webp' })
+  ? await getImage({ src, width: src.width, format: 'webp' })
   : null;
 ---
 
@@ -53,10 +53,14 @@ const zoom = zoomable
   .case-image :global(picture) {
     display: block;
   }
+  /* Натуральный размер, по центру по горизонтали, без upscale.
+     max-width:100% — если картинка шире колонки, ужимается до неё (не вылезает). */
   .case-image :global(img) {
     display: block;
-    width: 100%;
+    max-width: 100%;
+    width: auto;
     height: auto;
+    margin-inline: auto;
     border-radius: 0.5rem;
     border: 1px solid var(--color-border);
   }
