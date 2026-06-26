@@ -1,55 +1,59 @@
 ---
-// Единый паттерн обычной картинки кейса для MDX: lazy + decoding=async,
-// zoom через общий Lightbox (по умолчанию вкл), опциональная подпись.
+// Единый паттерн обычной картинки кейса для MDX, на astro:assets.
+// <Picture> даёт AVIF + WebP (+ srcset, width/height без CLS, lazy). Zoom через
+// общий Lightbox (по умолчанию вкл) — для увеличения генерируем hi-res webp.
+import { Picture, getImage } from 'astro:assets';
+
 interface Props {
-  src: string;
+  /** Импортированное изображение из src/assets (ImageMetadata). */
+  src: ImageMetadata;
   alt: string;
   caption?: string;
-  width?: number;
-  height?: number;
   /** Делать ли картинку увеличиваемой по клику (по умолчанию да). */
   zoomable?: boolean;
+  /** sizes для srcset (по умолчанию — под колонку 60rem / full-bleed). */
+  sizes?: string;
 }
-const { src, alt, caption, width, height, zoomable = true } = Astro.props as Props;
+const {
+  src,
+  alt,
+  caption,
+  zoomable = true,
+  sizes = '(min-width: 64rem) 960px, 100vw',
+} = Astro.props as Props;
+
+const widths = [480, 800, 1200, 1600].filter((w) => w < src.width).concat(src.width);
+
+// Hi-res вариант для лайтбокса (тот же кадр крупнее, webp).
+const zoom = zoomable
+  ? await getImage({ src, width: Math.min(src.width, 2000), format: 'webp' })
+  : null;
 ---
 
 <figure class="case-image full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6">
   {
-    zoomable ? (
+    zoomable && zoom ? (
       <button
         type="button"
         data-zoomable
-        data-zoom-src={src}
+        data-zoom-src={zoom.src}
         data-zoom-alt={alt}
         aria-label={`Enlarge image: ${alt}`}
       >
-        <img
-          class="case-image__img"
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          loading="lazy"
-          decoding="async"
-        />
+        <Picture src={src} alt={alt} formats={['avif', 'webp']} widths={widths} sizes={sizes} loading="lazy" decoding="async" />
       </button>
     ) : (
-      <img
-        class="case-image__img"
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        loading="lazy"
-        decoding="async"
-      />
+      <Picture src={src} alt={alt} formats={['avif', 'webp']} widths={widths} sizes={sizes} loading="lazy" decoding="async" />
     )
   }
   {caption && <figcaption class="case-image__caption">{caption}</figcaption>}
 </figure>
 
 <style>
-  .case-image__img {
+  .case-image :global(picture) {
+    display: block;
+  }
+  .case-image :global(img) {
     display: block;
     width: 100%;
     height: auto;

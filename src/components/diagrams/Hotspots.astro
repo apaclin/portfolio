@@ -5,6 +5,9 @@
 // плашек/popover/слоёв рядом. Симметричный рост от центра точки. 300ms ease-in-out.
 // Координаты — проценты. Точные размеры pill меряются крошечным скриптом ниже
 // (для гладкого width/height-перехода и чтобы текст не рефлоулил во время морфа).
+// Изображение — astro:assets (WebP/AVIF, srcset, width/height из ImageMetadata).
+import { Picture } from 'astro:assets';
+
 interface Hotspot {
   x: number; // %
   y: number; // %
@@ -12,26 +15,25 @@ interface Hotspot {
   description?: string;
 }
 interface Props {
-  src: string;
+  /** Импортированное изображение из src/assets (ImageMetadata). */
+  src: ImageMetadata;
   alt: string;
   hotspots: Hotspot[];
-  /** Интринсик-размеры картинки — резервируют место против CLS. */
-  width?: number;
-  height?: number;
 }
-const { src, alt, hotspots, width, height } = Astro.props as Props;
+const { src, alt, hotspots } = Astro.props as Props;
+const widths = [480, 800, 1200, 1600].filter((w) => w < src.width).concat(src.width);
 ---
 
 <figure class="full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6">
   <div class="hotspots-stage">
-    <img
+    <Picture
       src={src}
       alt={alt}
-      width={width}
-      height={height}
+      formats={['avif', 'webp']}
+      widths={widths}
+      sizes="(min-width: 64rem) 960px, 100vw"
       loading="lazy"
       decoding="async"
-      class="hotspots-img"
     />
     {
       hotspots.map((h) => (
@@ -51,7 +53,10 @@ const { src, alt, hotspots, width, height } = Astro.props as Props;
     position: relative;
     line-height: 0;
   }
-  .hotspots-img {
+  .hotspots-stage :global(picture) {
+    display: block;
+  }
+  .hotspots-stage :global(img) {
     display: block;
     width: 100%;
     height: auto;

@@ -3,8 +3,12 @@
 // Раскладка и swipe — нативный CSS Scroll Snap (ноль JS). Крошечный скрипт
 // только для Prev/Next, стрелок клавиатуры и disabled на краях.
 // Без библиотек, без autoplay/loop/dots/thumbnails — простой переход.
+// Изображения — astro:assets (<Picture>: AVIF+WebP, srcset, width/height, lazy).
+import { Picture, getImage } from 'astro:assets';
+
 interface CarouselItem {
-  src: string;
+  /** Импортированное изображение из src/assets (ImageMetadata). */
+  src: ImageMetadata;
   alt: string;
   caption?: string;
 }
@@ -19,6 +23,16 @@ interface Props {
 }
 const { items, ratio = '16 / 10', label = 'Screenshots', eager = false } = Astro.props as Props;
 const total = items.length;
+
+const sizes = '(min-width: 64rem) 960px, 100vw';
+// Hi-res вариант каждого слайда для лайтбокса.
+const slides = await Promise.all(
+  items.map(async (item) => ({
+    ...item,
+    widths: [480, 800, 1200, 1600].filter((w) => w < item.src.width).concat(item.src.width),
+    zoom: (await getImage({ src: item.src, width: Math.min(item.src.width, 2000), format: 'webp' })).src,
+  }))
+);
 ---
 
 <figure
@@ -31,7 +45,7 @@ const total = items.length;
   <div class="carousel__viewport">
     <ul class="carousel__track">
       {
-        items.map((item, i) => (
+        slides.map((item, i) => (
           <li
             class="carousel__slide"
             role="group"
@@ -41,14 +55,16 @@ const total = items.length;
             <button
               type="button"
               data-zoomable
-              data-zoom-src={item.src}
+              data-zoom-src={item.zoom}
               data-zoom-alt={item.alt}
               aria-label={`Enlarge image: ${item.alt}`}
             >
-              <img
-                class="carousel__img"
+              <Picture
                 src={item.src}
                 alt={item.alt}
+                formats={['avif', 'webp']}
+                widths={item.widths}
+                sizes={sizes}
                 loading={eager && i === 0 ? 'eager' : 'lazy'}
                 decoding="async"
               />
@@ -115,7 +131,11 @@ const total = items.length;
     flex-direction: column;
     min-width: 0;
   }
-  .carousel__img {
+  .carousel__slide :global(picture) {
+    display: block;
+    width: 100%;
+  }
+  .carousel__slide :global(img) {
     display: block;
     width: 100%;
     aspect-ratio: var(--carousel-ratio, 16 / 10);
