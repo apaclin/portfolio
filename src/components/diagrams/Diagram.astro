@@ -12,8 +12,10 @@ interface Props {
   alt: Localized;
   /** Опциональная видимая подпись. */
   caption?: Localized;
+  /** Делать ли схему увеличиваемой по клику (по умолчанию НЕТ). */
+  zoomable?: boolean;
 }
-const { name, alt, caption } = Astro.props as Props;
+const { name, alt, caption, zoomable = false } = Astro.props as Props;
 
 // Реестр всех SVG из src/diagrams/ как сырые строки (инлайнятся на сборке).
 // ?raw — берём разметку как есть, БЕЗ переоптимизации, чтобы произвольный
@@ -64,14 +66,29 @@ svg = namespaceSvgIds(svg, svgIdPrefix(name));
 
 <figure
   class="full-bleed mx-auto my-8 max-w-[60rem] px-5 sm:px-6"
-  role="img"
-  aria-label={alt[locale]}
+  role={zoomable ? undefined : 'img'}
+  aria-label={zoomable ? undefined : alt[locale]}
 >
-  {/* role="img"+aria-label на figure: скринридер озвучивает имя схемы и
-      игнорирует внутренности SVG — хирургия над строкой SVG не нужна. */}
-  <div class="diagram-svg">
-    <Fragment set:html={svg} />
-  </div>
+  {
+    /* Без zoom: role="img"+aria-label на figure (SR озвучивает имя, игнорит SVG).
+       С zoom: интерактивная кнопка с aria-label — её и читает SR; SVG внутри
+       презентационный. role=img на figure тогда не ставим, чтобы кнопка была
+       доступна. */
+    zoomable ? (
+      <button
+        type="button"
+        class="diagram-svg"
+        data-zoomable
+        aria-label={`Enlarge diagram: ${alt[locale]}`}
+      >
+        <Fragment set:html={svg} />
+      </button>
+    ) : (
+      <div class="diagram-svg">
+        <Fragment set:html={svg} />
+      </div>
+    )
+  }
   {
     caption && (
       <figcaption class="mt-3 text-center text-sm text-[var(--color-text-faint)]">

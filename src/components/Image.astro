@@ -1,0 +1,66 @@
+---
+// Единый паттерн обычной картинки кейса для MDX: lazy + decoding=async,
+// zoom через общий Lightbox (по умолчанию вкл), опциональная подпись.
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+  /** Делать ли картинку увеличиваемой по клику (по умолчанию да). */
+  zoomable?: boolean;
+}
+const { src, alt, caption, width, height, zoomable = true } = Astro.props as Props;
+---
+
+<figure class="case-image full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6">
+  {
+    zoomable ? (
+      <button
+        type="button"
+        data-zoomable
+        data-zoom-src={src}
+        data-zoom-alt={alt}
+        aria-label={`Enlarge image: ${alt}`}
+      >
+        <img
+          class="case-image__img"
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          loading="lazy"
+          decoding="async"
+        />
+      </button>
+    ) : (
+      <img
+        class="case-image__img"
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        loading="lazy"
+        decoding="async"
+      />
+    )
+  }
+  {caption && <figcaption class="case-image__caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .case-image__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+  }
+  .case-image__caption {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--color-text-muted);
+  }
+</style>

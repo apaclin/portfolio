@@ -14,8 +14,10 @@ interface Props {
   ratio?: string;
   /** Доступное имя карусели. */
   label?: string;
+  /** Грузить 1-й слайд eager — только если карусель в hero/над сгибом. */
+  eager?: boolean;
 }
-const { items, ratio = '16 / 10', label = 'Screenshots' } = Astro.props as Props;
+const { items, ratio = '16 / 10', label = 'Screenshots', eager = false } = Astro.props as Props;
 const total = items.length;
 ---
 
@@ -36,13 +38,21 @@ const total = items.length;
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${total}`}
           >
-            <img
-              class="carousel__img"
-              src={item.src}
-              alt={item.alt}
-              loading={i === 0 ? 'eager' : 'lazy'}
-              decoding="async"
-            />
+            <button
+              type="button"
+              data-zoomable
+              data-zoom-src={item.src}
+              data-zoom-alt={item.alt}
+              aria-label={`Enlarge image: ${item.alt}`}
+            >
+              <img
+                class="carousel__img"
+                src={item.src}
+                alt={item.alt}
+                loading={eager && i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </button>
             {item.caption && <span class="carousel__caption">{item.caption}</span>}
           </li>
         ))

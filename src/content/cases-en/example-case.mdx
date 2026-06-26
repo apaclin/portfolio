@@ -10,6 +10,7 @@ import { traditionalAp } from '../../components/diagrams/flow/examples/tradition
 import Diagram from '../../components/diagrams/Diagram.astro';
 import Hotspots from '../../components/diagrams/Hotspots.astro';
 import Carousel from '../../components/diagrams/Carousel.astro';
+import Image from '../../components/Image.astro';
 
 ## Overview
 
@@ -23,7 +24,8 @@ This is a placeholder case study written in **MDX**. It demonstrates that the
 <Diagram
   name="traditional-ap"
   alt={{ en: 'Traditional AP — static diagram', ru: 'Традиционный АР — статичная схема' }}
-  caption={{ en: 'Same flow, exported from Figma as SVG (Scenario A).', ru: 'Тот же поток, экспортирован из Figma в SVG (Сценарий A).' }}
+  caption={{ en: 'Same flow, exported from Figma as SVG (Scenario A). Click to zoom.', ru: 'Тот же поток, экспортирован из Figma в SVG (Сценарий A). Клик — увеличить.' }}
+  zoomable
 />
 
 ### Annotated screenshot (Hotspots)
@@ -47,6 +49,14 @@ This is a placeholder case study written in **MDX**. It demonstrates that the
     { src: "/images/screen-1.svg", alt: "Dashboard", caption: "Main dashboard" },
     { src: "/images/screen-2.svg", alt: "Invoice review", caption: "Invoice review flow" }
   ]}
+/>
+
+### Zoomable image
+
+<Image
+  src="/images/screen-1.svg"
+  alt="Dashboard screen"
+  caption="Hover shows a zoom cursor — click to open the lightbox."
 />
 
 ## Outcome
