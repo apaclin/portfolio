@@ -1,7 +1,15 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
+import react from '@astrojs/react';
+import keystatic from '@keystatic/astro';
 import tailwindcss from '@tailwindcss/vite';
+
+// Keystatic-админка — это серверные роуты (React-приложение + local API).
+// Чтобы прод-сборка оставалась ЧИСТЫМ SSG (без адаптера и без React в бандле
+// сайта), подключаем Keystatic и React ТОЛЬКО в dev (`astro dev`). В `build`
+// и `check` они исключаются → статика не меняется, Lighthouse не страдает.
+const isDev = process.argv.includes('dev');
 
 // https://astro.build/config
 export default defineConfig({
@@ -20,7 +28,8 @@ export default defineConfig({
   },
 
   // MDX подключается как интеграция Astro.
-  integrations: [mdx()],
+  // Keystatic + React — только в dev (см. isDev выше).
+  integrations: [mdx(), ...(isDev ? [react(), keystatic()] : [])],
 
   // Tailwind v4 подключается как Vite-плагин (официальный путь),
   // а НЕ через устаревший @astrojs/tailwind.
