@@ -13,6 +13,8 @@ interface Props {
   zoomable?: boolean;
   /** sizes для srcset (по умолчанию — под колонку 60rem / full-bleed). */
   sizes?: string;
+  /** Логическая (CSS) ширина макета для лайтбокса: 1440 / 1920. По умолч. 1440. */
+  maxWidth?: number;
 }
 const {
   src,
@@ -20,6 +22,7 @@ const {
   caption,
   zoomable = true,
   sizes = '(min-width: 64rem) 960px, 100vw',
+  maxWidth = 1440,
 } = Astro.props as Props;
 
 const widths = [480, 800, 1200, 1600].filter((w) => w < src.width).concat(src.width);
@@ -38,6 +41,7 @@ const zoom = zoomable
         data-zoomable
         data-zoom-src={zoom.src}
         data-zoom-alt={alt}
+        data-max-width={maxWidth}
         aria-label={`Enlarge image: ${alt}`}
       >
         <Picture src={src} alt={alt} formats={['avif', 'webp']} widths={widths} sizes={sizes} loading="lazy" decoding="async" />

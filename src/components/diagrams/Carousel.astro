@@ -20,8 +20,16 @@ interface Props {
   label?: string;
   /** Грузить 1-й слайд eager — только если карусель в hero/над сгибом. */
   eager?: boolean;
+  /** Логическая (CSS) ширина макета для лайтбокса: 1440 / 1920. По умолч. 1440. */
+  maxWidth?: number;
 }
-const { items, ratio = '16 / 10', label = 'Screenshots', eager = false } = Astro.props as Props;
+const {
+  items,
+  ratio = '16 / 10',
+  label = 'Screenshots',
+  eager = false,
+  maxWidth = 1440,
+} = Astro.props as Props;
 const total = items.length;
 
 const sizes = '(min-width: 64rem) 960px, 100vw';
@@ -57,6 +65,7 @@ const slides = await Promise.all(
               data-zoomable
               data-zoom-src={item.zoom}
               data-zoom-alt={item.alt}
+              data-max-width={maxWidth}
               aria-label={`Enlarge image: ${item.alt}`}
             >
               <Picture

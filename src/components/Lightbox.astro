@@ -39,7 +39,16 @@
     padding: clamp(1rem, 4vw, 3rem);
     box-sizing: border-box;
   }
-  /* Курсор pan только когда есть куда двигаться (картинка больше вьюпорта). */
+  /* Курсоры:
+     — зумабельный макет в Fit (можно увеличить, нет переполнения) → zoom-in;
+     — в Actual Size без переполнения → zoom-out;
+     — есть переполнение (контент > области) → grab / grabbing (pan). */
+  .lightbox.is-zoomable:not(.is-zoom) .lightbox__media:not(.is-pannable) {
+    cursor: zoom-in;
+  }
+  .lightbox.is-zoomable.is-zoom .lightbox__media:not(.is-pannable) {
+    cursor: zoom-out;
+  }
   .lightbox__media.is-pannable {
     cursor: grab;
   }
@@ -49,15 +58,21 @@
   .lightbox__media :global(img),
   .lightbox__media :global(svg) {
     display: block;
-    /* Натуральный размер 1:1: без fit-to-screen и без upscale. */
-    max-width: none;
-    max-height: none;
+    /* Базовое состояние (Fit Width): до логической ширины макета, но не шире
+       контейнера и без upscale (width:auto). Физический @2x-файл показывается
+       в логическом размере → интерфейсы не «взрывают» верстку. */
+    max-width: min(var(--lightbox-lw, 1440px), 100%);
     width: auto;
     height: auto;
     border-radius: 0.5rem;
     background-color: var(--color-bg);
     user-select: none;
     -webkit-user-drag: none; /* не запускать нативный drag картинки */
+  }
+  /* Actual Size (по клику): честный логический размер 1:1 (фикс. ширина). */
+  .lightbox.is-zoom .lightbox__media :global(img) {
+    max-width: none;
+    width: var(--lightbox-lw, 1440px);
   }
   .lightbox__close {
     position: fixed;
@@ -103,10 +118,12 @@
   const dialog = document.querySelector<HTMLDialogElement>('.lightbox');
   if (dialog) {
     const media = dialog.querySelector<HTMLElement>('.lightbox__media')!;
+    let logicalWidth = 1440;
 
-    // Картинка больше вьюпорта → включаем «pannable» (курсор grab).
-    // Маленькая картинка центрируется чистым CSS (place-items: safe center);
-    // большая открывается сверху-слева (видно начало интерфейса) и панорамируется.
+    // is-pannable считается ДИНАМИЧЕСКИ из реального переполнения в текущем
+    // состоянии (Fit Width или Actual Size), а не из физических пикселей файла.
+    // В Fit переполнения по горизонтали нет; в Actual Size при узком вьюпорте
+    // картинка выходит за рамки → pannable → grab + drag.
     const prepare = () => {
       const pannable =
         media.scrollWidth > media.clientWidth + 1 ||
@@ -117,10 +134,17 @@
     const open = (trigger: Element) => {
       media.replaceChildren();
       media.classList.remove('is-pannable', 'is-grabbing');
+      dialog.classList.remove('is-zoom', 'is-zoomable');
+
+      // Логическая (CSS) ширина макета: из data-max-width, иначе 1440.
+      logicalWidth = parseInt(trigger.getAttribute('data-max-width') ?? '', 10) || 1440;
+      dialog.style.setProperty('--lightbox-lw', `${logicalWidth}px`);
+
+      let img: HTMLImageElement | null = null;
       const src = trigger.getAttribute('data-zoom-src');
       if (src) {
-        // Растровое изображение: показываем тот же src в натуральном размере.
-        const img = document.createElement('img');
+        // Растровое изображение: hi-res файл, но показываем в логическом размере.
+        img = document.createElement('img');
         img.src = src;
         img.alt = trigger.getAttribute('data-zoom-alt') ?? '';
         img.decoding = 'async';
@@ -131,8 +155,7 @@
         const svg = trigger.querySelector('svg');
         if (svg) {
           const clone = svg.cloneNode(true) as SVGElement;
-          // Если у svg нет явных width/height — берём натуральный размер из viewBox,
-          // чтобы он показался 1:1, а не растянулся/сжался.
+          // Если у svg нет явных width/height — берём натуральный размер из viewBox.
           if (!clone.getAttribute('width') || !clone.getAttribute('height')) {
             const vb = (svg.getAttribute('viewBox') ?? '').split(/[\s,]+/).map(Number);
             if (vb.length === 4) {
@@ -143,14 +166,22 @@
           media.appendChild(clone);
         }
       }
+
       dialog.showModal();
 
-      // Выставляем pannable + центрируем после раскладки. Для растровой
-      // картинки повторяем после её загрузки (тогда известны размеры).
-      requestAnimationFrame(prepare);
-      const img = media.querySelector('img');
+      // После раскладки решаем, можно ли зумить до Actual Size: только растровый
+      // макет с достаточным числом пикселей (физика ≥ логической ширины).
+      // Мелкие картинки (физика < логической) и SVG — не зумятся.
+      const afterLayout = () => {
+        dialog.classList.toggle(
+          'is-zoomable',
+          !!img && img.naturalWidth >= logicalWidth
+        );
+        prepare();
+      };
+      requestAnimationFrame(afterLayout);
       if (img && !img.complete) {
-        img.addEventListener('load', () => requestAnimationFrame(prepare), {
+        img.addEventListener('load', () => requestAnimationFrame(afterLayout), {
           once: true,
         });
       }
@@ -167,53 +198,67 @@
 
     // Drag/pan «как в Figma/Notion»: тянем за саму картинку → двигаем скролл.
     // Тач не трогаем — там нативный скролл/свайп. Картинка остаётся 1:1.
+    let armed = false; // указатель нажат на картинке, но драг ещё не начался
     let panning = false;
     let startX = 0;
     let startY = 0;
     let startLeft = 0;
     let startTop = 0;
-    let moved = 0;
     let suppressClick = false;
 
     media.addEventListener('pointerdown', (event) => {
       if (event.pointerType === 'touch' || event.button !== 0) return;
       if (!(event.target as Element).closest('.lightbox__media > *')) return; // только по картинке
-      panning = true;
-      moved = 0;
+      armed = true;
+      panning = false;
       startX = event.clientX;
       startY = event.clientY;
       startLeft = media.scrollLeft;
       startTop = media.scrollTop;
-      media.setPointerCapture(event.pointerId);
-      media.classList.add('is-grabbing');
     });
     media.addEventListener('pointermove', (event) => {
-      if (!panning) return;
+      if (!armed) return;
       const dx = event.clientX - startX;
       const dy = event.clientY - startY;
-      moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
-      media.scrollLeft = startLeft - dx;
-      media.scrollTop = startTop - dy;
+      // Захватываем указатель ТОЛЬКО при реальном драге (>5px). Иначе простой
+      // клик остаётся на картинке (его таргет не переедет на контейнер) → зум.
+      if (!panning && Math.abs(dx) + Math.abs(dy) > 5) {
+        panning = true;
+        media.setPointerCapture(event.pointerId);
+        media.classList.add('is-grabbing');
+      }
+      if (panning) {
+        media.scrollLeft = startLeft - dx;
+        media.scrollTop = startTop - dy;
+      }
     });
     const endPan = (event: PointerEvent) => {
+      armed = false;
       if (!panning) return;
       panning = false;
       media.releasePointerCapture?.(event.pointerId);
       media.classList.remove('is-grabbing');
-      if (moved > 5) suppressClick = true; // после драга не закрываем
+      suppressClick = true; // был драг → клик (зум/закрытие) игнорируем
     };
     media.addEventListener('pointerup', endPan);
     media.addEventListener('pointercancel', endPan);
 
-    // Закрытие: клик по фону (всё, кроме картинки) или по кнопке Close.
-    // Если только что был pan-драг — клик игнорируем.
+    // Клик по картинке → переключить Fit Width ↔ Actual Size (если зумабельно).
+    // Клик по фону → закрыть. После pan-драга клик игнорируем.
     dialog.addEventListener('click', (event) => {
       if (suppressClick) {
         suppressClick = false;
         return;
       }
-      const t = event.target as Element;
-      if (!t.closest('.lightbox__media > *')) dialog.close();
+      const onImage = (event.target as Element).closest('.lightbox__media > *');
+      if (onImage) {
+        if (dialog.classList.contains('is-zoomable')) {
+          dialog.classList.toggle('is-zoom');
+          prepare(); // пересчитать pannable под новый размер
+        }
+      } else {
+        dialog.close();
+      }
     });
     // Esc и возврат фокуса на триггер обеспечивает сам <dialog>.
   }
