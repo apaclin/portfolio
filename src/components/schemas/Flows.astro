@@ -2,7 +2,7 @@
 // Векторная схема потоков. Одна языковая версия: актуальный текст живёт прямо
 // в самом SVG-файле, поэтому подтягиваем его содержимое как сырую строку через
 // Vite (?raw) и инлайним. Чтобы обновить схему — правим Flows.svg.
-import flowsSvgContent from '../../assets/images/Flows.svg?raw';
+import flowsSvgContent from '../../assets/matchpoint/flows.svg?raw';
 ---
 
 {/* full-bleed — чтобы доступная ширина считалась по ЭКРАНУ, а не по 42rem-колонке
@@ -13,6 +13,13 @@ import flowsSvgContent from '../../assets/images/Flows.svg?raw';
 </figure>
 
 <style is:global>
+  /* Центрируем схему, когда она уже контейнера. `safe center` (а не просто
+     center): при переполнении выравнивание падает на start, иначе левая часть
+     обрезается и до неё нельзя доскроллить. overflow-x:auto уже даёт скролл. */
+  .flows-schema-container {
+    display: flex;
+    justify-content: safe center;
+  }
   /* SVG рендерится 1:1 — берёт нативный размер из собственных width/height.
      Сброс перебивает prose/Tailwind, чтобы они не растягивали/сжимали вектор. */
   .flows-schema-container svg {
