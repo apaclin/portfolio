@@ -65,7 +65,7 @@ svg = namespaceSvgIds(svg, svgIdPrefix(name));
 ---
 
 <figure
-  class="full-bleed mx-auto my-8 max-w-[60rem] px-5 sm:px-6"
+  class="diagram-figure full-bleed mx-auto max-w-[60rem] px-5 sm:px-6"
   role={zoomable ? undefined : 'img'}
   aria-label={zoomable ? undefined : alt[locale]}
 >
@@ -99,6 +99,10 @@ svg = namespaceSvgIds(svg, svgIdPrefix(name));
 </figure>
 
 <style>
+  .diagram-figure {
+    margin-block-start: var(--space-media-before);
+    padding-block-end: var(--space-media-after);
+  }
   /* Инлайненный SVG адаптивен: заполняет контейнер, сохраняя пропорции.
      :global — SVG вставлен через set:html и не получает scoped-атрибут. */
   .diagram-svg :global(svg) {

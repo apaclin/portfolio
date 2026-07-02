@@ -76,21 +76,72 @@
 
   /* Акцент — СДЕРЖАННО, только ссылки/CTA (не заголовки).
      Глубокий индиго: контраст AA (≈8:1) на белом для читаемых ссылок. */
-  --color-accent: #4f46e5;
+  --color-accent: var(--color-text);
+
+  /* Семантические цвета — приглушённые, в духе Notion-like темы.
+     Каждая группа — компактная растяжка 1→5:
+     1 = едва заметный tint, 2 = bg, 3 = border, 4 = насыщенный акцент,
+     5 = fg/text. Старые bg/border/fg оставлены алиасами. */
+  --color-danger-1: #fffaf9;
+  --color-danger-2: #fdf0ed;
+  --color-danger-3: #f2c8bd;
+  --color-danger-4: #c95d45;
+  --color-danger-5: #9f341f;
+  --color-danger-bg: var(--color-danger-2);
+  --color-danger-border: var(--color-danger-3);
+  --color-danger-fg: var(--color-danger-5);
+
+  --color-warning-1: #fffaf0;
+  --color-warning-2: #fff6dd;
+  --color-warning-3: #edd6a2;
+  --color-warning-4: #b97800;
+  --color-warning-5: #8a5a00;
+  --color-warning-bg: var(--color-warning-2);
+  --color-warning-border: var(--color-warning-3);
+  --color-warning-fg: var(--color-warning-5);
+
+  --color-success-1: #f7fbf8;
+  --color-success-2: #edf7ef;
+  --color-success-3: #c6dfca;
+  --color-success-4: #4f8a5f;
+  --color-success-5: #2f6b3f;
+  --color-success-bg: var(--color-success-2);
+  --color-success-border: var(--color-success-3);
+  --color-success-fg: var(--color-success-5);
+
+  --color-info-1: #f7fafd;
+  --color-info-2: #eef4fb;
+  --color-info-3: #c9d8ea;
+  --color-info-4: #4f7da8;
+  --color-info-5: #315f8c;
+  --color-info-bg: var(--color-info-2);
+  --color-info-border: var(--color-info-3);
+  --color-info-fg: var(--color-info-5);
+
+  /* Интерактивные элементы */
+  --color-primary-bg: var(--color-text);
+  --color-primary-bg-hover: #4a4841;
+  --color-primary-bg-active: #2f2d28;
+  --color-primary-fg: #ffffff;
 
   /* --- Токены схем --- */
   /* Нейтральный узел перевязан на семантику. */
   --color-node-default-bg: var(--color-bg-subtle);
   --color-node-default-fg: var(--color-text-muted);
-  /* Статусные варианты — собственные hue (blue / amber / green). */
-  --color-node-active-bg: #eff6ff; /* blue-50    */
-  --color-node-active-fg: #2563eb; /* blue-600   */
-  --color-node-warning-bg: #fffbeb; /* amber-50   */
-  --color-node-warning-fg: #d97706; /* amber-600  */
-  --color-node-success-bg: #ecfdf5; /* emerald-50 */
-  --color-node-success-fg: #059669; /* emerald-600*/
+  /* Статусные варианты */
+  --color-node-active-bg: var(--color-info-bg);
+  --color-node-active-fg: var(--color-info-fg);
+  --color-node-warning-bg: var(--color-warning-bg);
+  --color-node-warning-fg: var(--color-warning-fg);
+  --color-node-success-bg: var(--color-success-bg);
+  --color-node-success-fg: var(--color-success-fg);
   /* Линии стрелок/коннекторов = заметная граница. */
   --color-diagram-line: var(--color-border-strong);
+
+  /* Ритм медиа в кейсах: изображение ближе к предыдущему тексту,
+     следующий смысловой блок отделён сильнее. */
+  --space-media-before: 0.875rem;
+  --space-media-after: 2.75rem;
 }
 
 /* Базовые поверхности страницы из токенов (применяется ко всем страницам). */
@@ -213,7 +264,7 @@
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 .prose :where(th, td):not(:where(.not-prose, .not-prose *)) {

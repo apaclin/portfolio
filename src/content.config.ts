@@ -9,6 +9,8 @@ import { z } from 'astro/zod';
 const caseSchema = z.object({
   title: z.string(),
   description: z.string(),
+  meta: z.string().optional(),
+  subtitle: z.string().optional(),
   date: z.coerce.date(),
   order: z.number(),
   cover: z.string().optional(),

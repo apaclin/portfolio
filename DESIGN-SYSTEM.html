@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DESIGN-SYSTEM</title>
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-bg-subtle: #f7f6f3;
+      --color-text: #37352f;
+      --color-text-muted: #6b6a64;
+      --color-text-faint: #9a988f;
+      --color-border: #eae9e5;
+      --color-border-strong: #d8d6cf;
+      --color-primary-bg: #37352f;
+      --color-primary-bg-hover: #4a4841;
+      --color-primary-bg-active: #2f2d28;
+      --color-primary-fg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .page {
+      width: min(1120px, calc(100vw - 48px));
+      margin: 0 auto;
+      padding: 56px 0 80px;
+    }
+
+    h1, h2, h3, h4, p {
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 40px;
+      max-width: 760px;
+      font-size: 40px;
+      line-height: 1.1;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      margin-top: 56px;
+      margin-bottom: 18px;
+      padding-top: 8px;
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 650;
+    }
+
+    h4 {
+      margin-top: 28px;
+      margin-bottom: 10px;
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 650;
+    }
+
+    p {
+      max-width: 760px;
+      margin-bottom: 16px;
+      color: var(--color-text-muted);
+    }
+
+    code {
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      background: var(--color-bg-subtle);
+      padding: 0.1em 0.35em;
+      color: var(--color-text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88em;
+    }
+
+    a {
+      color: var(--color-text);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      margin: 0 0 28px;
+      overflow-x: auto;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: var(--color-bg);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    th, td {
+      min-width: 112px;
+      padding: 10px 12px;
+      border-right: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: 0;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    th {
+      background: var(--color-bg-subtle);
+      color: var(--color-text);
+      font-weight: 650;
+    }
+
+    td {
+      color: var(--color-text-muted);
+    }
+
+    td:nth-child(2),
+    td:nth-child(3) {
+      color: var(--color-text);
+      white-space: nowrap;
+    }
+
+    ul, ol {
+      max-width: 820px;
+      margin: 0 0 24px;
+      padding-left: 24px;
+      color: var(--color-text-muted);
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    span[style*="display:inline-block"] {
+      vertical-align: -2px;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .page {
+        width: auto;
+        padding: 32px;
+      }
+
+      h2 {
+        break-after: avoid;
+      }
+
+      .table-wrap {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>Portfolio Design System</h1>
+    <p>Рабочая спецификация для сайта и схем. Основа: чистый белый Notion-like стиль, Inter, теплые нейтрали, тихие semantic colors. Значения ниже соответствуют текущим токенам в <code>src/styles/global.css</code> и текущему языку схем Matchpoint.</p>
+    <h2>Цвета</h2>
+    <h3>Нейтрали</h3>
+    <div class="table-wrap"><table><thead><tr><th>Роль</th><th>CSS variable</th><th>Hex</th><th>Образец</th><th>Где использовать</th></tr></thead><tbody><tr><td>Основной фон</td><td><code>--color-bg</code></td><td><code>#ffffff</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#ffffff;border-radius:3px;"></span></td><td>фон страницы, фон карточек-схем</td></tr><tr><td>Тихая поверхность</td><td><code>--color-bg-subtle</code></td><td><code>#f7f6f3</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#f7f6f3;border-radius:3px;"></span></td><td>нейтральные узлы, code bg, вторичные панели</td></tr><tr><td>Основной текст</td><td><code>--color-text</code></td><td><code>#37352f</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#37352f;border-radius:3px;"></span></td><td>body, заголовки, основные линии схем</td></tr><tr><td>Вторичный текст</td><td><code>--color-text-muted</code></td><td><code>#6b6a64</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#6b6a64;border-radius:3px;"></span></td><td>описания, подписи внутри схем, вторичные иконки</td></tr><tr><td>Слабый текст</td><td><code>--color-text-faint</code></td><td><code>#9a988f</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#9a988f;border-radius:3px;"></span></td><td>мета, счетчики, неактивные элементы</td></tr><tr><td>Мягкая граница</td><td><code>--color-border</code></td><td><code>#eae9e5</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#eae9e5;border-radius:3px;"></span></td><td>карточки, таблицы, рамки тихих блоков</td></tr><tr><td>Сильная граница</td><td><code>--color-border-strong</code></td><td><code>#d8d6cf</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#d8d6cf;border-radius:3px;"></span></td><td>разделители, второстепенные линии схем</td></tr></tbody></table></div>
+    <h3>Семантика</h3>
+    <p>Статусы оформлены как компактные растяжки <code>1 → 5</code>: <code>1</code> — самый тихий tint, <code>2</code> — рабочий фон, <code>3</code> — border, <code>4</code> — насыщенный акцент, <code>5</code> — текст/icon. Старые переменные <code>*-bg</code>, <code>*-border</code>, <code>*-fg</code> остались алиасами к шагам <code>2</code>, <code>3</code>, <code>5</code>.</p>
+    <div class="table-wrap"><table><thead><tr><th>Статус</th><th>1 / tint</th><th>2 / bg</th><th>3 / border</th><th>4 / accent</th><th>5 / fg</th></tr></thead><tbody><tr><td>Danger</td><td><code>--color-danger-1</code> <code>#fffaf9</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #f2c8bd;background:#fffaf9;border-radius:3px;"></span></td><td><code>--color-danger-2</code> <code>#fdf0ed</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #f2c8bd;background:#fdf0ed;border-radius:3px;"></span></td><td><code>--color-danger-3</code> <code>#f2c8bd</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#f2c8bd;border-radius:3px;"></span></td><td><code>--color-danger-4</code> <code>#c95d45</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#c95d45;border-radius:3px;"></span></td><td><code>--color-danger-5</code> <code>#9f341f</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#9f341f;border-radius:3px;"></span></td></tr><tr><td>Warning</td><td><code>--color-warning-1</code> <code>#fffaf0</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #edd6a2;background:#fffaf0;border-radius:3px;"></span></td><td><code>--color-warning-2</code> <code>#fff6dd</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #edd6a2;background:#fff6dd;border-radius:3px;"></span></td><td><code>--color-warning-3</code> <code>#edd6a2</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#edd6a2;border-radius:3px;"></span></td><td><code>--color-warning-4</code> <code>#b97800</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#b97800;border-radius:3px;"></span></td><td><code>--color-warning-5</code> <code>#8a5a00</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#8a5a00;border-radius:3px;"></span></td></tr><tr><td>Success</td><td><code>--color-success-1</code> <code>#f7fbf8</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #c6dfca;background:#f7fbf8;border-radius:3px;"></span></td><td><code>--color-success-2</code> <code>#edf7ef</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #c6dfca;background:#edf7ef;border-radius:3px;"></span></td><td><code>--color-success-3</code> <code>#c6dfca</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#c6dfca;border-radius:3px;"></span></td><td><code>--color-success-4</code> <code>#4f8a5f</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#4f8a5f;border-radius:3px;"></span></td><td><code>--color-success-5</code> <code>#2f6b3f</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#2f6b3f;border-radius:3px;"></span></td></tr><tr><td>Info</td><td><code>--color-info-1</code> <code>#f7fafd</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #c9d8ea;background:#f7fafd;border-radius:3px;"></span></td><td><code>--color-info-2</code> <code>#eef4fb</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #c9d8ea;background:#eef4fb;border-radius:3px;"></span></td><td><code>--color-info-3</code> <code>#c9d8ea</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#c9d8ea;border-radius:3px;"></span></td><td><code>--color-info-4</code> <code>#4f7da8</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#4f7da8;border-radius:3px;"></span></td><td><code>--color-info-5</code> <code>#315f8c</code> <span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#315f8c;border-radius:3px;"></span></td></tr></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Алиас</th><th>Значение</th></tr></thead><tbody><tr><td><code>--color-danger-bg</code> / <code>--color-warning-bg</code> / <code>--color-success-bg</code> / <code>--color-info-bg</code></td><td>шаг <code>2</code></td></tr><tr><td><code>--color-danger-border</code> / <code>--color-warning-border</code> / <code>--color-success-border</code> / <code>--color-info-border</code></td><td>шаг <code>3</code></td></tr><tr><td><code>--color-danger-fg</code> / <code>--color-warning-fg</code> / <code>--color-success-fg</code> / <code>--color-info-fg</code></td><td>шаг <code>5</code></td></tr></tbody></table></div>
+    <h3>Кнопки и интерактив</h3>
+    <div class="table-wrap"><table><thead><tr><th>Роль</th><th>CSS variable</th><th>Hex</th><th>Образец</th><th>Где использовать</th></tr></thead><tbody><tr><td>Primary bg</td><td><code>--color-primary-bg</code></td><td><code>#37352f</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#37352f;border-radius:3px;"></span></td><td>основные кнопки, CTA, темные action-pills</td></tr><tr><td>Primary hover</td><td><code>--color-primary-bg-hover</code></td><td><code>#4a4841</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#4a4841;border-radius:3px;"></span></td><td>hover primary</td></tr><tr><td>Primary active</td><td><code>--color-primary-bg-active</code></td><td><code>#2f2d28</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#2f2d28;border-radius:3px;"></span></td><td>active/pressed primary</td></tr><tr><td>Primary text</td><td><code>--color-primary-fg</code></td><td><code>#ffffff</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#ffffff;border-radius:3px;"></span></td><td>текст на темной кнопке</td></tr><tr><td>Accent</td><td><code>--color-accent</code></td><td><code>var(--color-text)</code> / <code>#37352f</code></td><td><span style="display:inline-block;width:14px;height:14px;border:1px solid #d8d6cf;background:#37352f;border-radius:3px;"></span></td><td>ссылки, focus outline</td></tr></tbody></table></div>
+    <h2>Типографика</h2>
+    <p>Шрифт: <code>Inter</code>, fallback: <code>Inter Fallback</code>, затем системные sans-serif.</p>
+    <div class="table-wrap"><table><thead><tr><th>Элемент</th><th>Размер</th><th>Line-height</th><th>Weight</th><th>Letter spacing</th><th>Цвет</th></tr></thead><tbody><tr><td>Case H1</td><td><code>30px</code></td><td><code>1.2</code></td><td><code>700</code></td><td><code>-0.02em</code> в prose</td><td><code>--color-text</code></td></tr><tr><td>H2 в статье</td><td><code>22px</code></td><td><code>1.3</code></td><td><code>600</code></td><td><code>-0.01em</code></td><td><code>--color-text</code></td></tr><tr><td>H3 в статье</td><td><code>18px</code></td><td><code>1.4</code></td><td><code>600</code></td><td><code>0</code></td><td><code>--color-text</code></td></tr><tr><td>Body</td><td><code>16px</code></td><td><code>1.7</code></td><td><code>400</code></td><td><code>0</code></td><td><code>--color-text</code></td></tr><tr><td>Hero subtitle</td><td><code>18px</code></td><td>около <code>1.5</code></td><td><code>600</code></td><td><code>0</code></td><td><code>--color-text</code></td></tr><tr><td>Meta</td><td><code>16px</code></td><td>около <code>1.5</code></td><td><code>400-500</code></td><td><code>0</code></td><td><code>--color-text-muted</code> / <code>--color-text-faint</code></td></tr><tr><td>Table text</td><td><code>14px</code></td><td><code>1.5</code></td><td><code>400</code></td><td><code>0</code></td><td><code>--color-text</code></td></tr><tr><td>Table header</td><td><code>14px</code></td><td><code>1.5</code></td><td><code>600</code></td><td><code>0</code></td><td><code>--color-text</code></td></tr><tr><td>Diagram box label</td><td><code>14px</code></td><td><code>~21px</code></td><td><code>500</code></td><td><code>0</code></td><td>по статусу</td></tr><tr><td>Diagram pill label</td><td><code>10px</code></td><td><code>~14px</code></td><td><code>600</code></td><td><code>0.05em</code></td><td>white on primary</td></tr><tr><td>Diagram captions</td><td><code>12-13px</code></td><td><code>1.4-1.5</code></td><td><code>400-500</code></td><td><code>0</code> или <code>0.05em</code> для секционных labels</td><td>muted/faint</td></tr></tbody></table></div>
+    <h2>Layout</h2>
+    <div class="table-wrap"><table><thead><tr><th>Объект</th><th>Значение</th><th>Примечание</th></tr></thead><tbody><tr><td>Основная prose-колонка</td><td><code>42rem</code></td><td>центральная колонка статьи</td></tr><tr><td>Горизонтальный отступ страницы</td><td><code>1.25rem</code> mobile, <code>2.5rem</code> суммарно в prose</td><td>через CSS grid</td></tr><tr><td>Inline image max-width</td><td><code>60rem</code></td><td><code>Image</code>, <code>Diagram</code>, <code>Carousel</code>, <code>Hotspots</code></td></tr><tr><td>Breakout wrapper</td><td><code>w-screen</code>, <code>overflow-x-auto</code>, <code>px-4</code></td><td>для широких схем</td></tr><tr><td>Annotated screen max-width</td><td><code>1440px</code></td><td>T-Taxi экран</td></tr><tr><td>Обычный Breakout max-width</td><td><code>1100px</code></td><td>дефолт <code>Breakout.astro</code></td></tr><tr><td>Media margin сверху</td><td><code>--space-media-before: 0.875rem</code> / <code>14px</code></td><td>изображение ближе к предыдущему тексту</td></tr><tr><td>Media margin снизу</td><td><code>--space-media-after: 2.75rem</code> / <code>44px</code></td><td>следующий смысловой блок отделен сильнее</td></tr></tbody></table></div>
+    <h2>Таблицы</h2>
+    <div class="table-wrap"><table><thead><tr><th>Параметр</th><th>Значение</th></tr></thead><tbody><tr><td>Font size</td><td><code>14px</code></td></tr><tr><td>Line-height</td><td><code>1.5</code></td></tr><tr><td>Border</td><td><code>1px solid var(--color-border)</code></td></tr><tr><td>Cell padding</td><td><code>8px 12px</code></td></tr><tr><td>Header bg</td><td><code>--color-bg-subtle</code></td></tr><tr><td>Header bottom border</td><td><code>--color-border-strong</code></td></tr></tbody></table></div>
+    <h2>Схемы</h2>
+    <h3>Цветовые правила</h3>
+    <div class="table-wrap"><table><thead><tr><th>Тип элемента</th><th>Fill</th><th>Stroke</th><th>Text/Icon</th></tr></thead><tbody><tr><td>Нейтральный узел</td><td><code>--color-bg-subtle</code> / <code>#f7f6f3</code></td><td><code>--color-text</code> или <code>--color-border</code></td><td><code>--color-text</code></td></tr><tr><td>Тихая карточка</td><td><code>--color-bg</code></td><td><code>--color-border</code></td><td><code>--color-text</code></td></tr><tr><td>Primary/action узел</td><td><code>--color-primary-bg</code></td><td><code>--color-primary-bg</code></td><td><code>--color-primary-fg</code></td></tr><tr><td>Danger узел</td><td><code>--color-danger-bg</code></td><td><code>--color-danger-border</code></td><td><code>--color-danger-fg</code></td></tr><tr><td>Warning узел</td><td><code>--color-warning-bg</code></td><td><code>--color-warning-border</code></td><td><code>--color-warning-fg</code></td></tr><tr><td>Success узел</td><td><code>--color-success-bg</code></td><td><code>--color-success-border</code></td><td><code>--color-success-fg</code></td></tr><tr><td>Info узел</td><td><code>--color-info-bg</code></td><td><code>--color-info-border</code></td><td><code>--color-info-fg</code></td></tr><tr><td>Основные коннекторы</td><td>none</td><td><code>--color-text</code></td><td>n/a</td></tr><tr><td>Вторичные коннекторы</td><td>none</td><td><code>--color-border-strong</code></td><td>n/a</td></tr></tbody></table></div>
+    <p>Не использовать новые локальные серые, синие, красные и желтые оттенки. Если нужен новый смысл, сначала выбрать ближайшую semantic-пару выше.</p>
+    <h3>Линии</h3>
+    <div class="table-wrap"><table><thead><tr><th>Элемент</th><th>Толщина</th><th>Цвет</th><th>Linecap/Linejoin</th><th>Примечание</th></tr></thead><tbody><tr><td>Рамки боксов в схемах</td><td><code>1.5px</code></td><td>статусный border или <code>--color-text</code></td><td><code>round</code></td><td>текущий основной стиль Matchpoint</td></tr><tr><td>Коннекторы/стрелки в Figma-схемах</td><td><code>1.5px</code></td><td><code>--color-text</code></td><td><code>round</code></td><td>лучше вписывается в сайт, чем 2px</td></tr><tr><td>Вторичные линии/разделители</td><td><code>1px</code></td><td><code>--color-border</code> / <code>--color-border-strong</code></td><td><code>round</code></td><td>рамки больших светлых карточек</td></tr><tr><td>Иконки outline</td><td><code>2px</code></td><td><code>currentColor</code></td><td><code>round</code></td><td>стиль локального <code>Icon.astro</code>, близко к Lucide</td></tr><tr><td>Точки-коннекторы</td><td><code>3px stroke</code></td><td><code>--color-text</code></td><td>n/a</td><td>маленькие круги на стыках стрелок</td></tr><tr><td>Пунктир</td><td><code>1.5px</code>, dash <code>4 4</code></td><td><code>--color-text</code></td><td><code>round</code></td><td>альтернативные/ветвящиеся пути</td></tr><tr><td>Подчеркивание ссылок</td><td><code>1px</code></td><td><code>--color-accent</code></td><td>n/a</td><td>в prose</td></tr></tbody></table></div>
+    <p>Практически: для новых схем в Figma ставь линии <code>1.5px</code>. Иконки оставляй <code>2px</code>, если они outline 24x24.</p>
+    <h3>Боксы</h3>
+    <div class="table-wrap"><table><thead><tr><th>Тип</th><th>Размер</th><th>Padding</th><th>Radius</th><th>Stroke</th><th>Текст</th></tr></thead><tbody><tr><td>Стандартный process box</td><td><code>180x64px</code></td><td>примерно <code>16px 12px</code></td><td><code>8px</code></td><td><code>1.5px</code></td><td><code>14px / 500</code>, центр</td></tr><tr><td>Короткий label/pill</td><td>высота <code>32px</code></td><td><code>12-16px</code> по X</td><td><code>16px</code></td><td><code>1.5px</code></td><td><code>14px / 500</code></td></tr><tr><td>Action pill</td><td><code>260x28px</code></td><td><code>16px</code> по X</td><td><code>14px</code></td><td>none или <code>1.5px</code></td><td><code>10px / 600</code>, uppercase, <code>0.05em</code></td></tr><tr><td>Иконка в action pill</td><td><code>20x20px</code></td><td>n/a</td><td><code>10px</code></td><td>none</td><td>white glyph</td></tr><tr><td>Flow icon tile</td><td><code>48x48px</code></td><td>n/a</td><td><code>12px</code></td><td>none</td><td>icon <code>22px</code></td></tr><tr><td>SVG diagram card</td><td>свободно</td><td><code>32-40px</code> внутри макета</td><td><code>8px</code></td><td><code>1px</code></td><td>зависит от схемы</td></tr><tr><td>Tooltip annotated screen</td><td>max <code>22rem</code></td><td><code>16px 24px</code></td><td><code>8px</code></td><td><code>1.5px</code></td><td><code>14px</code></td></tr></tbody></table></div>
+    <h3>Spacing внутри схем</h3>
+    <div class="table-wrap"><table><thead><tr><th>Связка</th><th>Значение</th></tr></thead><tbody><tr><td>Box label до края</td><td>минимум <code>12px</code>, лучше <code>16px</code></td></tr><tr><td>Между вертикальными process boxes</td><td><code>40px</code> между краями при стрелке</td></tr><tr><td>Длина короткой стрелки между box</td><td><code>31-32px</code></td></tr><tr><td>Между action pills</td><td><code>40px</code> по Y в текущей схеме</td></tr><tr><td>Между иконкой и текстом в action pill</td><td><code>12-16px</code></td></tr><tr><td>Внутренний отступ большой SVG-карточки</td><td><code>40px</code> сверху/сбоку как базовый ритм</td></tr></tbody></table></div>
+    <h2>Иконки</h2>
+    <p>Сейчас используются два варианта:</p>
+    <div class="table-wrap"><table><thead><tr><th>Где</th><th>Набор/стиль</th><th>Параметры</th></tr></thead><tbody><tr><td><code>src/components/icons/Icon.astro</code></td><td>локальный набор inline SVG, геометрия 24x24, близко к Lucide</td><td><code>fill=&quot;none&quot;</code>, <code>stroke=&quot;currentColor&quot;</code>, <code>stroke-width=&quot;2&quot;</code>, <code>round caps/joins</code></td></tr><tr><td><code>Lightbox</code>, <code>Carousel</code></td><td>inline SVG arrows/close в стиле Lucide</td><td><code>18-20px</code>, <code>stroke-width=&quot;2&quot;</code>, <code>round caps/joins</code></td></tr><tr><td>Экспортированные Figma-схемы</td><td>path-иконки, часто заливкой</td><td>держать визуально как простые 24x24 glyphs, без лишней детализации</td></tr></tbody></table></div>
+    <p>Для новых схем лучше брать Lucide-подобные outline-иконки 24x24 со stroke <code>2px</code>. Цвет через semantic fg или <code>--color-text-muted</code>.</p>
+    <h2>Компоненты и состояния</h2>
+    <h3>Primary button</h3>
+    <div class="table-wrap"><table><thead><tr><th>State</th><th>Background</th><th>Text</th><th>Border</th></tr></thead><tbody><tr><td>Default</td><td><code>--color-primary-bg</code> / <code>#37352f</code></td><td><code>--color-primary-fg</code> / <code>#ffffff</code></td><td>none</td></tr><tr><td>Hover</td><td><code>--color-primary-bg-hover</code> / <code>#4a4841</code></td><td><code>#ffffff</code></td><td>none</td></tr><tr><td>Active</td><td><code>--color-primary-bg-active</code> / <code>#2f2d28</code></td><td><code>#ffffff</code></td><td>none</td></tr><tr><td>Focus</td><td>same as state</td><td>same</td><td><code>2px solid var(--color-accent)</code> outline</td></tr></tbody></table></div>
+    <h3>Carousel / Lightbox icons</h3>
+    <div class="table-wrap"><table><thead><tr><th>Элемент</th><th>Размер</th><th>Stroke</th><th>Цвет</th></tr></thead><tbody><tr><td>Carousel arrow icon</td><td><code>18px</code></td><td><code>2px</code></td><td><code>currentColor</code></td></tr><tr><td>Lightbox arrow/close icon</td><td><code>20px</code></td><td><code>2px</code></td><td><code>currentColor</code></td></tr><tr><td>Disabled carousel arrow</td><td>opacity <code>0</code>, pointer-events none</td><td>keeps layout</td><td>no layout shift</td></tr></tbody></table></div>
+    <h2>Практические правила для Figma</h2>
+    <ol><li>Основной текст и главные линии: <code>#37352f</code>.</li><li>Вторичный текст и тихие иконки: <code>#6b6a64</code>.</li><li>Легкие рамки карточек: <code>#eae9e5</code>.</li><li>Более заметные, но не черные разделители: <code>#d8d6cf</code>.</li><li>Нейтральные узлы: <code>#f7f6f3</code>, не <code>black</code> с opacity.</li><li>Status-узлы всегда строить парой: bg + border + fg из одной semantic-группы.</li><li>Линии в схемах: <code>1.5px</code>. Иконки: <code>2px</code>.</li><li>Боксы: radius <code>8px</code>; action pills: radius <code>14px</code>; маленькие icon circles: radius <code>10px</code>.</li><li>Letter spacing обычно <code>0</code>. Исключение: короткие uppercase labels в action pills, там <code>0.05em</code>.</li><li>Не добавлять новые оттенки “почти серого” ради нюанса. Если нужно тише, использовать <code>--color-text-faint</code> или <code>--color-border</code>.</li></ol>
+  </main>
+</body>
+</html>

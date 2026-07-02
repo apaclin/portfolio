@@ -1,64 +1,11 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import { getCollection, render } from 'astro:content';
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import TranslationNotice from '../../../components/TranslationNotice.astro';
-import Prose from '../../../components/Prose.astro';
-import { formatDate } from '../../../lib/date';
+import CasePage from '../../../components/CasePage.astro';
+import { getLocalizedCasePaths } from '../../../lib/cases';
 
-// RU-роуты кейсов рендерят ОБЪЕДИНЕНИЕ слагов обеих коллекций.
-// Направление фоллбэка асимметричное: RU отсутствует → показываем EN
-// (английский — основной и полный). Обратного фоллбэка нет.
 export const getStaticPaths = (async () => {
-  const [ru, en] = await Promise.all([
-    getCollection('cases-ru'),
-    getCollection('cases-en'),
-  ]);
-
-  const ruById = new Map(ru.map((entry) => [entry.id, entry]));
-  const enById = new Map(en.map((entry) => [entry.id, entry]));
-  const allIds = new Set([...ruById.keys(), ...enById.keys()]);
-
-  const paths = [...allIds].map((id) => {
-    const ruEntry = ruById.get(id);
-    if (ruEntry) {
-      // Перевод есть — рендерим русскую запись, баннер не нужен.
-      return { params: { slug: id }, props: { entry: ruEntry, isFallback: false } };
-    }
-    // Перевода нет — фоллбэк на английскую запись (id взят из объединения,
-    // так что enEntry гарантированно существует).
-    const enEntry = enById.get(id)!;
-    return { params: { slug: id }, props: { entry: enEntry, isFallback: true } };
-  });
-
-  // Стабильный порядок по полю order.
-  paths.sort((a, b) => a.props.entry.data.order - b.props.entry.data.order);
-  return paths;
+  return getLocalizedCasePaths('ru');
 }) satisfies GetStaticPaths;
-
-const { entry, isFallback } = Astro.props;
-const { Content } = await render(entry);
-
-// Локаль контента кейса: при фоллбэке тело английское, иначе русское.
-// Интерфейс страницы (баннер, хедер, <html lang>) остаётся русским.
-const contentLocale = isFallback ? 'en' : 'ru';
 ---
 
-<BaseLayout title={entry.data.title} description={entry.data.description}>
-  <main class="py-12">
-    {
-      isFallback && (
-        <div class="prose">
-          <TranslationNotice />
-        </div>
-      )
-    }
-    {/* Область кейса: при фоллбэке контент английский → lang="en" на контейнере.
-        Схема внутри остаётся прямым ребёнком .prose и выходит в full-bleed. */}
-    <Prose as="article" lang={isFallback ? 'en' : undefined}>
-      <h1>{entry.data.title}</h1>
-      <p class="case-date">{formatDate(entry.data.date, contentLocale)}</p>
-      <Content />
-    </Prose>
-  </main>
-</BaseLayout>
+<CasePage {...Astro.props} />

@@ -3,8 +3,8 @@
 // Раскладка и swipe — нативный CSS Scroll Snap (ноль JS). Крошечный скрипт
 // только для Prev/Next, стрелок клавиатуры и disabled на краях.
 // Без библиотек, без autoplay/loop/dots/thumbnails — простой переход.
-// Изображения — astro:assets (<Picture>: AVIF+WebP, srcset, width/height, lazy).
-import { Picture, getImage } from 'astro:assets';
+// Изображения — astro:assets (AVIF+WebP+fallback srcset, width/height, lazy).
+import { getImage } from 'astro:assets';
 
 interface CarouselItem {
   /** Импортированное изображение из src/assets (ImageMetadata). */
@@ -33,18 +33,60 @@ const {
 const total = items.length;
 
 const sizes = '(min-width: 64rem) 960px, 100vw';
-// Hi-res вариант каждого слайда для лайтбокса.
+const cacheVersion = Date.now().toString(36);
+const withVersion = (url: string) =>
+  `${url}${url.includes('?') ? '&' : '?'}v=${cacheVersion}`;
+const toSrcset = (
+  images: Array<{ src: string; width: number }>
+) => images.map((image) => `${withVersion(image.src)} ${image.width}w`).join(', ');
+
+// Astro image cache не всегда инвалидируется, если файл заменили тем же именем.
+// Добавляем версию к src: она входит в hash трансформации и не меняет пиксели.
+const versionedSource = (src: ImageMetadata): ImageMetadata => ({
+  ...src,
+  src: withVersion(src.src),
+});
+const imageOptions = (src: ImageMetadata, width: number, format: string) => ({
+  src: versionedSource(src),
+  width,
+  format,
+});
+
+// Оптимизированные варианты каждого слайда + hi-res для лайтбокса.
 const slides = await Promise.all(
-  items.map(async (item) => ({
-    ...item,
-    widths: [480, 800, 1200, 1600].filter((w) => w < item.src.width).concat(item.src.width),
-    zoom: (await getImage({ src: item.src, width: item.src.width, format: 'webp' })).src,
-  }))
+  items.map(async (item) => {
+    const widths = [480, 800, 1200, 1600].filter((w) => w < item.src.width).concat(item.src.width);
+    const [avif, webp, fallback, zoom] = await Promise.all([
+      Promise.all(widths.map(async (width) => ({
+        width,
+        src: (await getImage(imageOptions(item.src, width, 'avif'))).src,
+      }))),
+      Promise.all(widths.map(async (width) => ({
+        width,
+        src: (await getImage(imageOptions(item.src, width, 'webp'))).src,
+      }))),
+      Promise.all(widths.map(async (width) => ({
+        width,
+        src: (await getImage(imageOptions(item.src, width, item.src.format))).src,
+      }))),
+      getImage(imageOptions(item.src, item.src.width, 'webp')),
+    ]);
+    const fallbackImage = fallback[fallback.length - 1];
+
+    return {
+      ...item,
+      avifSrcset: toSrcset(avif),
+      webpSrcset: toSrcset(webp),
+      fallbackSrcset: toSrcset(fallback),
+      fallbackSrc: withVersion(fallbackImage.src),
+      zoom: withVersion(zoom.src),
+    };
+  })
 );
 ---
 
 <figure
-  class="carousel full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6"
+  class="carousel full-bleed not-prose mx-auto max-w-[60rem] px-5 sm:px-6"
   role="group"
   aria-roledescription="carousel"
   aria-label={label}
@@ -68,15 +110,20 @@ const slides = await Promise.all(
               data-max-width={maxWidth}
               aria-label={`Enlarge image: ${item.alt}`}
             >
-              <Picture
-                src={item.src}
-                alt={item.alt}
-                formats={['avif', 'webp']}
-                widths={item.widths}
-                sizes={sizes}
-                loading={eager && i === 0 ? 'eager' : 'lazy'}
-                decoding="async"
-              />
+              <picture>
+                <source srcset={item.avifSrcset} type="image/avif" sizes={sizes} />
+                <source srcset={item.webpSrcset} type="image/webp" sizes={sizes} />
+                <img
+                  src={item.fallbackSrc}
+                  srcset={item.fallbackSrcset}
+                  alt={item.alt}
+                  sizes={sizes}
+                  loading={eager && i === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  width={item.src.width}
+                  height={item.src.height}
+                />
+              </picture>
             </button>
             {item.caption && <span class="carousel__caption">{item.caption}</span>}
           </li>
@@ -89,9 +136,10 @@ const slides = await Promise.all(
         <>
           <button
             type="button"
-            class="carousel__btn carousel__btn--prev"
+            class="carousel__btn carousel__btn--prev opacity-0 pointer-events-none transition-opacity duration-300"
             data-dir="-1"
             aria-label="Previous slide"
+            disabled
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m15 18-6-6 6-6" />
@@ -99,7 +147,7 @@ const slides = await Promise.all(
           </button>
           <button
             type="button"
-            class="carousel__btn carousel__btn--next"
+            class="carousel__btn carousel__btn--next transition-opacity duration-300"
             data-dir="1"
             aria-label="Next slide"
           >
@@ -114,6 +162,14 @@ const slides = await Promise.all(
 </figure>
 
 <style>
+  .carousel {
+    margin-block-start: var(--space-media-before);
+    padding-block-end: var(--space-media-after);
+  }
+  :global(.breakout) .carousel {
+    margin-block-start: 0;
+    padding-block-end: 0;
+  }
   .carousel__viewport {
     position: relative;
   }
@@ -175,6 +231,7 @@ const slides = await Promise.all(
     color: var(--color-text);
     box-shadow: 0 2px 8px color-mix(in oklab, var(--color-text) 18%, transparent);
     cursor: pointer;
+    transition: opacity 300ms ease;
   }
   .carousel__btn--prev {
     left: 0.5rem;
@@ -187,9 +244,9 @@ const slides = await Promise.all(
     outline-offset: 2px;
   }
   .carousel__btn[disabled] {
-    opacity: 0.4;
-    cursor: default;
+    opacity: 0;
     pointer-events: none;
+    cursor: default;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -209,8 +266,10 @@ const slides = await Promise.all(
     const prev = root.querySelector<HTMLButtonElement>('.carousel__btn--prev');
     const next = root.querySelector<HTMLButtonElement>('.carousel__btn--next');
     if (!track) return;
+    let didPreload = false;
 
-    const indexOf = () => Math.round(track.scrollLeft / track.clientWidth);
+    const indexOf = () =>
+      track.clientWidth > 0 ? Math.round(track.scrollLeft / track.clientWidth) : 0;
 
     const go = (dir: number) => {
       track.scrollBy({
@@ -222,8 +281,34 @@ const slides = await Promise.all(
     const sync = () => {
       const i = indexOf();
       const max = track.children.length - 1;
-      prev?.toggleAttribute('disabled', i <= 0);
-      next?.toggleAttribute('disabled', i >= max);
+      const updateButton = (
+        button: HTMLButtonElement | null,
+        isDisabled: boolean
+      ) => {
+        if (!button) return;
+        button.toggleAttribute('disabled', isDisabled);
+        button.classList.toggle('opacity-0', isDisabled);
+        button.classList.toggle('pointer-events-none', isDisabled);
+      };
+      updateButton(prev, i <= 0);
+      updateButton(next, i >= max);
+    };
+
+    const preloadSlideImages = () => {
+      if (didPreload) return;
+      didPreload = true;
+
+      const images = Array.from(track.querySelectorAll<HTMLImageElement>('img'));
+      images.forEach((img, index) => {
+        window.setTimeout(() => {
+          const src = img.currentSrc || img.src;
+          if (!src) return;
+          const preload = new window.Image();
+          preload.decoding = 'async';
+          preload.src = src;
+          void preload.decode?.().catch(() => undefined);
+        }, index * 120);
+      });
     };
 
     prev?.addEventListener('click', () => go(-1));
@@ -243,6 +328,24 @@ const slides = await Promise.all(
     track.addEventListener('scroll', () => requestAnimationFrame(sync), {
       passive: true,
     });
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(() => requestAnimationFrame(sync)).observe(track);
+    }
+    root.addEventListener('carousel:sync', () => requestAnimationFrame(sync));
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          preloadSlideImages();
+          observer.disconnect();
+        },
+        { rootMargin: '800px 0px' }
+      );
+      observer.observe(root);
+    } else {
+      setTimeout(preloadSlideImages, 600);
+    }
     sync();
   });
 </script>

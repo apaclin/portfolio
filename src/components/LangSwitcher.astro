@@ -3,7 +3,7 @@ import { getRelativeLocaleUrl } from 'astro:i18n';
 import { useTranslations, type Locale } from '../i18n/ui';
 import { stripLocale } from '../i18n/paths';
 
-const current: Locale = (Astro.currentLocale ?? 'en') as Locale;
+const current: Locale = (Astro.currentLocale ?? 'ru') as Locale;
 const other: Locale = current === 'en' ? 'ru' : 'en';
 
 // «Логический путь» без языкового префикса (общий хелпер).

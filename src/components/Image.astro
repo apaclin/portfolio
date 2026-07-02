@@ -33,7 +33,7 @@ const zoom = zoomable
   : null;
 ---
 
-<figure class="case-image full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6">
+<figure class="case-image full-bleed not-prose mx-auto max-w-[60rem] px-5 sm:px-6">
   {
     zoomable && zoom ? (
       <button
@@ -54,6 +54,14 @@ const zoom = zoomable
 </figure>
 
 <style>
+  .case-image {
+    margin-block-start: var(--space-media-before);
+    padding-block-end: var(--space-media-after);
+  }
+  :global(.breakout) .case-image {
+    margin-block-start: 0;
+    padding-block-end: 0;
+  }
   .case-image :global(picture) {
     display: block;
   }

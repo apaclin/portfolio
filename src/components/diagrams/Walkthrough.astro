@@ -1,0 +1,842 @@
+---
+// «Разбор интерфейса» (guided walkthrough) — порт прототипа v11 на стек проекта.
+// Explore: hover по зоне → мгновенная рамка + peek-карточка (последовательная
+// смена без наложения). Guided (клик по зоне / кнопке): модальный разбор с
+// blur-затемнением, резкой clip-path копией активной зоны, счётчиком шага и
+// фиксированной панелью Назад/Далее/закрыть.
+//
+// Зоны приходят пропом (typed Zone[]) — не хардкодятся в разметке. Координаты —
+// проценты холста 1440×900. Резкая копия — вторая <Picture> с тем же src,
+// обрезанная clip-path. Фон/обводка карточки — тёплые токены сайта
+// (--color-bg-subtle / --color-text). Primary-кнопка — токены --color-primary-*.
+import { Picture } from 'astro:assets';
+import Icon from '../icons/Icon.astro';
+import type { Zone } from '../../content/t-taxi/zones.ru';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  title: string;
+  description: string;
+  zones: Zone[];
+  hint?: string;
+  cta?: string;
+  replayCta?: string;
+  maxWidth?: string;
+}
+
+const {
+  src,
+  alt,
+  title,
+  description,
+  zones,
+  hint = 'Наведите на области экрана или запустите пошаговый разбор.',
+  cta = 'Разобрать экран',
+  replayCta = 'Посмотреть разбор снова',
+  maxWidth = '1440px',
+} = Astro.props as Props;
+
+const widths = [720, 960, 1200, 1440, 1920].filter((w) => w < src.width).concat(src.width);
+const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
+const pictureAttrs = {
+  src,
+  alt,
+  formats: ['avif', 'webp'] as const,
+  widths,
+  sizes,
+  loading: 'lazy' as const,
+  decoding: 'async' as const,
+};
+---
+
+<section
+  class="walkthrough not-prose full-bleed"
+  data-walkthrough
+  data-cta={cta}
+  data-replay-cta={replayCta}
+>
+  <div class="walkthrough__intro">
+    <div>
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <p class="walkthrough__hint">
+        <Icon name="zap" size={16} class="walkthrough__hint-ico" />
+        {hint}
+      </p>
+    </div>
+    <button class="walkthrough__start" type="button" data-start>{cta}</button>
+  </div>
+
+  <div class="walkthrough__wide">
+    <div class="walkthrough__stage-wrap" style={`max-width: ${maxWidth};`}>
+      <div class="walkthrough__stage explore" data-stage>
+        <div class="walkthrough__layer walkthrough__layer--base">
+          <Picture {...pictureAttrs} />
+        </div>
+        <div class="walkthrough__dim"></div>
+        <div class="walkthrough__layer walkthrough__layer--sharp" data-sharp>
+          <Picture {...pictureAttrs} aria-hidden="true" />
+        </div>
+        <div class="walkthrough__frame" data-frame></div>
+        <div class="walkthrough__regions">
+          {
+            zones.map((z, i) => (
+              <button
+                class="walkthrough__region"
+                type="button"
+                data-region
+                data-index={i}
+                data-l={z.l}
+                data-t={z.t}
+                data-w={z.w}
+                data-h={z.h}
+                data-title={z.title}
+                data-body={z.body}
+                style={`left:${z.l}%;top:${z.t}%;width:${z.w}%;height:${z.h}%;`}
+                aria-label={`${i + 1}. ${z.title}`}
+              />
+            ))
+          }
+        </div>
+        <div class="walkthrough__card" data-card role="dialog" aria-live="polite">
+          <div class="walkthrough__step" data-card-step></div>
+          <h3 data-card-title></h3>
+          <p data-card-body></p>
+        </div>
+        <div class="walkthrough__controls" data-controls>
+          <button class="walkthrough__nav" type="button" data-prev aria-label="Назад">
+            <Icon name="chevron-left" size={14} />
+            Назад
+          </button>
+          <button
+            class="walkthrough__nav walkthrough__nav--primary"
+            type="button"
+            data-next
+            aria-label="Далее"
+          >
+            <span data-next-text>Далее</span>
+            <Icon name="chevron-right" size={14} class="walkthrough__next-go" />
+            <Icon name="check" size={14} class="walkthrough__next-done" />
+          </button>
+          <span class="walkthrough__sep"></span>
+          <button class="walkthrough__close" type="button" data-close aria-label="Закрыть разбор">
+            <Icon name="x" size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="walkthrough__caption">
+    <span data-cap-left>Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.</span>
+    <span class="walkthrough__caption-keys">
+      <kbd>←</kbd> <kbd>→</kbd> двигают рамку между шагами · клик по экрану / <kbd>Esc</kbd> — выход
+    </span>
+  </p>
+</section>
+
+<script>
+  const initWalkthrough = (root: HTMLElement) => {
+    if (root.dataset.ready === 'true') return;
+    root.dataset.ready = 'true';
+
+    const stage = root.querySelector<HTMLElement>('[data-stage]');
+    const sharp = root.querySelector<HTMLElement>('[data-sharp]');
+    const frame = root.querySelector<HTMLElement>('[data-frame]');
+    const card = root.querySelector<HTMLElement>('[data-card]');
+    const cardStep = root.querySelector<HTMLElement>('[data-card-step]');
+    const cardTitle = root.querySelector<HTMLElement>('[data-card-title]');
+    const cardBody = root.querySelector<HTMLElement>('[data-card-body]');
+    const controls = root.querySelector<HTMLElement>('[data-controls]');
+    const prevBtn = root.querySelector<HTMLButtonElement>('[data-prev]');
+    const nextBtn = root.querySelector<HTMLButtonElement>('[data-next]');
+    const nextText = root.querySelector<HTMLElement>('[data-next-text]');
+    const closeBtn = root.querySelector<HTMLButtonElement>('[data-close]');
+    const startBtn = root.querySelector<HTMLButtonElement>('[data-start]');
+    const capLeft = root.querySelector<HTMLElement>('[data-cap-left]');
+    const regionEls = [...root.querySelectorAll<HTMLButtonElement>('[data-region]')];
+
+    if (
+      !stage ||
+      !sharp ||
+      !frame ||
+      !card ||
+      !cardStep ||
+      !cardTitle ||
+      !cardBody ||
+      !controls ||
+      !prevBtn ||
+      !nextBtn ||
+      !nextText ||
+      !closeBtn ||
+      !startBtn ||
+      !capLeft ||
+      regionEls.length === 0
+    ) {
+      return;
+    }
+
+    interface Zone {
+      l: number;
+      t: number;
+      w: number;
+      h: number;
+      title: string;
+      body: string;
+    }
+
+    const zones: Zone[] = regionEls.map((el) => ({
+      l: Number(el.dataset.l),
+      t: Number(el.dataset.t),
+      w: Number(el.dataset.w),
+      h: Number(el.dataset.h),
+      title: el.dataset.title || '',
+      body: el.dataset.body || '',
+    }));
+
+    const N = zones.length;
+    const CARD_EXIT = 250;
+    const cta = root.dataset.cta || 'Разобрать экран';
+    const replayCta = root.dataset.replayCta || 'Посмотреть разбор снова';
+
+    let idx = -1;
+    let guided = false;
+    let completed = false;
+    let hoverIdx = -1;
+    let cardShownIdx = -1;
+    let cardBusy = false;
+
+    const reflow = (el: HTMLElement) => void el.offsetWidth;
+
+    const setFramePos = (z: Zone) => {
+      frame.style.left = z.l + '%';
+      frame.style.top = z.t + '%';
+      frame.style.width = z.w + '%';
+      frame.style.height = z.h + '%';
+    };
+
+    const clipFor = (z: Zone) =>
+      `inset(${z.t}% ${(100 - z.l - z.w).toFixed(2)}% ${(100 - z.t - z.h).toFixed(2)}% ${z.l}% round 8px)`;
+
+    const fillCard = (i: number) => {
+      const z = zones[i];
+      cardStep.textContent = i + 1 + ' / ' + N;
+      cardTitle.textContent = z.title;
+      cardBody.textContent = z.body;
+    };
+
+    const placeCard = (z: Zone, fg: boolean) => {
+      const W = stage.clientWidth;
+      const H = stage.clientHeight;
+      const fl = (z.l / 100) * W;
+      const ft = (z.t / 100) * H;
+      const fw = (z.w / 100) * W;
+      const cw = card.offsetWidth || 336;
+      const ch = card.offsetHeight || 120;
+      const gap = 14;
+      const cx = fl + fw / 2;
+      let left = cx < W / 2 ? fl + fw + gap : fl - gap - cw;
+      if (left + cw > W - 10) left = W - cw - 10;
+      if (left < 10) left = 10;
+      let top = ft;
+      const maxTop = H - ch - (fg ? 96 : 12);
+      if (top > maxTop) top = maxTop;
+      if (top < 10) top = 10;
+      card.style.left = Math.round(left) + 'px';
+      card.style.top = Math.round(top) + 'px';
+    };
+
+    const setNextLabel = (i: number) => {
+      const last = i === N - 1;
+      nextText.textContent = last ? 'Готово' : 'Далее';
+      nextBtn.classList.toggle('is-last', last);
+    };
+
+    // ── Explore-режим: последовательная смена peek-карточек (без наложения) ──
+    const showCardVisual = (i: number) => {
+      fillCard(i);
+      card.classList.remove('stepped', 'moving', 'step-static');
+      placeCard(zones[i], false);
+      card.classList.add('show');
+    };
+    const hideCardVisual = () => card.classList.remove('show');
+
+    const syncCard = () => {
+      if (guided || cardBusy) return;
+      if (hoverIdx === cardShownIdx) return;
+      if (cardShownIdx !== -1) {
+        hideCardVisual();
+        cardShownIdx = -1;
+        cardBusy = true;
+        setTimeout(() => {
+          cardBusy = false;
+          syncCard();
+        }, CARD_EXIT);
+      } else if (hoverIdx !== -1) {
+        showCardVisual(hoverIdx);
+        cardShownIdx = hoverIdx;
+      }
+    };
+
+    // ── Вход в guided ──
+    const enterGuided = (i: number, fromPeek: boolean) => {
+      guided = true;
+      stage.classList.remove('explore');
+      stage.classList.add('guided');
+
+      const cameFromVisiblePeek = fromPeek && cardShownIdx === i;
+      hoverIdx = -1;
+      cardShownIdx = -1;
+      cardBusy = false;
+
+      frame.classList.remove('moving');
+      sharp.classList.remove('moving');
+      reflow(frame);
+      setFramePos(zones[i]);
+      sharp.style.clipPath = clipFor(zones[i]);
+      fillCard(i);
+      card.classList.remove('moving');
+
+      if (cameFromVisiblePeek) {
+        // Клик по зоне с уже видимым peek: карточка не переезжает — «дорастает»
+        // счётчиком (анимация max-height у .step), рамка фейдится с утолщением.
+        card.classList.remove('step-static');
+        placeCard(zones[i], true);
+        setNextLabel(i);
+        prevBtn.disabled = i === 0;
+        frame.classList.add('on');
+        sharp.style.opacity = '1';
+        card.classList.add('show', 'stepped');
+      } else {
+        // Вход через кнопку (без предварительного hover): карточка подъезжает
+        // снизу вверх с fade-in, как peek, но счётчик показан сразу вместе с
+        // карточкой — без отдельной «растущей» анимации (.step-static).
+        card.classList.remove('show');
+        card.classList.add('stepped', 'step-static');
+        placeCard(zones[i], true);
+        setNextLabel(i);
+        prevBtn.disabled = i === 0;
+        reflow(card);
+        frame.classList.add('on');
+        sharp.style.opacity = '1';
+        card.classList.add('show');
+      }
+
+      idx = i;
+      capLeft.textContent =
+        'Разбор запущен. Стрелки двигают рамку между шагами. Клик по экрану или Esc — выход.';
+    };
+
+    // ── Навигация Назад/Далее: единственный «перелёт» рамки/резкости/карточки ──
+    const step = (i: number) => {
+      [frame, card, sharp].forEach((el) => el.classList.add('moving'));
+      reflow(frame);
+      setFramePos(zones[i]);
+      sharp.style.clipPath = clipFor(zones[i]);
+      fillCard(i);
+      placeCard(zones[i], true);
+      setNextLabel(i);
+      prevBtn.disabled = i === 0;
+      frame.classList.add('on');
+      sharp.style.opacity = '1';
+      card.classList.add('show', 'stepped');
+      idx = i;
+    };
+
+    const next = () => {
+      if (idx < N - 1) step(idx + 1);
+      else {
+        completed = true;
+        closeGuided();
+      }
+    };
+    const prev = () => {
+      if (idx > 0) step(idx - 1);
+    };
+
+    const closeGuided = () => {
+      guided = false;
+      stage.classList.remove('guided');
+      stage.classList.add('explore');
+      frame.classList.remove('on', 'moving');
+      sharp.classList.remove('moving');
+      sharp.style.opacity = '0';
+      // Выход: только fade-out + отъезд карточки вниз, как при уходе курсора из
+      // зоны. Счётчик шага НЕ сворачивается своей анимацией — .step-static
+      // замораживает переход .step, 'stepped' остаётся, гаснет вместе с карточкой.
+      card.classList.add('step-static');
+      card.classList.remove('show', 'moving');
+      idx = -1;
+      hoverIdx = -1;
+      cardShownIdx = -1;
+      cardBusy = false;
+      startBtn.textContent = completed ? replayCta : cta;
+      capLeft.textContent = completed
+        ? 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.'
+        : 'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.';
+    };
+
+    regionEls.forEach((el, i) => {
+      el.addEventListener('mouseenter', () => {
+        if (guided) return;
+        hoverIdx = i;
+        syncCard();
+      });
+      el.addEventListener('mouseleave', () => {
+        if (guided) return;
+        if (hoverIdx === i) {
+          hoverIdx = -1;
+          syncCard();
+        }
+      });
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (guided) {
+          if (i !== idx) closeGuided();
+        } else {
+          enterGuided(i, true);
+        }
+      });
+    });
+
+    startBtn.addEventListener('click', () => enterGuided(0, false));
+    nextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      next();
+    });
+    prevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      prev();
+    });
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeGuided();
+    });
+    card.addEventListener('click', (e) => e.stopPropagation());
+    controls.addEventListener('click', (e) => e.stopPropagation());
+    stage.addEventListener('click', () => {
+      if (guided) closeGuided();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (!guided) return;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        next();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prev();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeGuided();
+      }
+    });
+
+    let rt: number;
+    window.addEventListener('resize', () => {
+      clearTimeout(rt);
+      rt = window.setTimeout(() => {
+        if (guided && idx >= 0) placeCard(zones[idx], true);
+        else if (cardShownIdx >= 0) placeCard(zones[cardShownIdx], false);
+      }, 80);
+    });
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-walkthrough]').forEach(initWalkthrough);
+</script>
+
+<style>
+  .walkthrough {
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    margin-block: 2rem 3rem;
+  }
+
+  /* ── Интро ── */
+  .walkthrough__intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    max-width: 42rem;
+    margin: 0 auto 1.5rem;
+    padding-inline: 1.5rem;
+  }
+  .walkthrough__intro h2 {
+    margin: 0 0 0.5rem;
+    color: var(--color-text);
+    font-size: 1.375rem;
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .walkthrough__intro p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+  .walkthrough__hint {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem !important;
+    color: var(--color-text-faint) !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+  }
+  .walkthrough__hint-ico {
+    flex: none;
+  }
+  .walkthrough__start {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.5rem;
+    background: var(--color-primary-bg);
+    padding: 0.75rem 1.25rem;
+    color: var(--color-primary-fg);
+    font-size: 0.875rem;
+    line-height: 1;
+    font-weight: 600;
+    transition:
+      background-color 160ms ease,
+      transform 120ms ease;
+  }
+  .walkthrough__start:hover {
+    background: var(--color-primary-bg-hover);
+  }
+  .walkthrough__start:active {
+    transform: translateY(1px);
+  }
+
+  /* ── Сцена ── */
+  .walkthrough__wide {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding-inline: 1.5rem;
+  }
+  .walkthrough__stage-wrap {
+    width: 100%;
+    margin-inline: auto;
+  }
+  .walkthrough__stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1440 / 900;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    background: #18191b;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 5%),
+      0 18px 50px -20px rgb(0 0 0 / 25%);
+    user-select: none;
+  }
+
+  .walkthrough__layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .walkthrough__layer :global(picture),
+  .walkthrough__layer :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .walkthrough__layer :global(img) {
+    object-fit: cover;
+  }
+  .walkthrough__layer--sharp {
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .walkthrough__layer--sharp.moving {
+    transition:
+      opacity 0.2s ease,
+      clip-path 0.42s var(--ease);
+  }
+
+  .walkthrough__dim {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+    background: rgb(9 9 12 / 34%);
+    backdrop-filter: blur(4px) saturate(0.5) brightness(0.62);
+    -webkit-backdrop-filter: blur(4px) saturate(0.5) brightness(0.62);
+    transition: opacity 0.3s ease;
+  }
+  .walkthrough__stage.guided .walkthrough__dim {
+    opacity: 1;
+  }
+
+  /* ── Рамка активной зоны ── */
+  .walkthrough__frame {
+    position: absolute;
+    z-index: 4;
+    border: 1px solid rgb(255 255 255 / 0%);
+    border-radius: 8px;
+    box-shadow: 0 12px 34px -6px rgb(0 0 0 / 45%);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.24s ease,
+      border-width 0.24s ease,
+      border-color 0.24s ease;
+  }
+  .walkthrough__frame.moving {
+    transition:
+      opacity 0.24s ease,
+      border-width 0.24s ease,
+      border-color 0.24s ease,
+      left 0.42s var(--ease),
+      top 0.42s var(--ease),
+      width 0.42s var(--ease),
+      height 0.42s var(--ease);
+  }
+  .walkthrough__frame.on {
+    opacity: 1;
+    border-width: 2.5px;
+    border-color: rgb(255 255 255 / 96%);
+  }
+
+  /* ── Зоны ── */
+  .walkthrough__regions {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+  }
+  .walkthrough__region {
+    position: absolute;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0%);
+    transition: box-shadow 0.22s ease;
+  }
+  .walkthrough__stage.explore:hover .walkthrough__region {
+    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 20%);
+  }
+  .walkthrough__stage.explore .walkthrough__region:hover {
+    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 90%);
+  }
+  .walkthrough__stage.guided .walkthrough__region {
+    cursor: default;
+  }
+
+  /* ── Карточка ── */
+  .walkthrough__card {
+    position: absolute;
+    z-index: 6;
+    width: 336px;
+    background: var(--color-bg-subtle);
+    border: 1.5px solid var(--color-text);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 14px 40px -8px rgb(0 0 0 / 40%);
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition:
+      opacity 0.24s ease,
+      transform 0.24s var(--ease);
+  }
+  .walkthrough__card.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .walkthrough__card.moving {
+    transition:
+      opacity 0.24s ease,
+      transform 0.24s var(--ease),
+      left 0.42s var(--ease),
+      top 0.42s var(--ease);
+  }
+  .walkthrough__stage.guided .walkthrough__card {
+    pointer-events: auto;
+  }
+  .walkthrough__step {
+    opacity: 0;
+    max-height: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.2;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    transition:
+      opacity 0.26s ease,
+      max-height 0.26s ease,
+      margin-bottom 0.26s ease;
+  }
+  .walkthrough__card.stepped .walkthrough__step {
+    opacity: 1;
+    max-height: 22px;
+    margin-bottom: 12px;
+  }
+  /* Замораживает переход у .step: счётчик появляется/остаётся без собственной
+     «растущей»/«сворачивающейся» анимации (вход через кнопку и выход). */
+  .walkthrough__card.step-static .walkthrough__step {
+    transition: none !important;
+  }
+  .walkthrough__card h3 {
+    margin: 0 0 8px;
+    color: var(--color-text);
+    font-size: 16px;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+  .walkthrough__card p {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  /* ── Панель Назад/Далее/закрыть ── */
+  .walkthrough__controls {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%) translateY(4px);
+    z-index: 7;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-bg-subtle);
+    border: 1.5px solid var(--color-text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    box-shadow: 0 10px 30px -6px rgb(0 0 0 / 40%);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.28s ease,
+      transform 0.28s ease;
+  }
+  .walkthrough__stage.guided .walkthrough__controls {
+    opacity: 1;
+    transform: translateX(-50%);
+    pointer-events: auto;
+  }
+  .walkthrough__nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 500;
+    padding: 8px 13px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1.5px solid var(--color-text);
+    background: transparent;
+    color: var(--color-text);
+    transition:
+      background 0.12s ease,
+      opacity 0.12s ease;
+  }
+  .walkthrough__nav:not(.walkthrough__nav--primary):hover:not(:disabled) {
+    background: rgb(55 53 47 / 7%);
+  }
+  .walkthrough__nav--primary {
+    background: var(--color-primary-bg);
+    color: var(--color-primary-fg);
+    border-color: var(--color-primary-bg);
+  }
+  .walkthrough__nav--primary:hover:not(:disabled) {
+    background: var(--color-primary-bg-hover);
+    border-color: var(--color-primary-bg-hover);
+  }
+  .walkthrough__nav:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .walkthrough__next-done {
+    display: none;
+  }
+  .walkthrough__nav.is-last .walkthrough__next-go {
+    display: none;
+  }
+  .walkthrough__nav.is-last .walkthrough__next-done {
+    display: inline-flex;
+  }
+  .walkthrough__sep {
+    width: 1px;
+    height: 20px;
+    background: rgb(55 53 47 / 20%);
+  }
+  .walkthrough__close {
+    display: inline-flex;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-text);
+    padding: 6px 7px;
+    border-radius: 6px;
+  }
+  .walkthrough__close:hover {
+    background: rgb(55 53 47 / 8%);
+  }
+
+  /* ── Подпись ── */
+  .walkthrough__caption {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    max-width: 1440px;
+    margin: 0.75rem auto 0;
+    padding-inline: 1.5rem;
+    color: var(--color-text-faint);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+  .walkthrough__caption kbd {
+    font: inherit;
+    font-size: 0.7rem;
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: 1px 6px;
+    color: var(--color-text-muted);
+  }
+
+  .walkthrough__start:focus-visible,
+  .walkthrough__region:focus-visible,
+  .walkthrough__nav:focus-visible,
+  .walkthrough__close:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .walkthrough * {
+      transition-duration: 0.001ms !important;
+    }
+  }
+
+  @media (max-width: 47.9375rem) {
+    .walkthrough__intro {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+    .walkthrough__start {
+      width: max-content;
+    }
+    .walkthrough__stage-wrap {
+      min-width: 760px;
+    }
+  }
+</style>

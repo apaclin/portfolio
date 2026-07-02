@@ -8,6 +8,16 @@
 
 <dialog class="lightbox" aria-label="Image viewer">
   <div class="lightbox__media"></div>
+  <button type="button" class="lightbox__nav lightbox__nav--prev is-hidden" aria-label="Previous image" disabled>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  </button>
+  <button type="button" class="lightbox__nav lightbox__nav--next is-hidden" aria-label="Next image" disabled>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  </button>
   <button type="button" class="lightbox__close" aria-label="Close" autofocus>
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M18 6 6 18M6 6l12 12" />
@@ -39,20 +49,13 @@
     padding: clamp(1rem, 4vw, 3rem);
     box-sizing: border-box;
   }
-  /* Курсоры:
-     — зумабельный макет в Fit (можно увеличить, нет переполнения) → zoom-in;
-     — в Actual Size без переполнения → zoom-out;
-     — есть переполнение (контент > области) → grab / grabbing (pan). */
-  .lightbox.is-zoomable:not(.is-zoom) .lightbox__media:not(.is-pannable) {
-    cursor: zoom-in;
-  }
-  .lightbox.is-zoomable.is-zoom .lightbox__media:not(.is-pannable) {
+  /* В лайтбоксе клик по изображению закрывает просмотр, поэтому над картинкой
+     показываем zoom-out. Если пользователь именно тащит переполненный макет,
+     временно показываем grabbing. */
+  .lightbox__media > :global(*) {
     cursor: zoom-out;
   }
-  .lightbox__media.is-pannable {
-    cursor: grab;
-  }
-  .lightbox__media.is-grabbing {
+  .lightbox__media.is-grabbing > :global(*) {
     cursor: grabbing;
   }
   .lightbox__media :global(img),
@@ -69,15 +72,9 @@
     user-select: none;
     -webkit-user-drag: none; /* не запускать нативный drag картинки */
   }
-  /* Actual Size (по клику): честный логический размер 1:1 (фикс. ширина). */
-  .lightbox.is-zoom .lightbox__media :global(img) {
-    max-width: none;
-    width: var(--lightbox-lw, 1440px);
-  }
+  .lightbox__nav,
   .lightbox__close {
     position: fixed;
-    top: clamp(0.75rem, 2vw, 1.25rem);
-    right: clamp(0.75rem, 2vw, 1.25rem);
     display: grid;
     place-items: center;
     width: 2.5rem;
@@ -87,7 +84,29 @@
     border: 1px solid var(--color-border-strong);
     color: var(--color-text);
     cursor: pointer;
+    transition: opacity 300ms ease;
   }
+  .lightbox__nav {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .lightbox__nav--prev {
+    left: clamp(0.75rem, 2vw, 1.25rem);
+  }
+  .lightbox__nav--next {
+    right: clamp(0.75rem, 2vw, 1.25rem);
+  }
+  .lightbox__nav[disabled],
+  .lightbox__nav.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    cursor: default;
+  }
+  .lightbox__close {
+    top: clamp(0.75rem, 2vw, 1.25rem);
+    right: clamp(0.75rem, 2vw, 1.25rem);
+  }
+  .lightbox__nav:focus-visible,
   .lightbox__close:focus-visible {
     outline: 2px solid var(--color-text);
     outline-offset: 2px;
@@ -118,12 +137,17 @@
   const dialog = document.querySelector<HTMLDialogElement>('.lightbox');
   if (dialog) {
     const media = dialog.querySelector<HTMLElement>('.lightbox__media')!;
+    const prevImage = dialog.querySelector<HTMLButtonElement>('.lightbox__nav--prev')!;
+    const nextImage = dialog.querySelector<HTMLButtonElement>('.lightbox__nav--next')!;
+    const closeButton = dialog.querySelector<HTMLButtonElement>('.lightbox__close')!;
     let logicalWidth = 1440;
+    let group: Element[] = [];
+    let activeIndex = 0;
+    let renderId = 0;
+    const preloadedZoom = new Set<string>();
 
-    // is-pannable считается ДИНАМИЧЕСКИ из реального переполнения в текущем
-    // состоянии (Fit Width или Actual Size), а не из физических пикселей файла.
-    // В Fit переполнения по горизонтали нет; в Actual Size при узком вьюпорте
-    // картинка выходит за рамки → pannable → grab + drag.
+    // is-pannable считается динамически из реального переполнения в текущем
+    // состоянии. Если макет не помещается по высоте/ширине, его можно потянуть.
     const prepare = () => {
       const pannable =
         media.scrollWidth > media.clientWidth + 1 ||
@@ -131,16 +155,76 @@
       media.classList.toggle('is-pannable', pannable);
     };
 
-    const open = (trigger: Element) => {
-      media.replaceChildren();
+    const syncLightboxNav = () => {
+      const hasGroup = group.length > 1;
+      const updateButton = (
+        button: HTMLButtonElement,
+        isDisabled: boolean
+      ) => {
+        button.disabled = isDisabled;
+        button.classList.toggle('is-hidden', !hasGroup || isDisabled);
+      };
+
+      updateButton(prevImage, !hasGroup || activeIndex <= 0);
+      updateButton(nextImage, !hasGroup || activeIndex >= group.length - 1);
+    };
+
+    const waitForImage = async (img: HTMLImageElement) => {
+      if (!img.complete) {
+        await new Promise<void>((resolve) => {
+          img.addEventListener('load', () => resolve(), { once: true });
+          img.addEventListener('error', () => resolve(), { once: true });
+        });
+      }
+      await img.decode?.().catch(() => undefined);
+    };
+
+    const preloadZoomImage = (trigger: Element | undefined) => {
+      const src = trigger?.getAttribute('data-zoom-src');
+      if (!src || preloadedZoom.has(src)) return;
+      preloadedZoom.add(src);
+
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = src;
+      void img.decode?.().catch(() => undefined);
+    };
+
+    const preloadGroupAround = (index: number) => {
+      if (group.length <= 1) return;
+      [index + 1, index - 1, ...group.map((_, i) => i)]
+        .filter((i, pos, list) => i >= 0 && i < group.length && list.indexOf(i) === pos)
+        .forEach((i, pos) => {
+          window.setTimeout(() => preloadZoomImage(group[i]), pos * 140);
+        });
+    };
+
+    const syncSourceCarousel = () => {
+      const trigger = group[activeIndex];
+      const carousel = trigger?.closest('.carousel');
+      const track = carousel?.querySelector<HTMLElement>('.carousel__track');
+      if (!carousel || !track) return;
+
+      track.scrollTo({
+        left: activeIndex * track.clientWidth,
+        behavior: 'auto',
+      });
+      carousel.dispatchEvent(new CustomEvent('carousel:sync'));
+    };
+
+    const render = async (trigger: Element) => {
+      const currentRender = ++renderId;
       media.classList.remove('is-pannable', 'is-grabbing');
-      dialog.classList.remove('is-zoom', 'is-zoomable');
+      media.scrollTo({ left: 0, top: 0, behavior: 'auto' });
+      syncLightboxNav();
+      preloadGroupAround(activeIndex);
 
       // Логическая (CSS) ширина макета: из data-max-width, иначе 1440.
       logicalWidth = parseInt(trigger.getAttribute('data-max-width') ?? '', 10) || 1440;
       dialog.style.setProperty('--lightbox-lw', `${logicalWidth}px`);
 
       let img: HTMLImageElement | null = null;
+      let nextNode: HTMLElement | SVGElement | null = null;
       const src = trigger.getAttribute('data-zoom-src');
       if (src) {
         // Растровое изображение: hi-res файл, но показываем в логическом размере.
@@ -149,7 +233,8 @@
         img.alt = trigger.getAttribute('data-zoom-alt') ?? '';
         img.decoding = 'async';
         img.draggable = false; // не запускать нативный drag картинки — мешает pan
-        media.appendChild(img);
+        await waitForImage(img);
+        nextNode = img;
       } else {
         // SVG-диаграмма (opt-in): клонируем svg из триггера в натуральном размере.
         const svg = trigger.querySelector('svg');
@@ -163,29 +248,32 @@
               clone.setAttribute('height', String(vb[3]));
             }
           }
-          media.appendChild(clone);
+          nextNode = clone;
         }
       }
 
-      dialog.showModal();
+      if (currentRender !== renderId || !nextNode) return;
+
+      media.replaceChildren(nextNode);
+      syncLightboxNav();
+      if (!dialog.open) {
+        dialog.showModal();
+      }
       document.body.style.overflow = 'hidden'; // блокируем фоновый скролл
 
-      // После раскладки решаем, можно ли зумить до Actual Size: только растровый
-      // макет с достаточным числом пикселей (физика ≥ логической ширины).
-      // Мелкие картинки (физика < логической) и SVG — не зумятся.
-      const afterLayout = () => {
-        dialog.classList.toggle(
-          'is-zoomable',
-          !!img && img.naturalWidth >= logicalWidth
-        );
-        prepare();
-      };
+      // После раскладки пересчитываем, есть ли реальное переполнение для pan.
+      const afterLayout = () => prepare();
       requestAnimationFrame(afterLayout);
-      if (img && !img.complete) {
-        img.addEventListener('load', () => requestAnimationFrame(afterLayout), {
-          once: true,
-        });
-      }
+    };
+
+    const open = (trigger: Element) => {
+      const carousel = trigger.closest('.carousel');
+      group = carousel
+        ? Array.from(carousel.querySelectorAll('[data-zoomable]'))
+        : [trigger];
+      activeIndex = Math.max(0, group.indexOf(trigger));
+
+      void render(group[activeIndex]);
     };
 
     // Делегированный клик по любому триггеру на странице.
@@ -195,6 +283,28 @@
         event.preventDefault();
         open(trigger);
       }
+    });
+
+    const goToImage = (dir: number) => {
+      const nextIndex = activeIndex + dir;
+      if (nextIndex < 0 || nextIndex >= group.length) return;
+      activeIndex = nextIndex;
+      syncLightboxNav();
+      preloadGroupAround(activeIndex);
+      void render(group[activeIndex]);
+    };
+
+    prevImage.addEventListener('click', (event) => {
+      event.stopPropagation();
+      goToImage(-1);
+    });
+    nextImage.addEventListener('click', (event) => {
+      event.stopPropagation();
+      goToImage(1);
+    });
+    closeButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      dialog.close();
     });
 
     // Drag/pan «как в Figma/Notion»: тянем за саму картинку → двигаем скролл.
@@ -209,6 +319,7 @@
 
     media.addEventListener('pointerdown', (event) => {
       if (event.pointerType === 'touch' || event.button !== 0) return;
+      if (!media.classList.contains('is-pannable')) return;
       if (!(event.target as Element).closest('.lightbox__media > *')) return; // только по картинке
       armed = true;
       panning = false;
@@ -243,29 +354,50 @@
     };
     media.addEventListener('pointerup', endPan);
     media.addEventListener('pointercancel', endPan);
+    media.addEventListener('pointerleave', () => {
+      if (!panning) {
+        armed = false;
+        media.classList.remove('is-grabbing');
+      }
+    });
 
-    // Клик по картинке → переключить Fit Width ↔ Actual Size (если зумабельно).
-    // Клик по фону → закрыть. После pan-драга клик игнорируем.
+    // Клик по картинке или фону закрывает лайтбокс. После pan-драга клик
+    // игнорируем, чтобы случайно не закрывать просмотр.
     dialog.addEventListener('click', (event) => {
+      if ((event.target as Element).closest('.lightbox__nav, .lightbox__close')) {
+        return;
+      }
       if (suppressClick) {
         suppressClick = false;
         return;
       }
       const onImage = (event.target as Element).closest('.lightbox__media > *');
       if (onImage) {
-        if (dialog.classList.contains('is-zoomable')) {
-          dialog.classList.toggle('is-zoom');
-          prepare(); // пересчитать pannable под новый размер
-        }
+        dialog.close();
       } else {
         dialog.close();
+      }
+    });
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        goToImage(-1);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        goToImage(1);
       }
     });
 
     // Снятие блокировки скролла — на ЛЮБОЙ сценарий закрытия (Esc, кнопка Close,
     // клик по фону через .close()). Событие close у <dialog> покрывает все.
     dialog.addEventListener('close', () => {
+      syncSourceCarousel();
+      renderId++;
       document.body.style.overflow = '';
+      group = [];
+      activeIndex = 0;
+      syncLightboxNav();
     });
     // Esc и возврат фокуса на триггер обеспечивает сам <dialog>.
   }

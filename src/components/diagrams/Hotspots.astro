@@ -24,7 +24,7 @@ const { src, alt, hotspots } = Astro.props as Props;
 const widths = [480, 800, 1200, 1600].filter((w) => w < src.width).concat(src.width);
 ---
 
-<figure class="full-bleed not-prose mx-auto my-8 max-w-[60rem] px-5 sm:px-6">
+<figure class="hotspots-figure full-bleed not-prose mx-auto max-w-[60rem] px-5 sm:px-6">
   <div class="hotspots-stage">
     <Picture
       src={src}
@@ -49,6 +49,10 @@ const widths = [480, 800, 1200, 1600].filter((w) => w < src.width).concat(src.wi
 </figure>
 
 <style>
+  .hotspots-figure {
+    margin-block-start: var(--space-media-before);
+    padding-block-end: var(--space-media-after);
+  }
   .hotspots-stage {
     position: relative;
     line-height: 0;

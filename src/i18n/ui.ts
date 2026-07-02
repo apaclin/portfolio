@@ -1,5 +1,5 @@
-// Словарь UI-строк. Английский — основной язык и источник набора ключей.
-export const defaultLang = 'en' as const;
+// Словарь UI-строк. Русский — основной язык и источник набора ключей.
+export const defaultLang = 'ru' as const;
 
 export const ui = {
   en: {
@@ -10,10 +10,10 @@ export const ui = {
     'action.switchLang': 'Русский',
     'meta.siteName': 'Portfolio',
     'meta.description': 'Personal portfolio',
-    // Показывается на EN-странице только теоретически (EN-роуты не фоллбэчат),
-    // но нужен для типобезопасности: набор ключей задаётся английским словарём.
-    'notice.untranslated':
-      'This page has not been translated yet — showing the English version.',
+    'notice.fallbackToEn':
+      'This page is only available in English — showing the English version.',
+    'notice.fallbackToRu':
+      'This page is only available in Russian — showing the Russian version.',
   },
   ru: {
     'nav.home': 'Главная',
@@ -23,8 +23,10 @@ export const ui = {
     'action.switchLang': 'English',
     'meta.siteName': 'Портфолио',
     'meta.description': 'Персональное портфолио',
-    'notice.untranslated':
+    'notice.fallbackToEn':
       'Эта страница ещё не переведена — показана английская версия.',
+    'notice.fallbackToRu':
+      'Эта страница доступна только на русском — показана русская версия.',
   },
 } as const;
 

@@ -16,10 +16,10 @@ const { title, description } = Astro.props;
 
 // Astro.currentLocale вычисляется из URL по конфигу i18n.
 // Если в пути нет языкового сегмента (например, на «/»), он может быть
-// undefined — тогда подставляем язык по умолчанию (теперь английский).
-const lang = Astro.currentLocale ?? 'en';
+// undefined — тогда подставляем основной язык сайта.
+const lang = Astro.currentLocale ?? 'ru';
 
-// hreflang: alternate-ссылки на en/ru версии ТЕКУЩЕЙ страницы + x-default → en.
+// hreflang: alternate-ссылки на en/ru версии ТЕКУЩЕЙ страницы + x-default → ru.
 const basePath = stripLocale(Astro.url.pathname);
 const enUrl = getRelativeLocaleUrl('en', basePath);
 const ruUrl = getRelativeLocaleUrl('ru', basePath);
@@ -57,7 +57,7 @@ const toAbs = (url: string) => (Astro.site ? new URL(url, Astro.site).href : url
     {description && <meta name="description" content={description} />}
     <link rel="alternate" hreflang="en" href={toAbs(enUrl)} />
     <link rel="alternate" hreflang="ru" href={toAbs(ruUrl)} />
-    <link rel="alternate" hreflang="x-default" href={toAbs(enUrl)} />
+    <link rel="alternate" hreflang="x-default" href={toAbs(ruUrl)} />
     <title>{title}</title>
   </head>
   <body class="font-sans">
