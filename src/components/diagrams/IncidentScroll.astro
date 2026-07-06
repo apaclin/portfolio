@@ -1,0 +1,239 @@
+---
+// Карточка инцидента — поведение скролла (фаза 1, без guided/peek).
+// Слои собраны из Figma-экспорта (2× PNG-срезы):
+//  • Топбар (fixed) — поверх всего, всегда виден.
+//  • Очередь + карта (слева) — статичны, не скроллятся, лежат под карточкой.
+//  • Карточка инцидента (sidesheet справа) — скроллится ВНУТРИ себя; её шапка
+//    sticky (при залипании появляется тень снизу); сама карточка отбрасывает
+//    тень влево на очередь/карту.
+// Координаты — проценты холста 1440×900 (экспорт был 2×, значения ÷2).
+import { Image } from 'astro:assets';
+import topbarLeft from '../../assets/t-taxi/incident/topbar-left.png';
+import topbarRight from '../../assets/t-taxi/incident/topbar-right.png';
+import queue from '../../assets/t-taxi/incident/queue.png';
+import map from '../../assets/t-taxi/incident/map.png';
+import cardHeader from '../../assets/t-taxi/incident/card-header.png';
+import cardVehicle from '../../assets/t-taxi/incident/card-vehicle.png';
+import cardTrip from '../../assets/t-taxi/incident/card-trip.png';
+import cardSymptoms from '../../assets/t-taxi/incident/card-symptoms.png';
+import cardToolbar from '../../assets/t-taxi/incident/card-toolbar.png';
+import cardLog from '../../assets/t-taxi/incident/card-log.png';
+
+interface Props {
+  maxWidth?: string;
+}
+const { maxWidth = '1440px' } = Astro.props as Props;
+
+// Секции тела карточки сверху вниз (шапка — отдельно, зафиксирована над телом).
+// Блок «Действия» (toolbar) — последним.
+const sections = [
+  { src: cardVehicle, alt: 'Состояние машины' },
+  { src: cardTrip, alt: 'Активная поездка' },
+  { src: cardSymptoms, alt: 'Описание и таблица симптомов' },
+  { src: cardLog, alt: 'История и лог решений' },
+  { src: cardToolbar, alt: 'Действия по инциденту' },
+];
+---
+
+<section class="incscroll not-prose full-bleed">
+  <div class="incscroll__wide">
+    <div class="incscroll__stage-wrap" style={`max-width: ${maxWidth};`}>
+      <div class="incscroll__stage">
+        <!-- Статичный фон: очередь + карта -->
+        <div class="incscroll__bg">
+          <Image class="incscroll__queue" src={queue} alt="Очередь инцидентов" loading="lazy" />
+          <Image class="incscroll__map" src={map} alt="Карта парка" loading="lazy" />
+        </div>
+
+        <!-- Карточка инцидента (скроллится внутри) -->
+        <div class="incscroll__card">
+          <div class="incscroll__header" data-inc-header>
+            <Image src={cardHeader} alt="Шапка инцидента: INC-2843, P1, действия" loading="lazy" />
+          </div>
+          <div class="incscroll__scroll" data-inc-scroll>
+            {
+              sections.map((s) => (
+                <Image class="incscroll__sec" src={s.src} alt={s.alt} loading="lazy" />
+              ))
+            }
+          </div>
+        </div>
+
+        <!-- Топбар (fixed, поверх всего) -->
+        <div class="incscroll__topbar">
+          <Image class="incscroll__tb-left" src={topbarLeft} alt="Т-Такси Мониторинг · зона · поиск" loading="lazy" />
+          <Image class="incscroll__tb-right" src={topbarRight} alt="Алерты и профиль" loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const init = (root: HTMLElement) => {
+    if (root.dataset.ready === 'true') return;
+    root.dataset.ready = 'true';
+    const scroller = root.querySelector<HTMLElement>('[data-inc-scroll]');
+    const header = root.querySelector<HTMLElement>('[data-inc-header]');
+    if (!scroller || !header) return;
+    // Тень под sticky-шапкой появляется, как только карточка прокручена.
+    const onScroll = () => header.classList.toggle('is-stuck', scroller.scrollTop > 2);
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  };
+  document.querySelectorAll<HTMLElement>('.incscroll').forEach(init);
+</script>
+
+<style>
+  .incscroll {
+    margin-block: 2rem 3rem;
+  }
+
+  .incscroll__wide {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding-inline: 1.5rem;
+  }
+  .incscroll__stage-wrap {
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  /* Сцена — фикс. пропорция 1440×900, всё позиционируется в % от неё. */
+  .incscroll__stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1440 / 900;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border);
+    background: #18191b;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 5%),
+      0 18px 50px -20px rgb(0 0 0 / 25%);
+    user-select: none;
+    font-size: 0; /* убираем inline-gap у картинок */
+  }
+  .incscroll__stage :global(img) {
+    display: block;
+  }
+
+  /* ── Статичный фон: очередь + карта ── */
+  .incscroll__bg {
+    position: absolute;
+    left: 0;
+    top: 5.333%; /* под топбаром (48/900) */
+    width: 100%;
+    height: 94.667%;
+    z-index: 1;
+  }
+  .incscroll__queue {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 25%; /* 360/1440 */
+    height: 100%;
+    object-fit: cover;
+    object-position: top left;
+  }
+  .incscroll__map {
+    position: absolute;
+    left: 25%;
+    top: 0;
+    width: 55.556%; /* 800/1440 */
+    height: 100%;
+    object-fit: cover;
+    object-position: top left;
+  }
+
+  /* ── Карточка инцидента (скроллится внутри) ── */
+  .incscroll__card {
+    position: absolute;
+    left: 65.347%; /* 941/1440 */
+    top: 5.333%;
+    width: 34.583%; /* 498/1440 */
+    height: 94.667%;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    background: #18191b;
+    border-left: 1px solid rgb(255 255 255 / 7%);
+    /* Тень карточки влево — на очередь/карту. */
+    box-shadow: -24px 0 55px -16px rgb(0 0 0 / 62%);
+  }
+  /* Скроллится ТОЛЬКО тело карточки; шапка вынесена наружу (см. ниже). */
+  .incscroll__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Приглушаем «резину» оверскролла до минимума — серьёзный инструмент. */
+    overscroll-behavior: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 18%) transparent;
+  }
+  .incscroll__scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+  .incscroll__scroll::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 18%);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .incscroll__sec {
+    width: 100%;
+    height: auto;
+  }
+  /* Шапка карточки — всегда зафиксирована (вне скролла), тело едет под ней. */
+  .incscroll__header {
+    flex: none;
+    position: relative;
+    z-index: 3;
+    background: #18191b;
+    transition: box-shadow 180ms ease;
+  }
+  .incscroll__header :global(img) {
+    width: 100%;
+    height: auto;
+  }
+  .incscroll__header.is-stuck {
+    box-shadow: 0 12px 22px -8px rgb(0 0 0 / 55%);
+  }
+
+  /* ── Топбар (fixed, поверх всего) ── */
+  .incscroll__topbar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 5.333%; /* 48/900 */
+    z-index: 10;
+    background: #18191b;
+    border-bottom: 1px solid rgb(255 255 255 / 6%);
+  }
+  .incscroll__tb-left {
+    position: absolute;
+    left: 1.111%; /* 16/1440 */
+    top: 20.83%; /* 10/48 */
+    width: 49.826%; /* 717.5/1440 */
+    height: 58.33%; /* 28/48 */
+    object-fit: contain;
+    object-position: left center;
+  }
+  .incscroll__tb-right {
+    position: absolute;
+    left: 89.583%; /* 1290/1440 */
+    top: 19.79%;
+    width: 9.375%; /* 135/1440 */
+    height: 60.42%;
+    object-fit: contain;
+    object-position: right center;
+  }
+
+  @media (max-width: 47.9375rem) {
+    .incscroll__stage-wrap {
+      min-width: 760px;
+    }
+  }
+</style>

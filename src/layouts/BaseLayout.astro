@@ -61,7 +61,7 @@ const toAbs = (url: string) => (Astro.site ? new URL(url, Astro.site).href : url
     <title>{title}</title>
   </head>
   <body class="font-sans">
-    <header class="mx-auto flex max-w-[42rem] justify-end px-5 pt-6">
+    <header class="mx-auto flex max-w-[72rem] justify-end px-5 pt-6 sm:px-6 lg:px-8">
       <LangSwitcher />
     </header>
     <slot />

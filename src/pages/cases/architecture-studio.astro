@@ -1,0 +1,111 @@
+---
+import CaseNav from '../../components/CaseNav.astro';
+import slice01 from '../../assets/bergstrom/slice-01.png';
+import slice02 from '../../assets/bergstrom/slice-02.png';
+import slice03 from '../../assets/bergstrom/slice-03.png';
+import slice04 from '../../assets/bergstrom/slice-04.png';
+import slice05 from '../../assets/bergstrom/slice-05.png';
+import slice06 from '../../assets/bergstrom/slice-06.png';
+import slice07 from '../../assets/bergstrom/slice-07.png';
+import slice08 from '../../assets/bergstrom/slice-08.png';
+
+const slices = [
+  slice01,
+  slice02,
+  slice03,
+  slice04,
+  slice05,
+  slice06,
+  slice07,
+  slice08,
+];
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Bergström: визуальный кейс сайта архитектурной студии."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Сайт архитектурной студии Bergström</title>
+  </head>
+  <body>
+    <CaseNav variant="floating" />
+    <main aria-label="Сайт архитектурной студии Bergström">
+      {
+        slices.map((slice, index) => (
+          <img
+            src={slice.src}
+            width={slice.width}
+            height={slice.height}
+            alt={`Bergström case slice ${String(index + 1).padStart(2, '0')}`}
+            loading={index === 0 ? 'eager' : 'lazy'}
+            decoding={index === 0 ? 'sync' : 'async'}
+            fetchpriority={index === 0 ? 'high' : 'auto'}
+          />
+        ))
+      }
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  html,
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: #1c1d1a;
+  }
+
+  html {
+    color-scheme: dark;
+    scrollbar-color: rgba(148, 148, 148, 0.58) transparent;
+    scrollbar-width: thin;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  main {
+    width: 100%;
+    background: #1c1d1a;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    image-rendering: auto;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    min-height: 48px;
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: rgba(148, 148, 148, 0.58);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(188, 188, 188, 0.72);
+    background-clip: content-box;
+  }
+</style>

@@ -1,0 +1,121 @@
+---
+import CaseNav from '../../components/CaseNav.astro';
+import slice01 from '../../assets/filmaze/slice-01.png';
+import slice02 from '../../assets/filmaze/slice-02.png';
+import slice03 from '../../assets/filmaze/slice-03.png';
+import slice04 from '../../assets/filmaze/slice-04.png';
+import slice05 from '../../assets/filmaze/slice-05.png';
+import slice06 from '../../assets/filmaze/slice-06.png';
+import slice07 from '../../assets/filmaze/slice-07.png';
+import slice08 from '../../assets/filmaze/slice-08.png';
+import slice09 from '../../assets/filmaze/slice-09.png';
+import slice10 from '../../assets/filmaze/slice-10.png';
+import slice11 from '../../assets/filmaze/slice-11.png';
+import slice12 from '../../assets/filmaze/slice-12.png';
+import slice13 from '../../assets/filmaze/slice-13.png';
+
+const slices = [
+  slice01,
+  slice02,
+  slice03,
+  slice04,
+  slice05,
+  slice06,
+  slice07,
+  slice08,
+  slice09,
+  slice10,
+  slice11,
+  slice12,
+  slice13,
+];
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Онлайн-кинотеатр Filmaze: визуальный кейс мобильного приложения."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Онлайн-кинотеатр Filmaze</title>
+  </head>
+  <body>
+    <CaseNav variant="floating" />
+    <main aria-label="Онлайн-кинотеатр Filmaze">
+      {
+        slices.map((slice, index) => (
+          <img
+            src={slice.src}
+            width={slice.width}
+            height={slice.height}
+            alt={`Filmaze case slice ${String(index + 1).padStart(2, '0')}`}
+            loading={index === 0 ? 'eager' : 'lazy'}
+            decoding={index === 0 ? 'sync' : 'async'}
+            fetchpriority={index === 0 ? 'high' : 'auto'}
+          />
+        ))
+      }
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  html,
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: #000;
+  }
+
+  html {
+    color-scheme: dark;
+    scrollbar-color: rgba(148, 148, 148, 0.58) transparent;
+    scrollbar-width: thin;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  main {
+    width: 100%;
+    background: #000;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    image-rendering: auto;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    min-height: 48px;
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: rgba(148, 148, 148, 0.58);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(188, 188, 188, 0.72);
+    background-clip: content-box;
+  }
+</style>

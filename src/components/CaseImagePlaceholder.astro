@@ -1,0 +1,56 @@
+---
+interface Props {
+  label: string;
+  note?: string;
+  aspect?: string;
+}
+
+const { label, note = 'Место для изображения', aspect = '16 / 9' } = Astro.props as Props;
+---
+
+<figure class="case-image-placeholder not-prose" style={`--placeholder-aspect: ${aspect};`}>
+  <div class="case-image-placeholder__frame">
+    <div>
+      <span class="case-image-placeholder__label">{label}</span>
+      <span class="case-image-placeholder__note">{note}</span>
+    </div>
+  </div>
+</figure>
+
+<style>
+  .case-image-placeholder {
+    width: 100%;
+    margin: 0;
+  }
+
+  .case-image-placeholder__frame {
+    display: grid;
+    min-height: 13rem;
+    aspect-ratio: var(--placeholder-aspect);
+    place-items: center;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: 8px;
+    background: var(--color-bg-subtle);
+    color: var(--color-text-muted);
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .case-image-placeholder__label,
+  .case-image-placeholder__note {
+    display: block;
+  }
+
+  .case-image-placeholder__label {
+    color: var(--color-text);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  .case-image-placeholder__note {
+    margin-block-start: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+</style>

@@ -1,0 +1,227 @@
+---
+interface ResearchHighlightItem {
+  title: string;
+  body: string;
+  points?: string[];
+  pointsVariant?: 'bulleted' | 'numbered';
+  conclusion?: string;
+  imageSrc: string;
+  imageAlt: string;
+  reverse?: boolean;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  items: ResearchHighlightItem[];
+  maxWidth?: string;
+}
+
+import PublicSvg from './PublicSvg.astro';
+
+const { title, description, items, maxWidth = '960px' } = Astro.props as Props;
+---
+
+<section class="research-highlights full-bleed not-prose">
+  <div class="research-highlights__inner" style={`max-width: ${maxWidth};`}>
+    <header class="research-highlights__intro">
+      <h2>{title}</h2>
+      <p>{description}</p>
+    </header>
+
+    <div class="research-highlights__list">
+      {
+        items.map((item) => {
+          const points = item.points ?? [];
+
+          return (
+            <article class:list={['research-highlights__row', item.reverse && 'is-reverse']}>
+              <div class="research-highlights__copy">
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+                {points.length > 0 && item.pointsVariant === 'numbered' && (
+                  <ol class="research-points research-points--numbered">
+                    {points.map((point) => (
+                      <li>{point}</li>
+                    ))}
+                  </ol>
+                )}
+                {points.length > 0 && item.pointsVariant !== 'numbered' && (
+                  <ul class="research-points">
+                    {points.map((point) => (
+                      <li>{point}</li>
+                    ))}
+                  </ul>
+                )}
+                {item.conclusion && <p>{item.conclusion}</p>}
+              </div>
+
+              <figure class="research-highlights__media">
+                {item.imageSrc.endsWith('.svg') ? (
+                  <PublicSvg src={item.imageSrc} alt={item.imageAlt} fit="container" />
+                ) : (
+                  <img src={item.imageSrc} alt={item.imageAlt} loading="lazy" decoding="async" />
+                )}
+              </figure>
+            </article>
+          );
+        })
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .research-highlights {
+    position: relative;
+    left: 50%;
+    box-sizing: border-box;
+    width: 100vw;
+    margin-block: 3rem 6rem;
+    overflow-x: clip;
+    padding-inline: 1rem;
+    transform: translateX(-50%);
+  }
+
+  .research-highlights__inner {
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .research-highlights__intro {
+    max-width: 42rem;
+  }
+
+  .research-highlights__intro h2 {
+    margin: 0 0 0.5rem;
+    color: var(--color-text);
+    font-size: 1.375rem;
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .research-highlights__intro p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .research-highlights__list {
+    display: grid;
+    gap: 5rem;
+    margin-block-start: 3rem;
+  }
+
+  .research-highlights__row {
+    display: grid;
+    grid-template-areas:
+      "copy"
+      "media";
+    gap: 1.5rem;
+    min-width: 0;
+  }
+
+  .research-highlights__copy {
+    grid-area: copy;
+    align-self: center;
+    min-width: 0;
+  }
+
+  .research-highlights__copy h3 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1.125rem;
+    line-height: 1.4;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .research-highlights__copy p {
+    margin: 0.75rem 0 0;
+    color: var(--color-text);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .research-points {
+    margin: 0.75rem 0 1rem;
+    padding-left: 1.25rem;
+    list-style-type: disc;
+    list-style-position: outside;
+    color: var(--color-text);
+    font-size: 1rem;
+  }
+
+  .research-points li {
+    display: list-item;
+    margin: 0.375rem 0;
+    padding-left: 0.125rem;
+    list-style-type: disc;
+    list-style-position: outside;
+    line-height: 1.7;
+  }
+
+  .research-points li::marker {
+    color: var(--color-text-muted);
+  }
+
+  .research-points--numbered,
+  .research-points--numbered li {
+    list-style-type: decimal;
+  }
+
+  .research-highlights__media {
+    grid-area: media;
+    width: min(100%, 35rem);
+    margin: 0;
+    justify-self: start;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .research-highlights__media img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  @media (min-width: 56rem) {
+    .research-highlights {
+      padding-inline: 1.5rem;
+    }
+
+    .research-highlights__row {
+      /* Текст — фикс. читаемая мера (~60 знаков), картинка добирает остаток. */
+      grid-template-columns: minmax(0, 23rem) 1fr;
+      grid-template-areas: 'copy media';
+      align-items: center;
+      gap: 4rem;
+    }
+
+    .research-highlights__row.is-reverse {
+      grid-template-columns: 1fr minmax(0, 23rem);
+      grid-template-areas: 'media copy';
+    }
+
+    .research-highlights__media {
+      width: 100%;
+      justify-self: stretch;
+    }
+  }
+
+  @media (max-width: 55.9375rem) {
+    .research-highlights {
+      margin-block-end: 6rem;
+    }
+
+    .research-highlights__list {
+      gap: 4rem;
+    }
+  }
+</style>

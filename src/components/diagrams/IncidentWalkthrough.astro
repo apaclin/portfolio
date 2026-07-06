@@ -1,0 +1,779 @@
+---
+// Разбор карточки инцидента — статичная карточка целиком, по центру, без скролла
+// (как разбор экрана 1). Карточка — один чёткий 2× PNG (показ 0.5× = 500×1201).
+// Затемнение guided — blur-копия + резкая clip-path копия активной зоны. Тултипы
+// сверху/снизу от зоны (карточка узкая). Панель Назад/Далее — fixed снизу экрана.
+import { Image } from 'astro:assets';
+import Icon from '../icons/Icon.astro';
+import { incidentZones } from '../../content/t-taxi/incident-zones.ru';
+import cardFull from '../../assets/t-taxi/incident/card-full.png';
+
+interface Props {
+  hint?: string;
+  cta?: string;
+  replayCta?: string;
+}
+const {
+  hint = 'Наведите на область карточки или запустите пошаговый разбор.',
+  cta = 'Разобрать карточку',
+  replayCta = 'Посмотреть разбор снова',
+} = Astro.props as Props;
+
+const zonesJson = JSON.stringify(incidentZones);
+const widths = [500, 750, 1000];
+---
+
+<section class="incw not-prose full-bleed" data-incw data-cta={cta} data-replay-cta={replayCta}>
+  <div class="incw__intro">
+    <p class="incw__hint">
+      <Icon name="zap" size={16} class="incw__hint-ico" />
+      {hint}
+    </p>
+    <button class="incw__start" type="button" data-start>{cta}</button>
+  </div>
+
+  <div class="incw__stage-wrap">
+    <div class="incw__stage explore" data-stage>
+      <Image class="incw__base" src={cardFull} widths={widths} sizes="500px" alt="Карточка инцидента INC-2843" loading="lazy" />
+      <div class="incw__dim" data-dim aria-hidden="true"></div>
+      <Image class="incw__sharp" src={cardFull} widths={widths} sizes="500px" alt="" aria-hidden="true" data-sharp loading="lazy" />
+      <div class="incw__zones">
+        {
+          incidentZones.map(
+            (z, i) =>
+              !z.whole && (
+                <button
+                  class="incw__zone"
+                  type="button"
+                  data-zone
+                  data-i={i}
+                  style={`top:${z.top}%;height:${z.height}%`}
+                  aria-label={z.title}
+                />
+              )
+          )
+        }
+      </div>
+      <div class="incw__tip" data-tip role="dialog" aria-live="polite">
+        <div class="incw__step" data-tip-step></div>
+        <h3 data-tip-title></h3>
+        <p data-tip-body></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="incw__controls" data-controls>
+    <button class="incw__nav incw__nav--icon" type="button" data-first aria-label="В начало" title="В начало">
+      <Icon name="chevron-first" size={14} />
+    </button>
+    <button class="incw__nav" type="button" data-prev aria-label="Назад">
+      <Icon name="chevron-left" size={14} />Назад
+    </button>
+    <button class="incw__nav incw__nav--primary" type="button" data-next aria-label="Далее">
+      <span data-next-text>Далее</span>
+      <Icon name="chevron-right" size={14} class="incw__next-go" />
+      <Icon name="check" size={14} class="incw__next-done" />
+    </button>
+    <span class="incw__sep"></span>
+    <button class="incw__close" type="button" data-close aria-label="Закрыть разбор">
+      <Icon name="x" size={16} />
+    </button>
+  </div>
+
+  <p class="incw__caption">
+    <span data-cap-left>Наведите — превью зоны. Клик по зоне или кнопке — пошаговый разбор.</span>
+    <span class="incw__caption-keys">
+      <kbd>←</kbd> <kbd>→</kbd> шаги · <kbd>Esc</kbd> — выход
+    </span>
+  </p>
+
+  <script type="application/json" data-zones set:html={zonesJson} />
+</section>
+
+<script>
+  interface Zone {
+    id: string;
+    title: string;
+    body: string;
+    top: number;
+    height: number;
+    whole?: boolean;
+  }
+  const clamp = (v: number, a: number, b: number) => Math.min(Math.max(v, a), b);
+  const CARD_EXIT = 240;
+  const LEFT = 2.1;
+  const WIDTH = 95.8;
+
+  const init = (root: HTMLElement) => {
+    if (root.dataset.ready === 'true') return;
+    root.dataset.ready = 'true';
+
+    const stage = root.querySelector<HTMLElement>('[data-stage]');
+    const sharp = root.querySelector<HTMLElement>('[data-sharp]');
+    const tip = root.querySelector<HTMLElement>('[data-tip]');
+    const tipStep = root.querySelector<HTMLElement>('[data-tip-step]');
+    const tipTitle = root.querySelector<HTMLElement>('[data-tip-title]');
+    const tipBody = root.querySelector<HTMLElement>('[data-tip-body]');
+    const controls = root.querySelector<HTMLElement>('[data-controls]');
+    const firstBtn = root.querySelector<HTMLButtonElement>('[data-first]');
+    const prevBtn = root.querySelector<HTMLButtonElement>('[data-prev]');
+    const nextBtn = root.querySelector<HTMLButtonElement>('[data-next]');
+    const nextText = root.querySelector<HTMLElement>('[data-next-text]');
+    const closeBtn = root.querySelector<HTMLButtonElement>('[data-close]');
+    const startBtn = root.querySelector<HTMLButtonElement>('[data-start]');
+    const capLeft = root.querySelector<HTMLElement>('[data-cap-left]');
+    const zonesEl = root.querySelector<HTMLElement>('[data-zones]');
+    const hotspots = [...root.querySelectorAll<HTMLButtonElement>('[data-zone]')];
+
+    if (
+      !stage || !sharp || !tip || !tipStep || !tipTitle || !tipBody || !controls ||
+      !firstBtn || !prevBtn || !nextBtn || !nextText || !closeBtn || !startBtn ||
+      !capLeft || !zonesEl
+    ) {
+      return;
+    }
+
+    const zones: Zone[] = JSON.parse(zonesEl.textContent || '[]');
+    const N = zones.length;
+    const cta = root.dataset.cta || 'Разобрать карточку';
+    const replayCta = root.dataset.replayCta || 'Посмотреть разбор снова';
+    const hotspotByIndex = new Map<number, HTMLElement>();
+    hotspots.forEach((h) => hotspotByIndex.set(Number(h.dataset.i), h));
+
+    let idx = -1;
+    let guided = false;
+    let completed = false;
+    let hoverIdx = -1;
+    let shownIdx = -1;
+    let busy = false;
+    let stepT = 0;
+    let suppressExitUntil = 0;
+
+    const clipFor = (i: number) => {
+      const z = zones[i];
+      if (z.whole) return 'inset(0 round 10px)';
+      const bottom = (100 - z.top - z.height).toFixed(2);
+      return `inset(${z.top}% ${(100 - LEFT - WIDTH).toFixed(2)}% ${bottom}% ${LEFT}% round 8px)`;
+    };
+
+    const clearActive = () => {
+      hotspots.forEach((h) => h.classList.remove('is-active'));
+      stage.classList.remove('whole-active');
+    };
+    const setActive = (i: number) => {
+      clearActive();
+      if (i < 0) return;
+      if (zones[i].whole) stage.classList.add('whole-active');
+      else hotspotByIndex.get(i)?.classList.add('is-active');
+    };
+
+    const fillTip = (i: number, withStep: boolean) => {
+      tipStep.textContent = withStep ? `${i + 1} / ${N}` : '';
+      tipTitle.textContent = zones[i].title;
+      tipBody.textContent = zones[i].body;
+      tip.classList.toggle('has-step', withStep);
+    };
+
+    const placeTip = (i: number) => {
+      const H = stage.clientHeight;
+      const W = stage.clientWidth;
+      const tw = tip.offsetWidth || 320;
+      const th = tip.offsetHeight || 120;
+      const gap = 12;
+      const left = clamp((W - tw) / 2, 8, Math.max(8, W - tw - 8));
+      const zTop = (zones[i].top / 100) * H;
+      const zH = (zones[i].height / 100) * H;
+      const belowTop = zTop + zH + gap;
+      const aboveTop = zTop - th - gap;
+      // Флип по ВЬЮПОРТУ: если снизу не влезает в экран — показываем сверху (и наоборот).
+      const sr = stage.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const fitsBelow = sr.top + belowTop + th <= vh - 8;
+      const fitsAbove = sr.top + aboveTop >= 8;
+      let top = fitsBelow ? belowTop : fitsAbove ? aboveTop : belowTop;
+      top = clamp(top, 8, Math.max(8, H - th - 8));
+      tip.style.left = Math.round(left) + 'px';
+      tip.style.top = Math.round(top) + 'px';
+    };
+
+    const scrollToZone = (i: number) => {
+      const z = zones[i];
+      const sr = stage.getBoundingClientRect();
+      // Пока идёт наш программный скролл к зоне — подавляем автовыход по уходу
+      // сцены из вида, иначе промежуточные кадры плавного скролла закрыли бы
+      // разбор ещё до того, как сцена доедет до места.
+      suppressExitUntil = performance.now() + 800;
+      if (z.whole) {
+        window.scrollTo({ top: window.scrollY + sr.top - 80, behavior: 'smooth' });
+      } else {
+        const zTop = (z.top / 100) * sr.height;
+        const zH = (z.height / 100) * sr.height;
+        const target = window.scrollY + sr.top + zTop + zH / 2 - window.innerHeight / 2;
+        window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+      }
+    };
+
+    const setNextLabel = (i: number) => {
+      const last = i === N - 1;
+      nextText.textContent = last ? 'Готово' : 'Далее';
+      nextBtn.classList.toggle('is-last', last);
+    };
+    const setStartLabel = () => {
+      startBtn.textContent = completed ? replayCta : cta;
+    };
+
+    // ── Explore: peek (последовательный fade, без наложения). Рамка зоны — через
+    // CSS :hover (см. стили), JS отвечает только за тултип. ──
+    const showPeek = (i: number) => {
+      fillTip(i, false);
+      placeTip(i);
+      tip.classList.add('show');
+    };
+    const hidePeek = () => {
+      tip.classList.remove('show');
+    };
+    const syncPeek = () => {
+      if (guided || busy) return;
+      if (hoverIdx === shownIdx) return;
+      if (shownIdx !== -1) {
+        hidePeek();
+        shownIdx = -1;
+        busy = true;
+        window.setTimeout(() => {
+          busy = false;
+          syncPeek();
+        }, CARD_EXIT);
+      } else if (hoverIdx !== -1) {
+        showPeek(hoverIdx);
+        shownIdx = hoverIdx;
+      }
+    };
+
+    // ── Guided: fade-out → clip к зоне + скролл страницы → fade-in ──
+    // Счётчик показан сразу (step-static) — при кнопке/навигации не «растёт».
+    const goStep = (i: number) => {
+      idx = i;
+      clearActive();
+      tip.classList.remove('show');
+      tip.classList.add('step-static');
+      sharp.style.opacity = '0';
+      fillTip(i, true);
+      setNextLabel(i);
+      prevBtn.disabled = i === 0;
+      firstBtn.disabled = i === 0;
+      scrollToZone(i);
+      window.clearTimeout(stepT);
+      stepT = window.setTimeout(() => {
+        sharp.style.clipPath = clipFor(i);
+        setActive(i);
+        placeTip(i);
+        sharp.style.opacity = '1';
+        tip.classList.add('show');
+      }, 210);
+    };
+
+    // Вход из уже видимого peek: тултип не пропадает — счётчик «дорастает»
+    // (fade + max-height), описание съезжает вниз (как на экране 1).
+    const enterFromPeek = (i: number) => {
+      idx = i;
+      tip.classList.remove('step-static');
+      fillTip(i, true);
+      setNextLabel(i);
+      prevBtn.disabled = i === 0;
+      firstBtn.disabled = i === 0;
+      sharp.style.clipPath = clipFor(i);
+      setActive(i);
+      sharp.style.opacity = '1';
+    };
+
+    const enterGuided = (i: number) => {
+      const fromPeek = tip.classList.contains('show') && shownIdx === i;
+      guided = true;
+      completed = false;
+      hoverIdx = -1;
+      shownIdx = -1;
+      busy = false;
+      stage.classList.remove('explore');
+      stage.classList.add('guided');
+      root.classList.add('is-guided');
+      // Только один активный разбор: другие закрываются.
+      document.dispatchEvent(new CustomEvent('t-walkthrough-open', { detail: root }));
+      setStartLabel();
+      if (fromPeek) enterFromPeek(i);
+      else goStep(i);
+      capLeft.textContent = 'Разбор карточки запущен. Стрелки — шаги, Esc — выход.';
+    };
+    const closeGuided = (done = false) => {
+      guided = false;
+      window.clearTimeout(stepT);
+      if (done) completed = true;
+      stage.classList.remove('guided');
+      stage.classList.add('explore');
+      root.classList.remove('is-guided');
+      clearActive();
+      tip.classList.remove('show');
+      sharp.style.opacity = '0';
+      idx = -1;
+      hoverIdx = -1;
+      shownIdx = -1;
+      setStartLabel();
+      capLeft.textContent = completed
+        ? 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.'
+        : 'Наведите — превью зоны. Клик по зоне или кнопке — пошаговый разбор.';
+    };
+    const next = () => {
+      if (idx < N - 1) goStep(idx + 1);
+      else closeGuided(true);
+    };
+    const prev = () => {
+      if (idx > 0) goStep(idx - 1);
+    };
+
+    hotspots.forEach((h) => {
+      const i = Number(h.dataset.i);
+      h.addEventListener('mouseenter', () => {
+        if (guided) return;
+        hoverIdx = i;
+        syncPeek();
+      });
+      h.addEventListener('mouseleave', () => {
+        if (guided) return;
+        if (hoverIdx === i) {
+          hoverIdx = -1;
+          syncPeek();
+        }
+      });
+      h.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (guided) return; // клик по зоне (в т.ч. активной) не выходит из разбора
+        enterGuided(i);
+      });
+    });
+
+    document.addEventListener('t-walkthrough-open', (e) => {
+      if ((e as CustomEvent).detail !== root && guided) closeGuided();
+    });
+
+    // Выход — только клик ВНЕ скриншота (не по сцене, панели и кнопке запуска).
+    document.addEventListener('click', (e) => {
+      if (!guided) return;
+      const t = e.target as Node;
+      if (stage.contains(t) || controls.contains(t) || startBtn.contains(t)) return;
+      closeGuided();
+    });
+
+    startBtn.addEventListener('click', () => enterGuided(0));
+    firstBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (idx > 0) goStep(0);
+    });
+    nextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      next();
+    });
+    prevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      prev();
+    });
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeGuided();
+    });
+    tip.addEventListener('click', (e) => e.stopPropagation());
+    controls.addEventListener('click', (e) => e.stopPropagation());
+    // Клик по сцене мимо зоны — выход (по зонам стоит stopPropagation).
+    stage.addEventListener('click', () => {
+      if (guided) closeGuided();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (!guided) return;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        next();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prev();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        if (idx > 0) goStep(0);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeGuided();
+      }
+    });
+
+    let rt: number;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(rt);
+      rt = window.setTimeout(() => {
+        if (guided && idx >= 0) placeTip(idx);
+        else if (shownIdx >= 0) placeTip(shownIdx);
+      }, 80);
+    });
+
+    // ── Автовыход при уходе сцены из вида ──
+    // Проскроллили так, что карточку почти не видно → выходим из разбора. Порог —
+    // ~30% видимой части сцены по каждой оси; min(размер сцены, размер вьюпорта)
+    // корректно обрабатывает сцену выше/шире вьюпорта.
+    const isStageMostlyVisible = () => {
+      const r = stage.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const visibleX = Math.min(r.right, vw) - Math.max(r.left, 0);
+      const visibleY = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+      const minX = Math.min(r.width, vw) * 0.3;
+      const minY = Math.min(r.height, vh) * 0.3;
+      return visibleX > minX && visibleY > minY;
+    };
+
+    let exitRaf = 0;
+    const checkAutoExit = () => {
+      if (exitRaf) return;
+      exitRaf = window.requestAnimationFrame(() => {
+        exitRaf = 0;
+        if (!guided) return;
+        if (performance.now() < suppressExitUntil) return;
+        if (!isStageMostlyVisible()) closeGuided();
+      });
+    };
+
+    window.addEventListener('scroll', checkAutoExit, { passive: true });
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-incw]').forEach(init);
+</script>
+
+<style>
+  .incw {
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    margin-block: 2rem 3rem;
+  }
+
+  .incw__intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    max-width: calc(42rem + 3rem);
+    margin: 0 auto 1.5rem;
+    padding-inline: 1.5rem;
+  }
+  .incw__hint {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    color: var(--color-text-faint);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .incw__hint :global(.incw__hint-ico) {
+    flex: none;
+  }
+  .incw__start {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.5rem;
+    background: var(--color-primary-bg);
+    padding: 0.75rem 1.25rem;
+    color: var(--color-primary-fg);
+    font-size: 0.875rem;
+    line-height: 1;
+    font-weight: 600;
+    transition: background-color 160ms ease, transform 120ms ease;
+  }
+  .incw__start:hover {
+    background: var(--color-primary-bg-hover);
+  }
+  .incw__start:active {
+    transform: translateY(1px);
+  }
+
+  /* Сцена = карточка целиком (0.5× от 2×-файла = 500×1201), по центру. */
+  .incw__stage-wrap {
+    max-width: 500px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  .incw__stage {
+    position: relative;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #18191b;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 5%), 0 24px 60px -24px rgb(0 0 0 / 35%);
+    user-select: none;
+    font-size: 0;
+  }
+  .incw__base {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .incw__sharp {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    width: 100%;
+    height: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+
+  /* Затемнение: blur + тёмный слой поверх; активная зона поверх — резкая копия. */
+  .incw__dim {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+    background: rgb(9 9 12 / 34%);
+    backdrop-filter: blur(4px) saturate(0.6) brightness(0.62);
+    -webkit-backdrop-filter: blur(4px) saturate(0.6) brightness(0.62);
+    transition: opacity 0.3s ease;
+  }
+  .incw__stage.guided .incw__dim {
+    opacity: 1;
+  }
+
+  /* Зоны — они же подсветка (inset-рамка). */
+  .incw__zones {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+  }
+  .incw__zone {
+    position: absolute;
+    left: 2.1%;
+    width: 95.8%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0%);
+    transition: box-shadow 0.22s ease;
+  }
+  .incw__stage.explore .incw__zone {
+    cursor: pointer;
+  }
+  /* Навели на карточку — все зоны проступают полупрозрачно; зона под курсором —
+     ярче (чистый CSS, как на экране 1). */
+  .incw__stage.explore:hover .incw__zone {
+    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 16%);
+  }
+  .incw__stage.explore .incw__zone:hover {
+    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 65%);
+  }
+  .incw__zone.is-active {
+    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 60%);
+  }
+  .incw__stage.guided .incw__zone {
+    pointer-events: none;
+  }
+  .incw__stage.guided .incw__zone.is-active {
+    box-shadow: inset 0 0 0 2.5px rgb(255 255 255 / 96%);
+  }
+  /* Подсветка «Панель» — рамка по всей карточке (над резкой копией). */
+  .incw__stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 2.5px rgb(255 255 255 / 0%);
+    transition: box-shadow 0.22s ease;
+  }
+  .incw__stage.whole-active::after {
+    box-shadow: inset 0 0 0 2.5px rgb(255 255 255 / 96%);
+  }
+
+  /* Тултип — сверху/снизу от зоны (карточка узкая). */
+  .incw__tip {
+    position: absolute;
+    z-index: 6;
+    width: min(320px, calc(100% - 24px));
+    background: var(--color-bg-subtle);
+    border: 1.5px solid var(--color-text);
+    border-radius: 8px;
+    padding: 1.25rem;
+    box-shadow: 0 14px 40px -8px rgb(0 0 0 / 40%);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    font-size: 14px;
+    transition: opacity 0.22s ease, transform 0.22s var(--ease);
+  }
+  .incw__tip.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .incw__stage.guided .incw__tip {
+    pointer-events: auto;
+  }
+  .incw__step {
+    opacity: 0;
+    max-height: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.2;
+    font-weight: 500;
+    transition:
+      opacity 0.26s ease,
+      max-height 0.26s ease,
+      margin-bottom 0.26s ease;
+  }
+  .incw__tip.has-step .incw__step {
+    opacity: 1;
+    max-height: 22px;
+    margin-bottom: 8px;
+  }
+  /* Мгновенно (вход через кнопку/навигация — счётчик уже на месте, без «роста»). */
+  .incw__tip.step-static .incw__step {
+    transition: none !important;
+  }
+  .incw__tip h3 {
+    margin: 0 0 8px;
+    color: var(--color-text);
+    font-size: 16px;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+  .incw__tip p {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  /* Панель управления — fixed снизу экрана: не уходит за экран, всегда доступна. */
+  .incw__controls {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(8px);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-strong);
+    border-radius: 10px;
+    padding: 8px 10px;
+    box-shadow: 0 12px 34px -6px rgb(0 0 0 / 40%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+  }
+  .incw.is-guided .incw__controls {
+    opacity: 1;
+    transform: translateX(-50%);
+    pointer-events: auto;
+  }
+  .incw__nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 500;
+    padding: 8px 13px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--color-border-strong);
+    background: transparent;
+    color: var(--color-text);
+    transition: background 0.12s ease, opacity 0.12s ease;
+  }
+  .incw__nav--icon {
+    padding: 8px;
+  }
+  .incw__nav:not(.incw__nav--primary):hover:not(:disabled) {
+    background: rgb(55 53 47 / 7%);
+  }
+  .incw__nav--primary {
+    background: var(--color-primary-bg);
+    color: var(--color-primary-fg);
+    border-color: var(--color-primary-bg);
+  }
+  .incw__nav--primary:hover:not(:disabled) {
+    background: var(--color-primary-bg-hover);
+    border-color: var(--color-primary-bg-hover);
+  }
+  .incw__nav:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .incw__nav :global(.incw__next-done) {
+    display: none;
+  }
+  .incw__nav.is-last :global(.incw__next-go) {
+    display: none;
+  }
+  .incw__nav.is-last :global(.incw__next-done) {
+    display: inline-flex;
+  }
+  .incw__sep {
+    width: 1px;
+    height: 20px;
+    background: rgb(55 53 47 / 20%);
+  }
+  .incw__close {
+    display: inline-flex;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-text);
+    padding: 6px 7px;
+    border-radius: 6px;
+  }
+  .incw__close:hover {
+    background: rgb(55 53 47 / 8%);
+  }
+
+  .incw__caption {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    max-width: 42rem;
+    margin: 1rem auto 0;
+    padding-inline: 1.5rem;
+    color: var(--color-text-faint);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+  .incw__caption kbd {
+    font: inherit;
+    font-size: 0.7rem;
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: 1px 6px;
+    color: var(--color-text-muted);
+  }
+
+  .incw__start:focus-visible,
+  .incw__zone:focus-visible,
+  .incw__nav:focus-visible,
+  .incw__close:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .incw__dim,
+    .incw__sharp,
+    .incw__zone,
+    .incw__tip {
+      transition-duration: 0.001ms !important;
+    }
+  }
+</style>

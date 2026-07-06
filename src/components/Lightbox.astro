@@ -72,6 +72,14 @@
     user-select: none;
     -webkit-user-drag: none; /* не запускать нативный drag картинки */
   }
+  .lightbox[data-fit='contain'] .lightbox__media :global(img),
+  .lightbox[data-fit='contain'] .lightbox__media :global(svg) {
+    max-width: min(var(--lightbox-lw, 100vw), 100%);
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
   .lightbox__nav,
   .lightbox__close {
     position: fixed;
@@ -222,6 +230,7 @@
       // Логическая (CSS) ширина макета: из data-max-width, иначе 1440.
       logicalWidth = parseInt(trigger.getAttribute('data-max-width') ?? '', 10) || 1440;
       dialog.style.setProperty('--lightbox-lw', `${logicalWidth}px`);
+      dialog.dataset.fit = trigger.getAttribute('data-lightbox-fit') ?? 'width';
 
       let img: HTMLImageElement | null = null;
       let nextNode: HTMLElement | SVGElement | null = null;

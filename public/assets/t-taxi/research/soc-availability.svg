@@ -1,0 +1,26 @@
+<svg width="496" height="310" viewBox="0 0 496 310" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 0.5H488C492.142 0.5 495.5 3.85786 495.5 8V302C495.5 306.142 492.142 309.5 488 309.5H8C3.85787 309.5 0.5 306.142 0.5 302V8C0.5 3.85787 3.85786 0.5 8 0.5Z" fill="white"/>
+<path d="M8 0.5H488C492.142 0.5 495.5 3.85786 495.5 8V302C495.5 306.142 492.142 309.5 488 309.5H8C3.85787 309.5 0.5 306.142 0.5 302V8C0.5 3.85787 3.85786 0.5 8 0.5Z" stroke="#EAE9E5"/>
+<path d="M136 41C154.987 41 173.548 46.6303 189.335 57.1789C205.122 67.7275 217.426 82.7207 224.692 100.262C231.958 117.804 233.86 137.106 230.155 155.729C226.451 174.351 217.308 191.456 203.882 204.882L169.941 170.941C176.654 164.228 181.226 155.675 183.078 146.364C184.93 137.053 183.979 127.402 180.346 118.631C176.713 109.86 170.561 102.364 162.667 97.0895C154.774 91.8151 145.493 89 136 89L136 41Z" fill="#CF6CA3" stroke="white"/>
+<path d="M136 233C148.607 233 161.09 230.517 172.738 225.692C184.385 220.868 194.968 213.797 203.882 204.882L169.941 170.941C165.484 175.398 160.192 178.934 154.369 181.346C148.545 183.758 142.303 185 136 185L136 233Z" fill="#4F96E4" stroke="white"/>
+<path d="M43.2711 161.847C48.7407 182.259 60.7931 200.297 77.5589 213.162C94.3248 226.027 114.867 233 136 233L136 185C125.434 185 115.162 181.513 106.779 175.081C98.3965 168.649 92.3704 159.63 89.6356 149.423L43.2711 161.847Z" fill="#DFB74F" stroke="white"/>
+<path d="M136 41C127.61 41 119.257 42.0997 111.153 44.2711L123.577 90.6356C127.629 89.5499 131.805 89 136 89L136 41Z" fill="#9E7BD3" stroke="white"/>
+<path d="M111.153 44.2711C98.976 47.534 87.5606 53.1635 77.5589 60.8381C67.5572 68.5127 59.165 78.0821 52.8616 89C46.5581 99.9179 42.4668 111.97 40.8213 124.469C39.1758 136.969 40.0082 149.669 43.2711 161.847L89.6356 149.423C88.0041 143.335 87.5879 136.984 88.4106 130.735C89.2334 124.485 91.2791 118.459 94.4308 113C97.5825 107.541 101.779 102.756 106.779 98.919C111.78 95.0817 117.488 92.267 123.577 90.6356L111.153 44.2711Z" fill="#78BB91" stroke="white"/>
+<circle cx="277.5" cy="53" r="5.5" stroke="#78BB91" stroke-width="2"/>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="299" y="58.0909">Moving</tspan></text>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="439" y="58.0909">25</tspan></text>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="272" y="94.0909">Hasn&#x2019;t moved for:</tspan></text>
+<circle cx="277.5" cy="125" r="5.5" stroke="#CF6CA3" stroke-width="2"/>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="299" y="130.091">2&#x2013;3 hours</tspan></text>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="438" y="130.091">38</tspan></text>
+<circle cx="277.5" cy="157" r="5.5" stroke="#DFB74F" stroke-width="2"/>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="299" y="162.091">3&#x2013;8 hours</tspan></text>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="441" y="162.091">21</tspan></text>
+<circle cx="277.5" cy="189" r="5.5" stroke="#4F96E4" stroke-width="2"/>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="299" y="194.091">8&#x2013;72 hours</tspan></text>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="441" y="194.091">12</tspan></text>
+<circle cx="277.5" cy="221" r="5.5" stroke="#9E7BD3" stroke-width="2"/>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="299" y="226.091">72+ hours</tspan></text>
+<text fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="447" y="226.091">4</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" font-style="italic" letter-spacing="0em"><tspan x="162" y="263.364">autoSecure fleet management</tspan></text>
+</svg>

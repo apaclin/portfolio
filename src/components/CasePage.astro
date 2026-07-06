@@ -3,6 +3,8 @@ import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Prose from './Prose.astro';
 import TranslationNotice from './TranslationNotice.astro';
+import CaseNav from './CaseNav.astro';
+import CaseToc from './CaseToc.astro';
 import type { LocalizedCaseProps } from '../lib/cases';
 
 const { entry, contentLocale, isFallback } = Astro.props as LocalizedCaseProps;
@@ -19,6 +21,7 @@ const { Content } = await render(entry);
       )
     }
     <Prose as="article" lang={isFallback ? contentLocale : undefined}>
+      <CaseNav variant="article" />
       <header class="case-hero !m-0 !pb-10">
         <h1 class="!m-0 !mb-4 !text-[30px] !leading-[1.2] !font-bold !tracking-[-0.02em]">
           {entry.data.title}
@@ -38,6 +41,7 @@ const { Content } = await render(entry);
           )
         }
       </header>
+      <CaseToc locale={contentLocale} />
       <Content />
     </Prose>
   </main>
@@ -49,7 +53,8 @@ const { Content } = await render(entry);
     text-wrap: pretty;
   }
 
-  .case-hero + :global(.breakout) {
+  .case-hero + :global(.breakout),
+  .case-hero + :global(.case-toc) + :global(.breakout) {
     margin-block-start: 0;
   }
 </style>

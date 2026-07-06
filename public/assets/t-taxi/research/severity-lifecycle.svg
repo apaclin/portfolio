@@ -1,0 +1,16 @@
+<svg width="496" height="310" viewBox="0 0 496 310" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 0.5H488C492.142 0.5 495.5 3.85786 495.5 8V302C495.5 306.142 492.142 309.5 488 309.5H8C3.85787 309.5 0.5 306.142 0.5 302V8C0.5 3.85787 3.85786 0.5 8 0.5Z" fill="white"/>
+<path d="M8 0.5H488C492.142 0.5 495.5 3.85786 495.5 8V302C495.5 306.142 492.142 309.5 488 309.5H8C3.85787 309.5 0.5 306.142 0.5 302V8C0.5 3.85787 3.85786 0.5 8 0.5Z" stroke="#EAE9E5"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="16" font-weight="500" letter-spacing="0em"><tspan x="171.203" y="118.318">Уровни приоритета</tspan></text>
+<path d="M87 142C87 139.791 88.7909 138 91 138H141C143.209 138 145 139.791 145 142V167C145 169.209 143.209 171 141 171H91C88.7909 171 87 169.209 87 167V142Z" fill="#6B6A64"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="95" y="159.591">SEV-5</tspan></text>
+<path d="M153 142C153 139.791 154.791 138 157 138H208C210.209 138 212 139.791 212 142V167C212 169.209 210.209 171 208 171H157C154.791 171 153 169.209 153 167V142Z" fill="#FFDE51"/>
+<text fill="black" fill-opacity="0.74" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="161" y="159.591">SEV-4</tspan></text>
+<path d="M220 142C220 139.791 221.791 138 224 138H275C277.209 138 279 139.791 279 142V167C279 169.209 277.209 171 275 171H224C221.791 171 220 169.209 220 167V142Z" fill="#FFAB2B"/>
+<text fill="black" fill-opacity="0.74" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="228" y="159.591">SEV-3</tspan></text>
+<path d="M287 142C287 139.791 288.791 138 291 138H341C343.209 138 345 139.791 345 142V167C345 169.209 343.209 171 341 171H291C288.791 171 287 169.209 287 167V142Z" fill="#F66A3D"/>
+<text fill="black" fill-opacity="0.74" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="295" y="159.591">SEV-2</tspan></text>
+<path d="M353 142C353 139.791 354.791 138 357 138H405C407.209 138 409 139.791 409 142V167C409 169.209 407.209 171 405 171H357C354.791 171 353 169.209 353 167V142Z" fill="#A61820"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="361" y="159.591">SEV-1</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" font-style="italic" letter-spacing="0em"><tspan x="218" y="201.364">PagerDuty</tspan></text>
+</svg>
