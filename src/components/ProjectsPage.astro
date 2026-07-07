@@ -11,6 +11,7 @@ import portrait from '../assets/profile/alexander-paklin.jpg';
 
 interface ProjectItem {
   title: string;
+  subtitle?: string;
   href?: string;
   external?: boolean;
   image?: ImageMetadata;
@@ -48,22 +49,24 @@ const contactLinks = [
 
 const sections: ProjectSection[] = [
   {
-    title: 'B2B SaaS',
+    title: 'B2B веб-сервисы',
     items: [
       {
         title: 'Matchpoint',
+        subtitle: 'Автоматизация счетов к оплате',
         href: '/cases/matchpoint',
         image: matchpointCover,
         imageAlt: 'Интерфейс Matchpoint на светлом мокапе',
       },
       {
         title: 'Т-Такси',
+        subtitle: 'Управление беспилотным флотом',
         href: '/cases/t-taxi',
         image: tTaxiCover,
         imageAlt: 'Темный мониторинг Т-Такси на экране',
       },
       {
-        title: 'Laneo',
+        title: 'Laneo CRM',
         href: '/cases/laneo',
         image: laneoCover,
         imageAlt: 'Интерфейс Laneo CRM на светлом мокапе',
@@ -72,16 +75,18 @@ const sections: ProjectSection[] = [
     ],
   },
   {
-    title: 'Проекты на Behance',
+    title: 'Приложения и сайты',
     items: [
       {
-        title: 'Онлайн-кинотеатр',
+        title: 'Filmaze',
+        subtitle: 'Онлайн-кинотеатр',
         href: '/cases/online-cinema',
         image: onlineCinemaCover,
         imageAlt: 'Мобильный интерфейс онлайн-кинотеатра Filmaze',
       },
       {
-        title: 'Сайт архитектурной студии',
+        title: 'Bergström',
+        subtitle: 'Сайт архитектурной студии',
         href: '/cases/architecture-studio',
         image: architectureStudioCover,
         imageAlt: 'Сайт архитектурной студии Bergstrom на ноутбуке',
@@ -167,7 +172,7 @@ const sections: ProjectSection[] = [
                             alt={item.imageAlt ?? item.title}
                             widths={[480, 720, 960]}
                             sizes="(min-width: 64rem) 350px, (min-width: 40rem) 50vw, calc(100vw - 2.5rem)"
-                            class="h-full w-full scale-[1.08] object-cover opacity-65 blur-[7px]"
+                            class="h-full w-full scale-[1.22] object-cover opacity-65 blur-[16px]"
                             loading="lazy"
                             decoding="async"
                           />
@@ -232,6 +237,13 @@ const sections: ProjectSection[] = [
                     )
                   }
                 </h3>
+                {
+                  item.subtitle && (
+                    <p class="mt-1 text-sm leading-6 text-[var(--color-text-muted)]">
+                      {item.subtitle}
+                    </p>
+                  )
+                }
               </article>
             ))}
           </div>

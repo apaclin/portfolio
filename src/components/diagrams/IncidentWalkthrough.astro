@@ -20,7 +20,9 @@ const {
 } = Astro.props as Props;
 
 const zonesJson = JSON.stringify(incidentZones);
-const widths = [500, 750, 1000];
+// Картинка теперь = карта (слева) + карточка (справа), в ширину контент-колонки
+// (1344×2402 → показ 672×1201). Карточка — правые 1000px, старт с x=344.
+const widths = [672, 1008, 1344];
 ---
 
 <section class="incw not-prose full-bleed" data-incw data-cta={cta} data-replay-cta={replayCta}>
@@ -34,9 +36,9 @@ const widths = [500, 750, 1000];
 
   <div class="incw__stage-wrap">
     <div class="incw__stage explore" data-stage>
-      <Image class="incw__base" src={cardFull} widths={widths} sizes="500px" alt="Карточка инцидента INC-2843" loading="lazy" />
+      <Image class="incw__base" src={cardFull} widths={widths} sizes="672px" alt="Карточка инцидента INC-2843 на карте" loading="lazy" />
       <div class="incw__dim" data-dim aria-hidden="true"></div>
-      <Image class="incw__sharp" src={cardFull} widths={widths} sizes="500px" alt="" aria-hidden="true" data-sharp loading="lazy" />
+      <Image class="incw__sharp" src={cardFull} widths={widths} sizes="672px" alt="" aria-hidden="true" data-sharp loading="lazy" />
       <div class="incw__zones">
         {
           incidentZones.map(
@@ -101,8 +103,9 @@ const widths = [500, 750, 1000];
   }
   const clamp = (v: number, a: number, b: number) => Math.min(Math.max(v, a), b);
   const CARD_EXIT = 240;
-  const LEFT = 2.1;
-  const WIDTH = 95.8;
+  // Карточка занимает правые 1000px из 1344 → зоны прижаты к правому краю.
+  const LEFT = 27.16;
+  const WIDTH = 71.28;
 
   const init = (root: HTMLElement) => {
     if (root.dataset.ready === 'true') return;
@@ -123,6 +126,7 @@ const widths = [500, 750, 1000];
     const startBtn = root.querySelector<HTMLButtonElement>('[data-start]');
     const capLeft = root.querySelector<HTMLElement>('[data-cap-left]');
     const zonesEl = root.querySelector<HTMLElement>('[data-zones]');
+    const introEl = root.querySelector<HTMLElement>('.incw__intro');
     const hotspots = [...root.querySelectorAll<HTMLButtonElement>('[data-zone]')];
 
     if (
@@ -148,6 +152,10 @@ const widths = [500, 750, 1000];
     let busy = false;
     let stepT = 0;
     let suppressExitUntil = 0;
+    // Разбор скроллится «постранично», а не к каждой зоне: шаги 1–3 (верх карточки)
+    // и 4–5 (низ) умещаются в экран, поэтому внутри страницы скролла нет.
+    let currentPage = -1;
+    const pageOf = (i: number) => (i <= 2 ? 0 : 1);
 
     const clipFor = (i: number) => {
       const z = zones[i];
@@ -185,30 +193,42 @@ const widths = [500, 750, 1000];
       const zH = (zones[i].height / 100) * H;
       const belowTop = zTop + zH + gap;
       const aboveTop = zTop - th - gap;
-      // Флип по ВЬЮПОРТУ: если снизу не влезает в экран — показываем сверху (и наоборот).
+      // Флип с учётом и вьюпорта, и границ карточки. Для нижних зон (напр. панель
+      // действий) «снизу» вылезает за карточку и клампится обратно НА зону —
+      // поэтому проверяем ещё и вписывание в карточку и уходим наверх.
       const sr = stage.getBoundingClientRect();
       const vh = window.innerHeight;
-      const fitsBelow = sr.top + belowTop + th <= vh - 8;
-      const fitsAbove = sr.top + aboveTop >= 8;
-      let top = fitsBelow ? belowTop : fitsAbove ? aboveTop : belowTop;
+      const fitsBelowVp = sr.top + belowTop + th <= vh - 8;
+      const fitsBelowCard = belowTop + th <= H - 8;
+      const fitsAboveVp = sr.top + aboveTop >= 8;
+      const fitsAboveCard = aboveTop >= 8;
+      const canBelow = fitsBelowVp && fitsBelowCard;
+      const canAbove = fitsAboveVp && fitsAboveCard;
+      let top = canBelow ? belowTop : canAbove ? aboveTop : fitsBelowVp ? belowTop : aboveTop;
       top = clamp(top, 8, Math.max(8, H - th - 8));
       tip.style.left = Math.round(left) + 'px';
       tip.style.top = Math.round(top) + 'px';
     };
 
-    const scrollToZone = (i: number) => {
-      const z = zones[i];
-      const sr = stage.getBoundingClientRect();
-      // Пока идёт наш программный скролл к зоне — подавляем автовыход по уходу
-      // сцены из вида, иначе промежуточные кадры плавного скролла закрыли бы
-      // разбор ещё до того, как сцена доедет до места.
+    // Постраничный скролл. Страница 0 (шаги 1–3): кнопка запуска прижата к верху
+    // вьюпорта — виден верх карточки. Страница 1 (шаги 4–5): низ карточки прижат
+    // к низу вьюпорта (над плавающей панелью управления). Скролл — только при
+    // смене страницы; внутри страницы (1↔2↔3, 4↔5) карточка стоит на месте.
+    const TOP_GAP = 16;
+    const CTRL_CLEAR = 96; // высота плавающей панели снизу + зазор
+    const scrollForStep = (i: number, force = false) => {
+      const page = pageOf(i);
+      if (!force && page === currentPage) return;
+      currentPage = page;
+      // Пока идёт наш программный скролл — подавляем автовыход по уходу сцены из
+      // вида, иначе промежуточные кадры плавного скролла закрыли бы разбор.
       suppressExitUntil = performance.now() + 800;
-      if (z.whole) {
-        window.scrollTo({ top: window.scrollY + sr.top - 80, behavior: 'smooth' });
+      if (page === 0) {
+        const r = (introEl || stage).getBoundingClientRect();
+        window.scrollTo({ top: Math.max(0, window.scrollY + r.top - TOP_GAP), behavior: 'smooth' });
       } else {
-        const zTop = (z.top / 100) * sr.height;
-        const zH = (z.height / 100) * sr.height;
-        const target = window.scrollY + sr.top + zTop + zH / 2 - window.innerHeight / 2;
+        const r = stage.getBoundingClientRect();
+        const target = window.scrollY + r.bottom - (window.innerHeight - CTRL_CLEAR);
         window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
       }
     };
@@ -261,7 +281,7 @@ const widths = [500, 750, 1000];
       setNextLabel(i);
       prevBtn.disabled = i === 0;
       firstBtn.disabled = i === 0;
-      scrollToZone(i);
+      scrollForStep(i);
       window.clearTimeout(stepT);
       stepT = window.setTimeout(() => {
         sharp.style.clipPath = clipFor(i);
@@ -281,6 +301,7 @@ const widths = [500, 750, 1000];
       setNextLabel(i);
       prevBtn.disabled = i === 0;
       firstBtn.disabled = i === 0;
+      scrollForStep(i);
       sharp.style.clipPath = clipFor(i);
       setActive(i);
       sharp.style.opacity = '1';
@@ -293,6 +314,7 @@ const widths = [500, 750, 1000];
       hoverIdx = -1;
       shownIdx = -1;
       busy = false;
+      currentPage = -1; // первый шаг всегда скроллит к своей странице
       stage.classList.remove('explore');
       stage.classList.add('guided');
       root.classList.add('is-guided');
@@ -316,6 +338,7 @@ const widths = [500, 750, 1000];
       idx = -1;
       hoverIdx = -1;
       shownIdx = -1;
+      currentPage = -1;
       setStartLabel();
       capLeft.textContent = completed
         ? 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.'
@@ -491,11 +514,12 @@ const widths = [500, 750, 1000];
     transform: translateY(1px);
   }
 
-  /* Сцена = карточка целиком (0.5× от 2×-файла = 500×1201), по центру. */
+  /* Сцена = карта + карточка (0.5× от 2×-файла = 672×1201), в ширину контент-
+     колонки (42rem), выровнена с интро/подписью. */
   .incw__stage-wrap {
-    max-width: 500px;
+    max-width: calc(42rem + 3rem);
     margin-inline: auto;
-    padding-inline: 1rem;
+    padding-inline: 1.5rem;
   }
   .incw__stage {
     position: relative;
@@ -547,8 +571,8 @@ const widths = [500, 750, 1000];
   }
   .incw__zone {
     position: absolute;
-    left: 2.1%;
-    width: 95.8%;
+    left: 27.16%;
+    width: 71.28%;
     padding: 0;
     border: 0;
     background: transparent;
