@@ -1,0 +1,25 @@
+---
+import PublicSvg from '../../common/PublicSvg.astro';
+
+type Lang = 'ru' | 'en';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'ru' } = Astro.props as Props;
+const src = `/assets/matchpoint/schemas/flows.${lang}.svg`;
+const alt =
+  lang === 'en'
+    ? 'Traditional AP path compared with Matchpoint exception workflow'
+    : 'Традиционный AP-процесс в сравнении с обработкой исключений в Matchpoint';
+---
+
+<PublicSvg src={src} alt={alt} fit="container" className="matchpoint-flows" />
+
+<style>
+  :global(.matchpoint-flows),
+  :global(.matchpoint-flows svg) {
+    width: 100%;
+  }
+</style>

@@ -13,6 +13,8 @@ export interface LocalizedCaseProps {
 const otherLocale = (locale: CaseLocale): CaseLocale =>
   locale === 'ru' ? 'en' : 'ru';
 
+const slugFromLocalizedId = (id: string) => id.replace(/-(en|ru)$/, '');
+
 export async function getLocalizedCasePaths(requestedLocale: CaseLocale) {
   const [ru, en] = await Promise.all([
     getCollection('cases-ru'),
@@ -20,8 +22,8 @@ export async function getLocalizedCasePaths(requestedLocale: CaseLocale) {
   ]);
 
   const entriesByLocale = {
-    ru: new Map(ru.map((entry) => [entry.id, entry])),
-    en: new Map(en.map((entry) => [entry.id, entry])),
+    ru: new Map(ru.map((entry) => [slugFromLocalizedId(entry.id), entry])),
+    en: new Map(en.map((entry) => [slugFromLocalizedId(entry.id), entry])),
   } satisfies Record<CaseLocale, Map<string, CaseEntry>>;
 
   const fallbackLocale = otherLocale(requestedLocale);

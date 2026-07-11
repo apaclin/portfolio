@@ -11,7 +11,7 @@
 // primary-кнопка — через токены --color-primary-*.
 import { Picture } from 'astro:assets';
 import Icon from '../icons/Icon.astro';
-import type { Zone } from '../../content/t-taxi/zones';
+import type { Zone } from '../../content/data/t-taxi/zones';
 
 interface Props {
   src: ImageMetadata;
@@ -19,11 +19,48 @@ interface Props {
   title: string;
   description: string;
   zones: Zone[];
+  locale?: 'en' | 'ru';
   hint?: string;
   cta?: string;
   replayCta?: string;
   maxWidth?: string;
 }
+
+const locale = (Astro.props.locale ?? (Astro.currentLocale === 'ru' ? 'ru' : 'en')) as 'en' | 'ru';
+const ui = {
+  ru: {
+    hint: 'Наведите на области экрана или запустите пошаговый разбор.',
+    cta: 'Разобрать экран',
+    replayCta: 'Посмотреть разбор снова',
+    first: 'В начало',
+    prev: 'Назад',
+    next: 'Далее',
+    done: 'Готово',
+    close: 'Закрыть разбор',
+    captionIdle: 'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.',
+    captionKeys: 'двигают рамку между шагами · клик по экрану /',
+    captionExit: '— выход',
+    captionStarted:
+      'Разбор запущен. Стрелки двигают рамку между шагами. Клик по экрану или Esc — выход.',
+    captionCompleted: 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.',
+  },
+  en: {
+    hint: 'Hover over screen areas or start the step-by-step walkthrough.',
+    cta: 'Break down screen',
+    replayCta: 'Watch walkthrough again',
+    first: 'Back to start',
+    prev: 'Back',
+    next: 'Next',
+    done: 'Done',
+    close: 'Close walkthrough',
+    captionIdle: 'Hover — outline first, preview follows. Click — step-by-step walkthrough.',
+    captionKeys: 'move the frame between steps · click the screen /',
+    captionExit: '— exit',
+    captionStarted:
+      'Walkthrough started. Arrow keys move the frame between steps. Click the screen or press Esc to exit.',
+    captionCompleted: 'Walkthrough complete. Hover over zones to jump back to any step.',
+  },
+}[locale];
 
 const {
   src,
@@ -31,9 +68,9 @@ const {
   title,
   description,
   zones,
-  hint = 'Наведите на области экрана или запустите пошаговый разбор.',
-  cta = 'Разобрать экран',
-  replayCta = 'Посмотреть разбор снова',
+  hint = ui.hint,
+  cta = ui.cta,
+  replayCta = ui.replayCta,
   maxWidth = '1440px',
 } = Astro.props as Props;
 
@@ -46,6 +83,11 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   data-walkthrough
   data-cta={cta}
   data-replay-cta={replayCta}
+  data-next-label={ui.next}
+  data-done-label={ui.done}
+  data-caption-idle={ui.captionIdle}
+  data-caption-started={ui.captionStarted}
+  data-caption-completed={ui.captionCompleted}
 >
   <div class="walkthrough__intro">
     <div>
@@ -117,27 +159,27 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
             class="walkthrough__nav walkthrough__nav--icon"
             type="button"
             data-first
-            aria-label="В начало"
-            title="В начало"
+            aria-label={ui.first}
+            title={ui.first}
           >
             <Icon name="chevron-first" size={14} />
           </button>
-          <button class="walkthrough__nav" type="button" data-prev aria-label="Назад">
+          <button class="walkthrough__nav" type="button" data-prev aria-label={ui.prev}>
             <Icon name="chevron-left" size={14} />
-            Назад
+            {ui.prev}
           </button>
           <button
             class="walkthrough__nav walkthrough__nav--primary"
             type="button"
             data-next
-            aria-label="Далее"
+            aria-label={ui.next}
           >
-            <span data-next-text>Далее</span>
+            <span data-next-text>{ui.next}</span>
             <Icon name="chevron-right" size={14} class="walkthrough__next-go" />
             <Icon name="check" size={14} class="walkthrough__next-done" />
           </button>
           <span class="walkthrough__sep"></span>
-          <button class="walkthrough__close" type="button" data-close aria-label="Закрыть разбор">
+          <button class="walkthrough__close" type="button" data-close aria-label={ui.close}>
             <Icon name="x" size={16} />
           </button>
         </div>
@@ -146,9 +188,9 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   </div>
 
   <p class="walkthrough__caption">
-    <span data-cap-left>Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.</span>
+    <span data-cap-left>{ui.captionIdle}</span>
     <span class="walkthrough__caption-keys">
-      <kbd>←</kbd> <kbd>→</kbd> двигают рамку между шагами · клик по экрану / <kbd>Esc</kbd> — выход
+      <kbd>←</kbd> <kbd>→</kbd> {ui.captionKeys} <kbd>Esc</kbd> {ui.captionExit}
     </span>
   </p>
 </section>
@@ -218,6 +260,14 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     const CARD_EXIT = 250;
     const cta = root.dataset.cta || 'Разобрать экран';
     const replayCta = root.dataset.replayCta || 'Посмотреть разбор снова';
+    const nextLabel = root.dataset.nextLabel || 'Далее';
+    const doneLabel = root.dataset.doneLabel || 'Готово';
+    const captionIdle = root.dataset.captionIdle || 'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.';
+    const captionStarted =
+      root.dataset.captionStarted ||
+      'Разбор запущен. Стрелки двигают рамку между шагами. Клик по экрану или Esc — выход.';
+    const captionCompleted =
+      root.dataset.captionCompleted || 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.';
 
     let idx = -1;
     let guided = false;
@@ -270,7 +320,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
     const setNextLabel = (i: number) => {
       const last = i === N - 1;
-      nextText.textContent = last ? 'Готово' : 'Далее';
+      nextText.textContent = last ? doneLabel : nextLabel;
       nextBtn.classList.toggle('is-last', last);
     };
 
@@ -384,8 +434,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
       idx = i;
       scrollStageIntoView();
-      capLeft.textContent =
-        'Разбор запущен. Стрелки двигают рамку между шагами. Клик по экрану или Esc — выход.';
+      capLeft.textContent = captionStarted;
     };
 
     // ── Навигация Назад/Далее: единственный «перелёт» рамки/резкости/карточки ──
@@ -435,9 +484,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       cardShownIdx = -1;
       cardBusy = false;
       startBtn.textContent = completed ? replayCta : cta;
-      capLeft.textContent = completed
-        ? 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.'
-        : 'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.';
+      capLeft.textContent = completed ? captionCompleted : captionIdle;
     };
 
     regionEls.forEach((el, i) => {
@@ -560,7 +607,12 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     wide?.addEventListener('scroll', checkAutoExit, { passive: true });
   };
 
-  document.querySelectorAll<HTMLElement>('[data-walkthrough]').forEach(initWalkthrough);
+  const initWalkthroughs = () => {
+    document.querySelectorAll<HTMLElement>('[data-walkthrough]').forEach(initWalkthrough);
+  };
+
+  document.addEventListener('astro:page-load', initWalkthroughs);
+  initWalkthroughs();
 </script>
 
 <style>

@@ -1,0 +1,28 @@
+<svg width="496" height="310" viewBox="0 0 496 310" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.5" y="0.5" width="495" height="309" rx="7.5" fill="white"/>
+<rect x="0.5" y="0.5" width="495" height="309" rx="7.5" stroke="#EAE9E5"/>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0em"><tspan x="44.5996" y="52.3636">50</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0em"><tspan x="44.4004" y="84.5638">40</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0em"><tspan x="44.4297" y="116.764">30</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0em"><tspan x="44.6172" y="148.964">20</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0em"><tspan x="45.4609" y="181.163">10</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0em"><tspan x="48.25" y="213.364">0</tspan></text>
+<text transform="translate(113 222)" fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="0.246094" y="13.0909">Waymo</tspan></text>
+<text transform="translate(243 222)" fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="0.342773" y="13.0909">Cruise</tspan></text>
+<text transform="translate(356 222)" fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="0.015625" y="13.0909">&#x41a;&#x438;&#x442;&#x430;&#x439;&#x441;&#x43a;&#x438;&#x435;</tspan></text>
+<line x1="75.5" y1="43.5" x2="455.5" y2="43.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<line x1="76.5" y1="77.5" x2="453.5" y2="77.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<line x1="76.5" y1="111.5" x2="453.5" y2="111.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<line x1="76.5" y1="146.5" x2="453.5" y2="146.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<line x1="76.5" y1="181.5" x2="453.5" y2="181.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<line x1="75" y1="213.5" x2="456" y2="213.5" stroke="#EAE9E5"/>
+<line x1="75.5" y1="213.5" x2="75.5" y2="44.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<line x1="201.5" y1="213.5" x2="201.5" y2="44.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<line x1="327.5" y1="213.5" x2="327.5" y2="44.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<line x1="455.5" y1="213.5" x2="455.5" y2="44.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
+<path d="M98 69C98 66.7909 99.7908 65 102 65L174 65C176.209 65 178 66.7909 178 69L178 214L98 214L98 69Z" fill="#C9D8EA"/>
+<path d="M225 155C225 152.791 226.791 151 229 151L301 151C303.209 151 305 152.791 305 155L305 214L225 214L225 155Z" fill="#C9D8EA"/>
+<path d="M352 209C352 206.791 353.791 205 356 205L430 205C432.209 205 434 206.791 434 209L434 214L352 214L352 209Z" fill="#C9D8EA"/>
+<rect x="168.5" y="258" width="8" height="8" rx="4" fill="#C9D8EA"/>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="184.626" y="267.091">Vehicles per engineer</tspan></text>
+</svg>

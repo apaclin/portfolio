@@ -1,0 +1,51 @@
+---
+// Hero-картинка стандартного кейса — первый визуал страницы. В отличие от
+// обычного <Image> (lazy) грузится eager + fetchpriority=high + decoding=sync,
+// чтобы появиться ОДНОВРЕМЕННО с текстом, а не после него (без «текст → пустая
+// рамка → картинка»). Обёртка Breakout повторяет прежний паттерн первого блока.
+// Пропсы пробрасываются в Image, поэтому каждый кейс задаёт свои maxWidth/class/
+// widths/sizes, а механика приоритетной загрузки едина и живёт здесь.
+import Breakout from '../common/Breakout.astro';
+import Image from '../common/Image.astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  /** Ширина Breakout-обёртки. */
+  maxWidth?: string;
+  variant?: 'case' | 'inline';
+  widths?: number[];
+  sizes?: string;
+  class?: string;
+  zoomable?: boolean;
+  caption?: string;
+}
+
+const {
+  src,
+  alt,
+  maxWidth = '720px',
+  variant = 'case',
+  widths,
+  sizes,
+  class: className,
+  zoomable = false,
+  caption,
+} = Astro.props as Props;
+---
+
+<Breakout maxWidth={maxWidth}>
+  <Image
+    src={src}
+    alt={alt}
+    variant={variant}
+    widths={widths}
+    sizes={sizes}
+    class={className}
+    zoomable={zoomable}
+    caption={caption}
+    loading="eager"
+    fetchpriority="high"
+    decoding="sync"
+  />
+</Breakout>

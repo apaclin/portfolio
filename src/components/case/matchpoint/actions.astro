@@ -1,0 +1,18 @@
+---
+import PublicSvg from '../../common/PublicSvg.astro';
+
+type Lang = 'ru' | 'en';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'ru' } = Astro.props as Props;
+const src = `/assets/matchpoint/schemas/actions.${lang}.svg`;
+const alt =
+  lang === 'en'
+    ? 'Exception actions grouped into supporting actions and resolutions'
+    : 'Действия для исключений, сгруппированные на вспомогательные действия и решения';
+---
+
+<PublicSvg src={src} alt={alt} />

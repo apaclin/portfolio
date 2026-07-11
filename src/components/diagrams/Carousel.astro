@@ -18,6 +18,10 @@ interface Props {
   ratio?: string;
   /** Доступное имя карусели. */
   label?: string;
+  /** CSS max-width контейнера карусели. */
+  containerMaxWidth?: string;
+  /** Убрать внутренние боковые отступы контейнера. */
+  flush?: boolean;
   /** Грузить 1-й слайд eager — только если карусель в hero/над сгибом. */
   eager?: boolean;
   /** Логическая (CSS) ширина макета для лайтбокса: 1440 / 1920. По умолч. 1440. */
@@ -27,6 +31,8 @@ const {
   items,
   ratio = '16 / 10',
   label = 'Screenshots',
+  containerMaxWidth = '60rem',
+  flush = false,
   eager = false,
   maxWidth = 1440,
 } = Astro.props as Props;
@@ -86,11 +92,15 @@ const slides = await Promise.all(
 ---
 
 <figure
-  class="carousel full-bleed not-prose mx-auto max-w-[60rem] px-5 sm:px-6"
+  class:list={[
+    'carousel full-bleed not-prose mx-auto max-w-[60rem]',
+    !flush && 'px-5 sm:px-6',
+    flush && 'px-0',
+  ]}
   role="group"
   aria-roledescription="carousel"
   aria-label={label}
-  style={`--carousel-ratio:${ratio}`}
+  style={`--carousel-ratio:${ratio};max-width:${containerMaxWidth}`}
 >
   <div class="carousel__viewport">
     <ul class="carousel__track">
@@ -125,7 +135,7 @@ const slides = await Promise.all(
                 />
               </picture>
             </button>
-            {item.caption && <span class="carousel__caption">{item.caption}</span>}
+            {item.caption && <span class="carousel__caption" set:html={item.caption} />}
           </li>
         ))
       }
@@ -196,6 +206,13 @@ const slides = await Promise.all(
     flex-direction: column;
     min-width: 0;
   }
+  .carousel__slide :global([data-zoomable]) {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
   .carousel__slide :global(picture) {
     display: block;
     width: 100%;
@@ -257,16 +274,20 @@ const slides = await Promise.all(
 </style>
 
 <script>
-  const reduceMotion = window.matchMedia(
-    '(prefers-reduced-motion: reduce)'
-  ).matches;
+  const initCarousels = () => {
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
 
-  document.querySelectorAll<HTMLElement>('.carousel').forEach((root) => {
-    const track = root.querySelector<HTMLElement>('.carousel__track');
-    const prev = root.querySelector<HTMLButtonElement>('.carousel__btn--prev');
-    const next = root.querySelector<HTMLButtonElement>('.carousel__btn--next');
-    if (!track) return;
-    let didPreload = false;
+    document.querySelectorAll<HTMLElement>('.carousel').forEach((root) => {
+      if (root.dataset.carouselReady === 'true') return;
+      root.dataset.carouselReady = 'true';
+
+      const track = root.querySelector<HTMLElement>('.carousel__track');
+      const prev = root.querySelector<HTMLButtonElement>('.carousel__btn--prev');
+      const next = root.querySelector<HTMLButtonElement>('.carousel__btn--next');
+      if (!track) return;
+      let didPreload = false;
 
     const indexOf = () =>
       track.clientWidth > 0 ? Math.round(track.scrollLeft / track.clientWidth) : 0;
@@ -348,4 +369,8 @@ const slides = await Promise.all(
     }
     sync();
   });
+  };
+
+  document.addEventListener('astro:page-load', initCarousels);
+  initCarousels();
 </script>

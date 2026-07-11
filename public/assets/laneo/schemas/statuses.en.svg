@@ -1,0 +1,135 @@
+<svg width="1440" height="560" viewBox="0 0 1440 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.5" y="0.5" width="1439" height="559" rx="7.5" fill="white"/>
+<rect x="0.5" y="0.5" width="1439" height="559" rx="7.5" stroke="#EAE9E5"/>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="123.5" y="52.3636">SALES ORDER</tspan></text>
+<rect x="139.5" y="88.5" width="54" height="23" rx="11.5" fill="#FCF8ED"/>
+<rect x="139.5" y="88.5" width="54" height="23" rx="11.5" stroke="#F3D694"/>
+<text fill="#A44719" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="147" y="104.364">DRAFT</tspan></text>
+<rect x="101.5" y="144.5" width="131" height="23" rx="11.5" fill="#FCF8ED"/>
+<rect x="101.5" y="144.5" width="131" height="23" rx="11.5" stroke="#F3D694"/>
+<text fill="#A44719" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="109" y="160.364">PENDING APPROVAL</tspan></text>
+<rect x="128.5" y="200.5" width="77" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="128.5" y="200.5" width="77" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="136" y="216.364">APPROVED</tspan></text>
+<rect x="124.5" y="256.5" width="85" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="124.5" y="256.5" width="85" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="132" y="272.364">CONFIRMED</tspan></text>
+<rect x="136" y="312.5" width="62" height="23" rx="11.5" fill="#F2FBF5"/>
+<rect x="136" y="312.5" width="62" height="23" rx="11.5" stroke="#95E0AD"/>
+<text fill="#288647" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="143.5" y="328.364">CLOSED</tspan></text>
+<path d="M167.5 115C167.5 114.724 167.276 114.5 167 114.5C166.724 114.5 166.5 114.724 166.5 115H167H167.5ZM166.646 141.354C166.842 141.549 167.158 141.549 167.354 141.354L170.536 138.172C170.731 137.976 170.731 137.66 170.536 137.464C170.34 137.269 170.024 137.269 169.828 137.464L167 140.293L164.172 137.464C163.976 137.269 163.66 137.269 163.464 137.464C163.269 137.66 163.269 137.976 163.464 138.172L166.646 141.354ZM167 115H166.5V141H167H167.5V115H167Z" fill="#F3D694"/>
+<path d="M167.5 171C167.5 170.724 167.276 170.5 167 170.5C166.724 170.5 166.5 170.724 166.5 171H167H167.5ZM166.646 197.354C166.842 197.549 167.158 197.549 167.354 197.354L170.536 194.172C170.731 193.976 170.731 193.66 170.536 193.464C170.34 193.269 170.024 193.269 169.828 193.464L167 196.293L164.172 193.464C163.976 193.269 163.66 193.269 163.464 193.464C163.269 193.66 163.269 193.976 163.464 194.172L166.646 197.354ZM167 171H166.5V197H167H167.5V171H167Z" fill="#F3D694"/>
+<path d="M167.5 227C167.5 226.724 167.276 226.5 167 226.5C166.724 226.5 166.5 226.724 166.5 227H167H167.5ZM166.646 253.354C166.842 253.549 167.158 253.549 167.354 253.354L170.536 250.172C170.731 249.976 170.731 249.66 170.536 249.464C170.34 249.269 170.024 249.269 169.828 249.464L167 252.293L164.172 249.464C163.976 249.269 163.66 249.269 163.464 249.464C163.269 249.66 163.269 249.976 163.464 250.172L166.646 253.354ZM167 227H166.5V253H167H167.5V227H167Z" fill="#C3D9F4"/>
+<path d="M167.5 283C167.5 282.724 167.276 282.5 167 282.5C166.724 282.5 166.5 282.724 166.5 283H167H167.5ZM166.646 309.354C166.842 309.549 167.158 309.549 167.354 309.354L170.536 306.172C170.731 305.976 170.731 305.66 170.536 305.464C170.34 305.269 170.024 305.269 169.828 305.464L167 308.293L164.172 305.464C163.976 305.269 163.66 305.269 163.464 305.464C163.269 305.66 163.269 305.976 163.464 306.172L166.646 309.354ZM167 283H166.5V309H167H167.5V283H167Z" fill="#C3D9F4"/>
+<line x1="107" y1="359.5" x2="227" y2="359.5" stroke="#EAEBED"/>
+<rect x="124.5" y="384.5" width="85" height="23" rx="11.5" fill="#F4F5F6"/>
+<rect x="124.5" y="384.5" width="85" height="23" rx="11.5" stroke="#D4D7DB"/>
+<text fill="#5C6066" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="132" y="400.364">CANCELLED</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="410.75" y="52.3636">SHIPMENT</tspan></text>
+<rect x="408.75" y="88.5" width="71" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="408.75" y="88.5" width="71" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="416.25" y="104.364">PLANNED</tspan></text>
+<rect x="412.75" y="144.5" width="63" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="412.75" y="144.5" width="63" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="420.25" y="160.364">PICKING</tspan></text>
+<rect x="413.75" y="200.5" width="61" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="413.75" y="200.5" width="61" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="421.25" y="216.364">PACKED</tspan></text>
+<rect x="404.25" y="256.5" width="80" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="404.25" y="256.5" width="80" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="411.75" y="272.364">IN TRANSIT</tspan></text>
+<rect x="405.25" y="312.5" width="78" height="23" rx="11.5" fill="#F2FBF5"/>
+<rect x="405.25" y="312.5" width="78" height="23" rx="11.5" stroke="#95E0AD"/>
+<text fill="#288647" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="412.75" y="328.364">DELIVERED</tspan></text>
+<rect x="405.25" y="368.5" width="78" height="23" rx="11.5" fill="#F4F5F6"/>
+<rect x="405.25" y="368.5" width="78" height="23" rx="11.5" stroke="#D4D7DB"/>
+<text fill="#5C6066" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="412.75" y="384.364">RETURNED</tspan></text>
+<path d="M444.75 115C444.75 114.724 444.526 114.5 444.25 114.5C443.974 114.5 443.75 114.724 443.75 115H444.25H444.75ZM443.896 141.354C444.092 141.549 444.408 141.549 444.604 141.354L447.786 138.172C447.981 137.976 447.981 137.66 447.786 137.464C447.59 137.269 447.274 137.269 447.078 137.464L444.25 140.293L441.422 137.464C441.226 137.269 440.91 137.269 440.714 137.464C440.519 137.66 440.519 137.976 440.714 138.172L443.896 141.354ZM444.25 115H443.75V141H444.25H444.75V115H444.25Z" fill="#C3D9F4"/>
+<path d="M444.75 171C444.75 170.724 444.526 170.5 444.25 170.5C443.974 170.5 443.75 170.724 443.75 171H444.25H444.75ZM443.896 197.354C444.092 197.549 444.408 197.549 444.604 197.354L447.786 194.172C447.981 193.976 447.981 193.66 447.786 193.464C447.59 193.269 447.274 193.269 447.078 193.464L444.25 196.293L441.422 193.464C441.226 193.269 440.91 193.269 440.714 193.464C440.519 193.66 440.519 193.976 440.714 194.172L443.896 197.354ZM444.25 171H443.75V197H444.25H444.75V171H444.25Z" fill="#C3D9F4"/>
+<path d="M444.75 227C444.75 226.724 444.526 226.5 444.25 226.5C443.974 226.5 443.75 226.724 443.75 227H444.25H444.75ZM443.896 253.354C444.092 253.549 444.408 253.549 444.604 253.354L447.786 250.172C447.981 249.976 447.981 249.66 447.786 249.464C447.59 249.269 447.274 249.269 447.078 249.464L444.25 252.293L441.422 249.464C441.226 249.269 440.91 249.269 440.714 249.464C440.519 249.66 440.519 249.976 440.714 250.172L443.896 253.354ZM444.25 227H443.75V253H444.25H444.75V227H444.25Z" fill="#C3D9F4"/>
+<path d="M444.75 283C444.75 282.724 444.526 282.5 444.25 282.5C443.974 282.5 443.75 282.724 443.75 283H444.25H444.75ZM443.896 309.354C444.092 309.549 444.408 309.549 444.604 309.354L447.786 306.172C447.981 305.976 447.981 305.66 447.786 305.464C447.59 305.269 447.274 305.269 447.078 305.464L444.25 308.293L441.422 305.464C441.226 305.269 440.91 305.269 440.714 305.464C440.519 305.66 440.519 305.976 440.714 306.172L443.896 309.354ZM444.25 283H443.75V309H444.25H444.75V283H444.25Z" fill="#C3D9F4"/>
+<path d="M444.75 339C444.75 338.724 444.526 338.5 444.25 338.5C443.974 338.5 443.75 338.724 443.75 339H444.25H444.75ZM443.896 365.354C444.092 365.549 444.408 365.549 444.604 365.354L447.786 362.172C447.981 361.976 447.981 361.66 447.786 361.464C447.59 361.269 447.274 361.269 447.078 361.464L444.25 364.293L441.422 361.464C441.226 361.269 440.91 361.269 440.714 361.464C440.519 361.66 440.519 361.976 440.714 362.172L443.896 365.354ZM444.25 339H443.75V365H444.25H444.75V339H444.25Z" fill="#95E0AD"/>
+<line x1="384.25" y1="415.5" x2="504.25" y2="415.5" stroke="#EAEBED"/>
+<rect x="401.75" y="440.5" width="85" height="23" rx="11.5" fill="#F4F5F6"/>
+<rect x="401.75" y="440.5" width="85" height="23" rx="11.5" stroke="#D4D7DB"/>
+<text fill="#5C6066" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="409.25" y="456.364">CANCELLED</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="695.5" y="52.3636">INVOICE</tspan></text>
+<rect x="694.822" y="88.5" width="54" height="23" rx="11.5" fill="#FCF8ED"/>
+<rect x="694.822" y="88.5" width="54" height="23" rx="11.5" stroke="#F3D694"/>
+<text fill="#A44719" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="702.322" y="104.364">DRAFT</tspan></text>
+<rect x="698.822" y="144.5" width="46" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="698.822" y="144.5" width="46" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="706.322" y="160.364">SENT</tspan></text>
+<rect x="669.322" y="200.5" width="105" height="23" rx="11.5" fill="#FCF8ED"/>
+<rect x="669.322" y="200.5" width="105" height="23" rx="11.5" stroke="#F3D694"/>
+<text fill="#A44719" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="676.822" y="216.364">PARTIALLY PAID</tspan></text>
+<rect x="701.322" y="256.5" width="41" height="23" rx="11.5" fill="#F2FBF5"/>
+<rect x="701.322" y="256.5" width="41" height="23" rx="11.5" stroke="#95E0AD"/>
+<text fill="#288647" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="708.822" y="272.364">PAID</tspan></text>
+<rect x="777.822" y="144.5" width="70" height="23" rx="11.5" fill="#FCF5F4"/>
+<rect x="777.822" y="144.5" width="70" height="23" rx="11.5" stroke="#ECB7B5"/>
+<text fill="#9D333C" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="785.322" y="160.364">OVERDUE</tspan></text>
+<rect x="682.822" y="312.5" width="78" height="23" rx="11.5" fill="#F4F5F6"/>
+<rect x="682.822" y="312.5" width="78" height="23" rx="11.5" stroke="#D4D7DB"/>
+<text fill="#5C6066" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="690.322" y="328.364">REFUNDED</tspan></text>
+<path d="M722.322 115C722.322 114.724 722.098 114.5 721.822 114.5C721.546 114.5 721.322 114.724 721.322 115H721.822H722.322ZM721.469 141.354C721.664 141.549 721.981 141.549 722.176 141.354L725.358 138.172C725.553 137.976 725.553 137.66 725.358 137.464C725.163 137.269 724.846 137.269 724.651 137.464L721.822 140.293L718.994 137.464C718.799 137.269 718.482 137.269 718.287 137.464C718.091 137.66 718.091 137.976 718.287 138.172L721.469 141.354ZM721.822 115H721.322V141H721.822H722.322V115H721.822Z" fill="#F3D694"/>
+<path d="M722.322 171C722.322 170.724 722.098 170.5 721.822 170.5C721.546 170.5 721.322 170.724 721.322 171H721.822H722.322ZM721.469 197.354C721.664 197.549 721.981 197.549 722.176 197.354L725.358 194.172C725.553 193.976 725.553 193.66 725.358 193.464C725.163 193.269 724.846 193.269 724.651 193.464L721.822 196.293L718.994 193.464C718.799 193.269 718.482 193.269 718.287 193.464C718.091 193.66 718.091 193.976 718.287 194.172L721.469 197.354ZM721.822 171H721.322V197H721.822H722.322V171H721.822Z" fill="#C3D9F4"/>
+<path d="M722.322 227C722.322 226.724 722.098 226.5 721.822 226.5C721.546 226.5 721.322 226.724 721.322 227H721.822H722.322ZM721.469 253.354C721.664 253.549 721.981 253.549 722.176 253.354L725.358 250.172C725.553 249.976 725.553 249.66 725.358 249.464C725.163 249.269 724.846 249.269 724.651 249.464L721.822 252.293L718.994 249.464C718.799 249.269 718.482 249.269 718.287 249.464C718.091 249.66 718.091 249.976 718.287 250.172L721.469 253.354ZM721.822 227H721.322V253H721.822H722.322V227H721.822Z" fill="#F3D694"/>
+<path d="M722.322 283C722.322 282.724 722.098 282.5 721.822 282.5C721.546 282.5 721.322 282.724 721.322 283H721.822H722.322ZM721.469 309.354C721.664 309.549 721.981 309.549 722.176 309.354L725.358 306.172C725.553 305.976 725.553 305.66 725.358 305.464C725.163 305.269 724.846 305.269 724.651 305.464L721.822 308.293L718.994 305.464C718.799 305.269 718.482 305.269 718.287 305.464C718.091 305.66 718.091 305.976 718.287 306.172L721.469 309.354ZM721.822 283H721.322V309H721.822H722.322V283H721.822Z" fill="#95E0AD"/>
+<path d="M748.322 155.5C748.046 155.5 747.822 155.724 747.822 156C747.822 156.276 748.046 156.5 748.322 156.5V156V155.5ZM774.676 156.354C774.871 156.158 774.871 155.842 774.676 155.646L771.494 152.464C771.299 152.269 770.982 152.269 770.787 152.464C770.591 152.66 770.591 152.976 770.787 153.172L773.615 156L770.787 158.828C770.591 159.024 770.591 159.34 770.787 159.536C770.982 159.731 771.299 159.731 771.494 159.536L774.676 156.354ZM748.322 156V156.5H774.322V156V155.5H748.322V156Z" fill="#C3D9F4"/>
+<line x1="662.178" y1="359.5" x2="782.178" y2="359.5" stroke="#EAEBED"/>
+<rect x="679.678" y="384.5" width="85" height="23" rx="11.5" fill="#F4F5F6"/>
+<rect x="679.678" y="384.5" width="85" height="23" rx="11.5" stroke="#D4D7DB"/>
+<text fill="#5C6066" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="687.178" y="400.364">CANCELLED</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="968.25" y="52.3636">PAYMENT</tspan></text>
+<rect x="965.395" y="88.5" width="68" height="23" rx="11.5" fill="#FCF8ED"/>
+<rect x="965.395" y="88.5" width="68" height="23" rx="11.5" stroke="#F3D694"/>
+<text fill="#A44719" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="972.895" y="104.364">PENDING</tspan></text>
+<rect x="955.895" y="144.5" width="87" height="23" rx="11.5" fill="#F2FBF5"/>
+<rect x="955.895" y="144.5" width="87" height="23" rx="11.5" stroke="#95E0AD"/>
+<text fill="#288647" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="963.395" y="160.364">COMPLETED</tspan></text>
+<rect x="1066.39" y="88.5" width="54" height="23" rx="11.5" fill="#FCF5F4"/>
+<rect x="1066.39" y="88.5" width="54" height="23" rx="11.5" stroke="#ECB7B5"/>
+<text fill="#9D333C" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1073.89" y="104.364">FAILED</tspan></text>
+<rect x="960.395" y="200.5" width="78" height="23" rx="11.5" fill="#F4F5F6"/>
+<rect x="960.395" y="200.5" width="78" height="23" rx="11.5" stroke="#D4D7DB"/>
+<text fill="#5C6066" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="967.895" y="216.364">REFUNDED</tspan></text>
+<path d="M1036.89 99.5C1036.62 99.5 1036.39 99.7239 1036.39 100C1036.39 100.276 1036.62 100.5 1036.89 100.5V100V99.5ZM1063.25 100.354C1063.44 100.158 1063.44 99.8417 1063.25 99.6464L1060.07 96.4645C1059.87 96.2692 1059.55 96.2692 1059.36 96.4645C1059.16 96.6597 1059.16 96.9763 1059.36 97.1716L1062.19 100L1059.36 102.828C1059.16 103.024 1059.16 103.34 1059.36 103.536C1059.55 103.731 1059.87 103.731 1060.07 103.536L1063.25 100.354ZM1036.89 100V100.5H1062.89V100V99.5H1036.89V100Z" fill="#F3D694"/>
+<path d="M999.895 115C999.895 114.724 999.671 114.5 999.395 114.5C999.118 114.5 998.895 114.724 998.895 115H999.395H999.895ZM999.041 141.354C999.236 141.549 999.553 141.549 999.748 141.354L1002.93 138.172C1003.13 137.976 1003.13 137.66 1002.93 137.464C1002.73 137.269 1002.42 137.269 1002.22 137.464L999.395 140.293L996.566 137.464C996.371 137.269 996.054 137.269 995.859 137.464C995.664 137.66 995.664 137.976 995.859 138.172L999.041 141.354ZM999.395 115H998.895V141H999.395H999.895V115H999.395Z" fill="#F3D694"/>
+<path d="M999.895 171C999.895 170.724 999.671 170.5 999.395 170.5C999.118 170.5 998.895 170.724 998.895 171H999.395H999.895ZM999.041 197.354C999.236 197.549 999.553 197.549 999.748 197.354L1002.93 194.172C1003.13 193.976 1003.13 193.66 1002.93 193.464C1002.73 193.269 1002.42 193.269 1002.22 193.464L999.395 196.293L996.566 193.464C996.371 193.269 996.054 193.269 995.859 193.464C995.664 193.66 995.664 193.976 995.859 194.172L999.041 197.354ZM999.395 171H998.895V197H999.395H999.895V171H999.395Z" fill="#95E0AD"/>
+<line x1="939.428" y1="247.5" x2="1059.43" y2="247.5" stroke="#EAEBED"/>
+<rect x="955.928" y="272.5" width="87" height="23" rx="11.5" fill="#F4F5F6"/>
+<rect x="955.928" y="272.5" width="87" height="23" rx="11.5" stroke="#D4D7DB"/>
+<text fill="#5C6066" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="964.428" y="288.364">CANCELLED</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="1245" y="52.3636">PACKAGE</tspan></text>
+<rect x="1240.82" y="88.5" width="68" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="1240.82" y="88.5" width="68" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1248.32" y="104.364">CREATED</tspan></text>
+<rect x="1244.32" y="144.5" width="61" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="1244.32" y="144.5" width="61" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1251.82" y="160.364">PACKED</tspan></text>
+<rect x="1196.82" y="200.5" width="156" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="1196.82" y="200.5" width="156" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1204.32" y="216.364">ASSIGNED TO SHIPMENT</tspan></text>
+<rect x="1235.82" y="312.5" width="78" height="23" rx="11.5" fill="#F2FBF5"/>
+<rect x="1235.82" y="312.5" width="78" height="23" rx="11.5" stroke="#95E0AD"/>
+<text fill="#288647" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1243.32" y="328.364">DELIVERED</tspan></text>
+<rect x="1235.82" y="368.5" width="78" height="23" rx="11.5" fill="#F4F5F6"/>
+<rect x="1235.82" y="368.5" width="78" height="23" rx="11.5" stroke="#D4D7DB"/>
+<text fill="#5C6066" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1243.32" y="384.364">RETURNED</tspan></text>
+<rect x="1234.82" y="256.5" width="80" height="23" rx="11.5" fill="#F2F7FD"/>
+<rect x="1234.82" y="256.5" width="80" height="23" rx="11.5" stroke="#C3D9F4"/>
+<text fill="#1D5DAC" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1242.32" y="272.364">IN TRANSIT</tspan></text>
+<path d="M1275.32 115C1275.32 114.724 1275.1 114.5 1274.82 114.5C1274.55 114.5 1274.32 114.724 1274.32 115H1274.82H1275.32ZM1274.47 141.354C1274.66 141.549 1274.98 141.549 1275.18 141.354L1278.36 138.172C1278.55 137.976 1278.55 137.66 1278.36 137.464C1278.16 137.269 1277.85 137.269 1277.65 137.464L1274.82 140.293L1271.99 137.464C1271.8 137.269 1271.48 137.269 1271.29 137.464C1271.09 137.66 1271.09 137.976 1271.29 138.172L1274.47 141.354ZM1274.82 115H1274.32V141H1274.82H1275.32V115H1274.82Z" fill="#C3D9F4"/>
+<path d="M1275.32 171C1275.32 170.724 1275.1 170.5 1274.82 170.5C1274.55 170.5 1274.32 170.724 1274.32 171H1274.82H1275.32ZM1274.47 197.354C1274.66 197.549 1274.98 197.549 1275.18 197.354L1278.36 194.172C1278.55 193.976 1278.55 193.66 1278.36 193.464C1278.16 193.269 1277.85 193.269 1277.65 193.464L1274.82 196.293L1271.99 193.464C1271.8 193.269 1271.48 193.269 1271.29 193.464C1271.09 193.66 1271.09 193.976 1271.29 194.172L1274.47 197.354ZM1274.82 171H1274.32V197H1274.82H1275.32V171H1274.82Z" fill="#C3D9F4"/>
+<path d="M1275.32 227C1275.32 226.724 1275.1 226.5 1274.82 226.5C1274.55 226.5 1274.32 226.724 1274.32 227H1274.82H1275.32ZM1274.47 253.354C1274.66 253.549 1274.98 253.549 1275.18 253.354L1278.36 250.172C1278.55 249.976 1278.55 249.66 1278.36 249.464C1278.16 249.269 1277.85 249.269 1277.65 249.464L1274.82 252.293L1271.99 249.464C1271.8 249.269 1271.48 249.269 1271.29 249.464C1271.09 249.66 1271.09 249.976 1271.29 250.172L1274.47 253.354ZM1274.82 227H1274.32V253H1274.82H1275.32V227H1274.82Z" fill="#C3D9F4"/>
+<path d="M1275.32 283C1275.32 282.724 1275.1 282.5 1274.82 282.5C1274.55 282.5 1274.32 282.724 1274.32 283H1274.82H1275.32ZM1274.47 309.354C1274.66 309.549 1274.98 309.549 1275.18 309.354L1278.36 306.172C1278.55 305.976 1278.55 305.66 1278.36 305.464C1278.16 305.269 1277.85 305.269 1277.65 305.464L1274.82 308.293L1271.99 305.464C1271.8 305.269 1271.48 305.269 1271.29 305.464C1271.09 305.66 1271.09 305.976 1271.29 306.172L1274.47 309.354ZM1274.82 283H1274.32V309H1274.82H1275.32V283H1274.82Z" fill="#C3D9F4"/>
+<path d="M1275.32 339C1275.32 338.724 1275.1 338.5 1274.82 338.5C1274.55 338.5 1274.32 338.724 1274.32 339H1274.82H1275.32ZM1274.47 365.354C1274.66 365.549 1274.98 365.549 1275.18 365.354L1278.36 362.172C1278.55 361.976 1278.55 361.66 1278.36 361.464C1278.16 361.269 1277.85 361.269 1277.65 361.464L1274.82 364.293L1271.99 361.464C1271.8 361.269 1271.48 361.269 1271.29 361.464C1271.09 361.66 1271.09 361.976 1271.29 362.172L1274.47 365.354ZM1274.82 339H1274.32V365H1274.82H1275.32V339H1274.82Z" fill="#95E0AD"/>
+<line x1="1214.82" y1="415.5" x2="1334.82" y2="415.5" stroke="#EAEBED"/>
+<rect x="1251.82" y="440.5" width="46" height="23" rx="11.5" fill="#FCF5F4"/>
+<rect x="1251.82" y="440.5" width="46" height="23" rx="11.5" stroke="#ECB7B5"/>
+<text fill="#9D333C" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1259.32" y="456.364">LOST</tspan></text>
+<rect x="1238.32" y="488.5" width="73" height="23" rx="11.5" fill="#FCF5F4"/>
+<rect x="1238.32" y="488.5" width="73" height="23" rx="11.5" stroke="#ECB7B5"/>
+<text fill="#9D333C" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="-0.02em"><tspan x="1245.82" y="504.364">DAMAGED</tspan></text>
+</svg>

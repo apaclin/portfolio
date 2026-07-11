@@ -1,13 +1,15 @@
 ---
-import CaseNav from '../../components/CaseNav.astro';
-import slice01 from '../../assets/bergstrom/slice-01.png';
-import slice02 from '../../assets/bergstrom/slice-02.png';
-import slice03 from '../../assets/bergstrom/slice-03.png';
-import slice04 from '../../assets/bergstrom/slice-04.png';
-import slice05 from '../../assets/bergstrom/slice-05.png';
-import slice06 from '../../assets/bergstrom/slice-06.png';
-import slice07 from '../../assets/bergstrom/slice-07.png';
-import slice08 from '../../assets/bergstrom/slice-08.png';
+import { ClientRouter } from 'astro:transitions';
+import CaseNav from '../../components/case/CaseNav.astro';
+import CaseSliceImage from '../../components/case/CaseSliceImage.astro';
+import slice01 from '../../assets/images/cases/bergstrom/slice-01.png';
+import slice02 from '../../assets/images/cases/bergstrom/slice-02.png';
+import slice03 from '../../assets/images/cases/bergstrom/slice-03.png';
+import slice04 from '../../assets/images/cases/bergstrom/slice-04.png';
+import slice05 from '../../assets/images/cases/bergstrom/slice-05.png';
+import slice06 from '../../assets/images/cases/bergstrom/slice-06.png';
+import slice07 from '../../assets/images/cases/bergstrom/slice-07.png';
+import slice08 from '../../assets/images/cases/bergstrom/slice-08.png';
 
 const slices = [
   slice01,
@@ -26,26 +28,35 @@ const slices = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/* Критический фон инлайном — чёрный уже на ПЕРВОЙ отрисовке, без вспышки
+        белого (бандл стилей подключается позже). is:inline = не хойстить. */}
+    <style is:inline>
+      html,
+      body {
+        margin: 0;
+        background: #000;
+      }
+      html {
+        color-scheme: dark;
+      }
+    </style>
     <meta
       name="description"
       content="Bergström: визуальный кейс сайта архитектурной студии."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Сайт архитектурной студии Bergström</title>
+    <ClientRouter fallback="swap" />
   </head>
   <body>
     <CaseNav variant="floating" />
     <main aria-label="Сайт архитектурной студии Bergström">
       {
         slices.map((slice, index) => (
-          <img
-            src={slice.src}
-            width={slice.width}
-            height={slice.height}
+          <CaseSliceImage
+            src={slice}
             alt={`Bergström case slice ${String(index + 1).padStart(2, '0')}`}
-            loading={index === 0 ? 'eager' : 'lazy'}
-            decoding={index === 0 ? 'sync' : 'async'}
-            fetchpriority={index === 0 ? 'high' : 'auto'}
+            eager={index === 0}
           />
         ))
       }

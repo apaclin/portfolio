@@ -1,0 +1,505 @@
+---
+// Интерактивное сравнение user flow по трём сценариям (Финансист / Клиент /
+// Логист). Sticky-табы (segmented control) + панель активного сценария.
+//
+// Каждый сценарий приходит двумя Astro-компонентами с SVG-разметкой — десктоп
+// (обе колонки AS-IS/TO-BE в одном холсте, разной естественной высоты) и
+// мобильный (колонки в стек).
+// Нужную версию показываем медиазапросом; вторая display:none (и уходит из
+// a11y-дерева). Никакого equal-height и вложенных скроллов: SVG масштабируется
+// width:100%/height:auto, скролл только страничный.
+//
+// Ширина секции — через Breakout (~1440px, под нативный холст SVG), но с
+// scroll={false}: overflow-x-контейнер ломает position:sticky, а нашему контенту
+// горизонтальный скролл не нужен (SVG жмётся width:100%).
+import Breakout from '../common/Breakout.astro';
+import FinanceDesktop from '../case/laneo/flows/finance.astro';
+import ClientDesktop from '../case/laneo/flows/client.astro';
+import LogisticsDesktop from '../case/laneo/flows/logistics.astro';
+import FinanceMobile from '../case/laneo/flows/mobile-finance.astro';
+import ClientMobile from '../case/laneo/flows/mobile-client.astro';
+import LogisticsMobile from '../case/laneo/flows/mobile-logistics.astro';
+
+type Lang = 'ru' | 'en';
+interface Props { lang?: Lang; }
+const { lang = 'ru' } = Astro.props as Props;
+
+const ui = {
+  section: {
+    ru: 'Сравнение пользовательских путей по сценариям',
+    en: 'Comparison of user journeys across scenarios',
+  },
+  tabs: { ru: 'Сценарии', en: 'Scenarios' },
+} satisfies Record<string, Record<Lang, string>>;
+
+interface Scenario {
+  id: string;
+  tab: Record<Lang, string>;
+  Desktop: any;
+  Mobile: any;
+  label: Record<Lang, string>;
+}
+
+const scenarios: Scenario[] = [
+  {
+    id: 'client',
+    tab: { ru: 'Клиент', en: 'Client' },
+    Desktop: ClientDesktop,
+    Mobile: ClientMobile,
+    label: {
+      ru: 'Сценарий «клиент на линии — где мой заказ». Слева — текущий путь (AS-IS): менеджер сверяет наличие, отгрузки и оплату по CRM, WMS, Excel и ERP и отвечает вручную. Справа — целевой путь (TO-BE): статус заказа и прогресс-бары в одном обзоре, ответ по конкретике за секунды.',
+      en: 'Scenario “client on the line — where’s my order”. Left — the current path (AS-IS): the manager reconciles availability, shipments and payment across CRM, WMS, Excel and ERP and answers by hand. Right — the target path (TO-BE): order status and progress bars in a single overview, a specific answer in seconds.',
+    },
+  },
+  {
+    id: 'finance',
+    tab: { ru: 'Финансист', en: 'Finance' },
+    Desktop: FinanceDesktop,
+    Mobile: FinanceMobile,
+    label: {
+      ru: 'Сценарий «разговор об оплате с финансами». Слева — текущий путь (AS-IS): ответ про оплату и отгрузку собирается вручную из CRM, WMS, ERP и Excel. Справа — целевой путь (TO-BE): статус оплаты и отгрузки виден в одном обзоре, ответ с разбивкой по счетам.',
+      en: 'Scenario “a payment conversation with finance”. Left — the current path (AS-IS): the answer about payment and shipping is assembled by hand from CRM, WMS, ERP and Excel. Right — the target path (TO-BE): payment and shipment status visible in a single overview, an answer broken down by invoice.',
+    },
+  },
+  {
+    id: 'logistics',
+    tab: { ru: 'Логист', en: 'Logistics' },
+    Desktop: LogisticsDesktop,
+    Mobile: LogisticsMobile,
+    label: {
+      ru: 'Сценарий «согласование отгрузок с логистикой». Слева — текущий путь (AS-IS): чтобы понять, последняя ли отгрузка, менеджер сверяет Excel, WMS и уточняет у логиста. Справа — целевой путь (TO-BE): статус отгрузки виден в обзоре, ответ с раскладкой остатка.',
+      en: 'Scenario “coordinating shipments with logistics”. Left — the current path (AS-IS): to tell whether a shipment is the last one, the manager checks Excel and WMS and asks the logistician. Right — the target path (TO-BE): shipment status visible in the overview, an answer with the remainder laid out.',
+    },
+  },
+];
+---
+
+<Breakout maxWidth="1440px" scroll={false}>
+<section
+  class="scenario-flows not-prose"
+  data-scenario-flows
+  aria-label={ui.section[lang]}
+>
+    <div class="scenario-flows__tabbar">
+    <div
+      class="scenario-flows__tabs"
+      role="tablist"
+      aria-label={ui.tabs[lang]}
+      aria-orientation="horizontal"
+    >
+      {
+        scenarios.map((s, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`sf-tab-${s.id}`}
+            class="scenario-flows__tab"
+            aria-controls={`sf-panel-${s.id}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-sf-tab={s.id}
+          >
+            {s.tab[lang]}
+          </button>
+        ))
+      }
+    </div>
+    </div>
+
+    {
+      scenarios.map((s, i) => {
+        const Desktop = s.Desktop;
+        const Mobile = s.Mobile;
+        return (
+          <div
+            id={`sf-panel-${s.id}`}
+            class="scenario-flows__panel"
+            role="tabpanel"
+            aria-labelledby={`sf-tab-${s.id}`}
+            tabindex="0"
+            data-sf-panel={s.id}
+            hidden={i !== 0}
+          >
+            <div
+              class="scenario-flows__figure scenario-flows__figure--desktop"
+              role="img"
+              aria-label={s.label[lang]}
+            >
+              <Desktop lang={lang} />
+            </div>
+            <div
+              class="scenario-flows__figure scenario-flows__figure--mobile"
+              role="img"
+              aria-label={s.label[lang]}
+            >
+              <Mobile lang={lang} />
+            </div>
+          </div>
+        );
+      })
+    }
+</section>
+</Breakout>
+
+<style>
+  .scenario-flows {
+    /* Ширину/центрирование/внешние отступы даёт Breakout. Здесь — только
+       ширина 100% (секция как flex-элемент внутри Breakout) и scroll-margin
+       для scrollIntoView(block:'start'), чтобы заголовок сценария не прилипал
+       впритык к краю вьюпорта. */
+    width: 100%;
+    scroll-margin-top: 1rem;
+  }
+
+  /* --- Sticky segmented control ---
+     Sticky живёт на обёртке (полная ширина, центрирует пилюлю), сама пилюля —
+     inline-flex. position:sticky работает: Breakout использован с scroll={false},
+     поэтому над секцией нет overflow-скролл-контейнера (transform на Breakout
+     залипание не ломает — его ломает только overflow). */
+  .scenario-flows__tabbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    padding-block: 0.5rem;
+    margin-block-end: 0.75rem;
+  }
+
+  .scenario-flows__tabs {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .scenario-flows__tab {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.2;
+    padding: 0.5rem 1rem;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .scenario-flows__tab:hover {
+    color: var(--color-text);
+  }
+
+  .scenario-flows__tab[aria-selected='true'] {
+    background: var(--color-primary-bg);
+    color: var(--color-primary-fg);
+  }
+
+  .scenario-flows__tab:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* --- Панель сценария --- */
+  .scenario-flows__panel {
+    /* НЕ align-items:stretch, никаких min-height/equal-height:
+       вертикальный поток, естественная высота, скролл только страничный */
+    display: block;
+  }
+
+  .scenario-flows__panel:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+    border-radius: 8px;
+  }
+
+  .scenario-flows__figure :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+  }
+
+  /* Переключение десктоп/мобилка. Скрытая версия уходит из a11y-дерева. */
+  .scenario-flows__figure--mobile {
+    display: none;
+  }
+
+  @media (max-width: 47.9375rem) {
+    .scenario-flows__tabs {
+      /* на узком экране контрол во всю ширину, сегменты поровну */
+      display: flex;
+      width: 100%;
+    }
+    .scenario-flows__tab {
+      flex: 1 1 0;
+      text-align: center;
+      padding-inline: 0.5rem;
+    }
+    .scenario-flows__figure--desktop {
+      display: none;
+    }
+    .scenario-flows__figure--mobile {
+      display: block;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scenario-flows__tab {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const initScenarioFlows = (root: HTMLElement) => {
+    if (root.dataset.ready === 'true') return;
+    root.dataset.ready = 'true';
+
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-sf-tab]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-sf-panel]')];
+    if (tabs.length === 0 || panels.length === 0) return;
+
+    const normalizeVisibleSvgs = () => {
+      requestAnimationFrame(() => {
+        root
+          .querySelectorAll<SVGSVGElement>('.scenario-flows__figure svg')
+          .forEach(normalizeFlowSvg);
+      });
+    };
+
+    const resetAndNormalizeVisibleSvgs = () => {
+      root
+        .querySelectorAll<SVGSVGElement>('.scenario-flows__figure svg')
+        .forEach((svg) => {
+          delete svg.dataset.textNormalized;
+        });
+      normalizeVisibleSvgs();
+    };
+
+    const select = (id: string, { scroll = false, focus = false } = {}) => {
+      tabs.forEach((tab) => {
+        const active = tab.dataset.sfTab === id;
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        tab.tabIndex = active ? 0 : -1;
+        if (active && focus) tab.focus();
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.sfPanel !== id;
+      });
+      if (scroll) {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        root.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      }
+      normalizeVisibleSvgs();
+    };
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => {
+        select(tab.dataset.sfTab!, { scroll: true });
+      });
+
+      tab.addEventListener('keydown', (event) => {
+        let next = -1;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          next = (index + 1) % tabs.length;
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          next = (index - 1 + tabs.length) % tabs.length;
+        } else if (event.key === 'Home') {
+          next = 0;
+        } else if (event.key === 'End') {
+          next = tabs.length - 1;
+        } else {
+          return;
+        }
+        event.preventDefault();
+        select(tabs[next].dataset.sfTab!, { scroll: true, focus: true });
+      });
+    });
+
+    normalizeVisibleSvgs();
+    window.addEventListener('resize', resetAndNormalizeVisibleSvgs, { passive: true });
+    document.fonts?.ready.then(resetAndNormalizeVisibleSvgs).catch(() => {});
+  };
+
+  const MIN_BOX_WIDTH = 80;
+  const MIN_BOX_HEIGHT = 50;
+  const PILL_TEXT_PADDING = 12;
+  const PILL_Y_COORDS = new Set(['104.5', '1661.5']);
+
+  const getNumberAttr = (element: Element, name: string) =>
+    Number.parseFloat(element.getAttribute(name) ?? 'NaN');
+
+  const getBox = (element: SVGGraphicsElement) => {
+    try {
+      return element.getBBox();
+    } catch {
+      return null;
+    }
+  };
+
+  const isRenderable = (element: SVGGraphicsElement) => {
+    const box = getBox(element);
+    return Boolean(box && box.width > 0 && box.height > 0 && element.getClientRects().length > 0);
+  };
+
+  const normalizeFlowSvg = (svg: SVGSVGElement) => {
+    if (svg.dataset.textNormalized === 'true' || !isRenderable(svg)) return;
+
+    normalizePills(svg);
+    normalizeBoxLabels(svg);
+    svg.dataset.textNormalized = 'true';
+  };
+
+  const normalizePills = (svg: SVGSVGElement) => {
+    const pillRects = [...svg.querySelectorAll<SVGRectElement>('rect')]
+      .filter((rect) => PILL_Y_COORDS.has(rect.getAttribute('y') ?? ''))
+      .filter((rect) => getNumberAttr(rect, 'height') === 27)
+      .filter((rect) => getNumberAttr(rect, 'width') >= 50);
+
+    const groupedRects = new Map<string, SVGRectElement[]>();
+    pillRects.forEach((rect) => {
+      const key = [
+        rect.getAttribute('x'),
+        rect.getAttribute('y'),
+        rect.getAttribute('width'),
+        rect.getAttribute('height'),
+      ].join(':');
+      groupedRects.set(key, [...(groupedRects.get(key) ?? []), rect]);
+    });
+
+    const iconRects = [...svg.querySelectorAll<SVGRectElement>('rect')]
+      .map((rect) => ({ rect, box: getBox(rect) }))
+      .filter((item): item is { rect: SVGRectElement; box: DOMRect } => {
+        if (!item.box) return false;
+        return item.box.width <= 22 && item.box.height <= 22 && getNumberAttr(item.rect, 'rx') >= 8;
+      });
+
+    const pillGroups = [...groupedRects.values()]
+      .filter((group) => group.length >= 2)
+      .map((group) => ({ rects: group, box: getBox(group[0]) }))
+      .filter((group): group is { rects: SVGRectElement[]; box: DOMRect } => Boolean(group.box))
+      .map((group) => ({
+        ...group,
+        iconBox: iconRects.find(({ box }) =>
+          box.x >= group.box.x &&
+          box.y >= group.box.y &&
+          box.x + box.width <= group.box.x + group.box.width &&
+          box.y + box.height <= group.box.y + group.box.height
+        )?.box,
+      }));
+
+    [...svg.querySelectorAll<SVGTextElement>('text')]
+      .filter((text) => getNumberAttr(text, 'font-size') === 10)
+      .forEach((text) => {
+        const textBox = getBox(text);
+        if (!textBox) return;
+
+        const textCenterY = textBox.y + textBox.height / 2;
+        const pill = pillGroups.find(({ box }) =>
+          textCenterY >= box.y - 2 &&
+          textCenterY <= box.y + box.height + 2 &&
+          textBox.x >= box.x - 12 &&
+          textBox.x <= box.x + box.width + 12
+        );
+        if (!pill) return;
+
+        const measuredWidth = textBox.width;
+        const textAreaStart = pill.iconBox
+          ? pill.iconBox.x + pill.iconBox.width
+          : pill.box.x;
+        const textAreaOffset = textAreaStart - pill.box.x;
+        const preferredWidth = Math.ceil(Math.max(
+          pill.box.width,
+          textAreaOffset + measuredWidth + PILL_TEXT_PADDING * 2,
+        ));
+        if (preferredWidth > pill.box.width) {
+          pill.rects.forEach((rect) => rect.setAttribute('width', String(preferredWidth)));
+          pill.box.width = preferredWidth;
+        }
+
+        centerTextInBox(text, {
+          x: textAreaStart,
+          y: pill.box.y,
+          width: pill.box.x + pill.box.width - textAreaStart,
+          height: pill.box.height,
+        });
+      });
+  };
+
+  const normalizeBoxLabels = (svg: SVGSVGElement) => {
+    const shapeCandidates = [
+      ...svg.querySelectorAll<SVGGraphicsElement>('rect, path'),
+    ]
+      .map((shape) => ({ shape, box: getBox(shape) }))
+      .filter((item): item is { shape: SVGGraphicsElement; box: DOMRect } => {
+        if (!item.box) return false;
+        return item.box.width >= MIN_BOX_WIDTH && item.box.height >= MIN_BOX_HEIGHT;
+      });
+
+    [...svg.querySelectorAll<SVGTextElement>('text')]
+      .filter((text) => getNumberAttr(text, 'font-size') === 14)
+      .forEach((text) => {
+        const textBox = getBox(text);
+        if (!textBox) return;
+
+        const textCenterX = textBox.x + textBox.width / 2;
+        const textCenterY = textBox.y + textBox.height / 2;
+        const container = shapeCandidates
+          .filter(({ box }) =>
+            textCenterX >= box.x - 8 &&
+            textCenterX <= box.x + box.width + 8 &&
+            textCenterY >= box.y - 8 &&
+            textCenterY <= box.y + box.height + 8
+          )
+          .sort((a, b) => a.box.width * a.box.height - b.box.width * b.box.height)[0];
+
+        if (!container) return;
+        centerTextInBox(text, container.box);
+      });
+  };
+
+  const centerTextInBox = (
+    text: SVGTextElement,
+    box: Pick<DOMRect, 'x' | 'y' | 'width' | 'height'>,
+  ) => {
+    const centerX = box.x + box.width / 2;
+    text.setAttribute('text-anchor', 'middle');
+    text.querySelectorAll<SVGTSpanElement>('tspan').forEach((tspan) => {
+      tspan.setAttribute('x', String(roundSvgNumber(centerX)));
+    });
+
+    const textBox = getBox(text);
+    if (!textBox) return;
+
+    const deltaY = box.y + box.height / 2 - (textBox.y + textBox.height / 2);
+    if (Math.abs(deltaY) < 0.5) return;
+
+    text.querySelectorAll<SVGTSpanElement>('tspan').forEach((tspan) => {
+      const y = getNumberAttr(tspan, 'y');
+      if (Number.isFinite(y)) {
+        tspan.setAttribute('y', String(roundSvgNumber(y + deltaY)));
+      }
+    });
+  };
+
+  const roundSvgNumber = (value: number) => Math.round(value * 1000) / 1000;
+
+  const initAll = () => {
+    document
+      .querySelectorAll<HTMLElement>('[data-scenario-flows]')
+      .forEach(initScenarioFlows);
+  };
+
+  document.addEventListener('astro:page-load', initAll);
+  initAll();
+</script>

@@ -1,0 +1,392 @@
+---
+import { Image } from 'astro:assets';
+import BlurImage from '../common/BlurImage.astro';
+import TranslationNotice from '../common/TranslationNotice.astro';
+import matchpointCover from '../../assets/images/project-covers/matchpoint.webp';
+import tTaxiCover from '../../assets/images/project-covers/t-taxi.webp';
+import laneoCover from '../../assets/images/project-covers/laneo.png';
+import onlineCinemaCover from '../../assets/images/project-covers/online-cinema.webp';
+import architectureStudioCover from '../../assets/images/project-covers/architecture-studio.webp';
+import radixCover from '../../assets/images/pet-projects/radix-cover.png';
+import portrait from '../../assets/images/profile/alexander-paklin.jpg';
+
+interface ProjectItem {
+  title: string;
+  subtitle?: string;
+  href?: string;
+  external?: boolean;
+  image?: ImageMetadata;
+  imageAlt?: string;
+  comingSoon?: boolean;
+}
+
+interface ProjectSection {
+  title: string;
+  items: ProjectItem[];
+}
+
+interface LinkItem {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+type Locale = 'en' | 'ru';
+
+interface Props {
+  locale?: Locale;
+  fallbackContentLocale?: 'ru' | 'en';
+}
+
+const { locale = 'en', fallbackContentLocale } = Astro.props as Props;
+
+const localized = {
+  en: {
+    portraitAlt: 'Alexander Paklin',
+    role: 'Product / UX Designer',
+    name: 'Alexander Paklin',
+    intro:
+      'I design complex B2B web services: from workflows and data structure to UI, prototypes and design systems.',
+    openLabel: 'Open',
+    contactLinks: [
+      {
+        label: 'Resume',
+        href: 'https://docs.google.com/document/d/1YNz4EceIuJb3XWb2HBYgc6JKpGGa0Thoesb_y2Jztkc/edit?usp=sharing',
+        external: true,
+      },
+      {
+        label: 'Telegram',
+        href: 'http://t.me/apaclin',
+        external: true,
+      },
+      {
+        label: 'Email',
+        href: 'mailto:apaclin@gmail.com',
+      },
+    ],
+    sections: [
+      {
+        title: 'B2B Web Services',
+        items: [
+          {
+            title: 'Matchpoint',
+            subtitle: 'Accounts payable automation',
+            href: '/cases/matchpoint',
+            image: matchpointCover,
+            imageAlt: 'Matchpoint interface on a light mockup',
+          },
+          {
+            title: 'T-Taxi',
+            subtitle: 'Autonomous fleet operations',
+            href: '/cases/t-taxi',
+            image: tTaxiCover,
+            imageAlt: 'Dark T-Taxi monitoring interface on a screen',
+          },
+          {
+            title: 'Laneo CRM',
+            subtitle: 'Complex B2B order control',
+            href: '/cases/laneo',
+            image: laneoCover,
+            imageAlt: 'Laneo CRM interface on a light mockup',
+          },
+        ],
+      },
+      {
+        title: 'Apps and Websites',
+        items: [
+          {
+            title: 'Filmaze',
+            subtitle: 'Online cinema',
+            href: '/cases/online-cinema',
+            image: onlineCinemaCover,
+            imageAlt: 'Filmaze mobile online cinema interface',
+          },
+          {
+            title: 'Bergström',
+            subtitle: 'Architecture studio website',
+            href: '/cases/architecture-studio',
+            image: architectureStudioCover,
+            imageAlt: 'Bergstrom architecture studio website on a laptop',
+          },
+        ],
+      },
+      {
+        title: 'Pet Projects',
+        items: [
+          {
+            title: 'Tone Ramp Generator',
+            href: 'https://www.figma.com/community/plugin/1636766593436362521',
+            external: true,
+            image: radixCover,
+            imageAlt: 'Radix Colors to Variables plugin cover',
+          },
+        ],
+      },
+    ] satisfies ProjectSection[],
+  },
+  ru: {
+    portraitAlt: 'Александр Паклин',
+    role: 'Product / UX Designer',
+    name: 'Александр Паклин',
+    intro:
+      'Проектирую сложные B2B веб-сервисы: от сценариев и структуры данных до UI, прототипов и дизайн-систем.',
+    openLabel: 'Открыть',
+    contactLinks: [
+      {
+        label: 'Резюме',
+        href: 'https://docs.google.com/document/d/1YNz4EceIuJb3XWb2HBYgc6JKpGGa0Thoesb_y2Jztkc/edit?usp=sharing',
+        external: true,
+      },
+      {
+        label: 'Telegram',
+        href: 'http://t.me/apaclin',
+        external: true,
+      },
+      {
+        label: 'Email',
+        href: 'mailto:apaclin@gmail.com',
+      },
+    ],
+    sections: [
+      {
+        title: 'B2B веб-сервисы',
+        items: [
+          {
+            title: 'Matchpoint',
+            subtitle: 'Автоматизация счетов к оплате',
+            href: '/ru/cases/matchpoint',
+            image: matchpointCover,
+            imageAlt: 'Интерфейс Matchpoint на светлом мокапе',
+          },
+          {
+            title: 'Т-Такси',
+            subtitle: 'Управление беспилотным флотом',
+            href: '/ru/cases/t-taxi',
+            image: tTaxiCover,
+            imageAlt: 'Темный мониторинг Т-Такси на экране',
+          },
+          {
+            title: 'Laneo CRM',
+            subtitle: 'Контроль сложных B2B-заказов',
+            href: '/ru/cases/laneo',
+            image: laneoCover,
+            imageAlt: 'Интерфейс Laneo CRM на светлом мокапе',
+          },
+        ],
+      },
+      {
+        title: 'Приложения и сайты',
+        items: [
+          {
+            title: 'Filmaze',
+            subtitle: 'Онлайн-кинотеатр',
+            href: '/cases/online-cinema',
+            image: onlineCinemaCover,
+            imageAlt: 'Мобильный интерфейс онлайн-кинотеатра Filmaze',
+          },
+          {
+            title: 'Bergström',
+            subtitle: 'Сайт архитектурной студии',
+            href: '/cases/architecture-studio',
+            image: architectureStudioCover,
+            imageAlt: 'Сайт архитектурной студии Bergstrom на ноутбуке',
+          },
+        ],
+      },
+      {
+        title: 'Pet-проекты',
+        items: [
+          {
+            title: 'Генератор тоновых растяжек',
+            href: 'https://www.figma.com/community/plugin/1636766593436362521',
+            external: true,
+            image: radixCover,
+            imageAlt: 'Обложка плагина Radix Colors to Variables',
+          },
+        ],
+      },
+    ] satisfies ProjectSection[],
+  },
+} satisfies Record<Locale, {
+  portraitAlt: string;
+  role: string;
+  name: string;
+  intro: string;
+  openLabel: string;
+  contactLinks: LinkItem[];
+  sections: ProjectSection[];
+}>;
+
+const content = localized[locale];
+const { contactLinks, sections } = content;
+---
+
+{/* Ставим html.js ДО отрисовки: с JS контент стартует скрытым и плавно
+    проявляется; без JS — всё видно сразу. */}
+<script is:inline>document.documentElement.classList.add('js');</script>
+
+<main class="mx-auto w-full max-w-[72rem] px-5 py-16 sm:px-6 lg:px-8">
+  {fallbackContentLocale && <TranslationNotice contentLocale={fallbackContentLocale} />}
+
+  <div class="reveal mt-4 lg:flex lg:items-start lg:gap-16">
+    <section class="lg:w-72 lg:shrink-0 lg:sticky lg:top-16">
+      <BlurImage
+        src={portrait}
+        alt={content.portraitAlt}
+        widths={[96, 112, 192, 224]}
+        sizes="(min-width: 40rem) 112px, 96px"
+        class="mb-5 h-24 w-24 rounded-lg border border-[var(--color-border)] sm:h-28 sm:w-28"
+        eager
+      />
+      <p class="mb-3 text-sm text-[var(--color-text-muted)]">{content.role}</p>
+      <h1 class="text-3xl font-semibold tracking-normal text-[var(--color-text)]">
+        {content.name}
+      </h1>
+      <p class="mt-4 leading-7 text-[var(--color-text-muted)]">
+        {content.intro}
+      </p>
+      <p class="mt-5 flex flex-wrap gap-x-2 gap-y-1 text-sm text-[var(--color-text-muted)]">
+        {
+          contactLinks.map((link, index) => (
+            <>
+              {index > 0 && <span aria-hidden="true">·</span>}
+              <a
+                href={link.href}
+                target={link.external ? '_blank' : undefined}
+                rel={link.external ? 'noreferrer' : undefined}
+                class="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+              >
+                {link.label}
+              </a>
+            </>
+          ))
+        }
+      </p>
+    </section>
+
+    <div class="mt-12 lg:mt-0 lg:flex-1 space-y-14">
+    {
+      sections.map((section, sectionIndex) => (
+        <section aria-labelledby={`section-${section.title}`}>
+          <h2
+            id={`section-${section.title}`}
+            class="text-xl font-semibold tracking-normal text-[var(--color-text)]"
+          >
+            {section.title}
+          </h2>
+          <div class="mt-6 grid gap-8 sm:grid-cols-2">
+            {section.items.map((item) => (
+              <article aria-disabled={item.comingSoon ? 'true' : undefined}>
+                {
+                  item.comingSoon ? (
+                    <div class="relative aspect-video w-full overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                      {
+                        item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.imageAlt ?? item.title}
+                            widths={[480, 720, 960]}
+                            sizes="(min-width: 64rem) 350px, (min-width: 40rem) 50vw, calc(100vw - 2.5rem)"
+                            class="h-full w-full scale-[1.22] object-cover opacity-65"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : (
+                          <div class="h-full w-full bg-black opacity-65"></div>
+                        )
+                      }
+                      <div class="absolute inset-0 grid place-items-center bg-white/35">
+                        <span class="rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold text-[var(--color-text)] shadow-sm">
+                          Coming Soon
+                        </span>
+                      </div>
+                    </div>
+                  ) : item.href ? (
+                    <a
+                      href={item.href}
+                      target={item.external ? '_blank' : undefined}
+                      rel={item.external ? 'noreferrer' : undefined}
+                      aria-label={`${content.openLabel} ${item.title}`}
+                      class="block overflow-hidden rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+                    >
+                      {
+                        item.image ? (
+                          <BlurImage
+                            src={item.image}
+                            alt={item.imageAlt ?? item.title}
+                            widths={[480, 720, 960]}
+                            sizes="(min-width: 64rem) 350px, (min-width: 40rem) 50vw, calc(100vw - 2.5rem)"
+                            class="aspect-video w-full rounded-lg border border-[var(--color-border)]"
+                            eager={sectionIndex === 0}
+                          />
+                        ) : (
+                          <div class="aspect-video w-full rounded-lg bg-black"></div>
+                        )
+                      }
+                    </a>
+                  ) : (
+                    <div class="aspect-video w-full rounded-lg bg-black"></div>
+                  )
+                }
+                <h3
+                  class:list={[
+                    'mt-3 text-base font-medium',
+                    item.comingSoon ? 'text-[var(--color-text-faint)]' : 'text-[var(--color-text)]',
+                  ]}
+                >
+                  {
+                    item.comingSoon ? (
+                      item.title
+                    ) : item.href ? (
+                      <a
+                        href={item.href}
+                        target={item.external ? '_blank' : undefined}
+                        rel={item.external ? 'noreferrer' : undefined}
+                        class="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+                      >
+                        {item.title}
+                      </a>
+                    ) : (
+                      item.title
+                    )
+                  }
+                </h3>
+                {
+                  item.subtitle && (
+                    <p class="mt-1 text-sm leading-6 text-[var(--color-text-muted)]">
+                      {item.subtitle}
+                    </p>
+                  )
+                }
+              </article>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+    </div>
+  </div>
+</main>
+
+<style>
+  /* Мягкий fade-in контента на первой загрузке — страница «проявляется», а не
+     возникает мгновенно белый→текст. CSS-анимация стартует сама при отрисовке
+     (не нужен JS-триггер, нет риска «залипшего» скрытого текста), `both` держит
+     opacity:0 до старта → без вспышки. Без JS (нет html.js) — контент виден сразу. */
+  @keyframes contentIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  :global(html.js) .reveal {
+    animation: contentIn 0.5s ease both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .reveal {
+      animation: none;
+    }
+  }
+</style>

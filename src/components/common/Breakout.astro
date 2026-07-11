@@ -1,0 +1,41 @@
+---
+interface Props {
+  maxWidth?: string;
+  // По умолчанию широкий контент скроллится по горизонтали (overflow-x-auto).
+  // scroll={false} убирает этот скролл-контейнер — нужно, когда внутри живёт
+  // position:sticky (overflow-контейнер ломает залипание), а контент и так
+  // ужимается по ширине (width:100%) и в горизонтальном скролле не нуждается.
+  // html/body имеют overflow-x:clip, поэтому w-screen не даёт полосу страницы.
+  scroll?: boolean;
+}
+
+const { maxWidth = "1100px", scroll = true } = Astro.props;
+---
+
+<div
+  class:list={[
+    'breakout relative left-1/2 -translate-x-1/2 w-screen px-4 flex flex-col items-center',
+    scroll ? 'overflow-x-auto' : 'overflow-x-visible',
+  ]}
+>
+  <div class="w-full flex justify-center" style={`max-width: ${maxWidth};`}>
+    <slot />
+  </div>
+</div>
+
+<style>
+  .breakout {
+    margin-block-start: var(--space-media-before);
+    padding-block-end: var(--space-media-after);
+  }
+  .breakout :global(.case-image),
+  .breakout :global(.carousel) {
+    margin-block-start: 0;
+    padding-block-end: 0;
+  }
+  .breakout :global(svg) {
+    display: block;
+    height: auto;
+    flex-shrink: 0;
+  }
+</style>

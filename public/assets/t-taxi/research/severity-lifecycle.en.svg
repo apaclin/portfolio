@@ -1,0 +1,15 @@
+<svg width="496" height="310" viewBox="0 0 496 310" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 0.5H488C492.142 0.5 495.5 3.85786 495.5 8V302C495.5 306.142 492.142 309.5 488 309.5H8C3.85787 309.5 0.5 306.142 0.5 302V8C0.5 3.85787 3.85786 0.5 8 0.5Z" fill="white"/>
+<path d="M8 0.5H488C492.142 0.5 495.5 3.85786 495.5 8V302C495.5 306.142 492.142 309.5 488 309.5H8C3.85787 309.5 0.5 306.142 0.5 302V8C0.5 3.85787 3.85786 0.5 8 0.5Z" stroke="#EAE9E5"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="16" font-weight="500" letter-spacing="0em"><tspan x="196.391" y="136.318">Priority levels</tspan></text>
+<path d="M87 160C87 157.791 88.7909 156 91 156H141C143.209 156 145 157.791 145 160V185C145 187.209 143.209 189 141 189H91C88.7909 189 87 187.209 87 185V160Z" fill="#6B6A64"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="95" y="177.591">SEV-5</tspan></text>
+<path d="M153 160C153 157.791 154.791 156 157 156H208C210.209 156 212 157.791 212 160V185C212 187.209 210.209 189 208 189H157C154.791 189 153 187.209 153 185V160Z" fill="#FFDE51"/>
+<text fill="black" fill-opacity="0.74" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="161" y="177.591">SEV-4</tspan></text>
+<path d="M220 160C220 157.791 221.791 156 224 156H275C277.209 156 279 157.791 279 160V185C279 187.209 277.209 189 275 189H224C221.791 189 220 187.209 220 185V160Z" fill="#FFAB2B"/>
+<text fill="black" fill-opacity="0.74" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="228" y="177.591">SEV-3</tspan></text>
+<path d="M287 160C287 157.791 288.791 156 291 156H341C343.209 156 345 157.791 345 160V185C345 187.209 343.209 189 341 189H291C288.791 189 287 187.209 287 185V160Z" fill="#F66A3D"/>
+<text fill="black" fill-opacity="0.74" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="295" y="177.591">SEV-2</tspan></text>
+<path d="M353 160C353 157.791 354.791 156 357 156H405C407.209 156 409 157.791 409 160V185C409 187.209 407.209 189 405 189H357C354.791 189 353 187.209 353 185V160Z" fill="#A61820"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="361" y="177.591">SEV-1</tspan></text>
+</svg>

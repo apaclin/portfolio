@@ -1,0 +1,67 @@
+---
+import { readFileSync } from 'node:fs';
+import { join, normalize, sep } from 'node:path';
+import { namespaceSvgIds, svgIdPrefix } from '../../lib/svg';
+
+interface Props {
+  src: string;
+  alt: string;
+  className?: string;
+  fit?: 'intrinsic' | 'container';
+}
+
+const { src, alt, className, fit = 'intrinsic' } = Astro.props as Props;
+
+const publicRoot = normalize(join(process.cwd(), 'public')) + sep;
+const relativeSrc = src.startsWith('/') ? src.slice(1) : src;
+const filePath = normalize(join(process.cwd(), 'public', relativeSrc));
+
+if (!filePath.startsWith(publicRoot)) {
+  throw new Error(`[PublicSvg] SVG path escapes public/: ${src}`);
+}
+
+let svg = readFileSync(filePath, 'utf8');
+svg = namespaceSvgIds(svg, svgIdPrefix(relativeSrc));
+---
+
+<div
+  class:list={['public-svg', fit === 'container' && 'public-svg--container', className]}
+  role="img"
+  aria-label={alt}
+>
+  <Fragment set:html={svg} />
+</div>
+
+<style>
+  .public-svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  .public-svg :global(svg) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .public-svg--container,
+  .public-svg--container :global(svg) {
+    width: 100%;
+  }
+
+  /* Inlined SVGs share one document, so a bare `text{}` rule inside any of
+     them (e.g. the JetBrains-Mono @font-face chart) leaks and clobbers every
+     other schema's font. Re-assert the intended family per attribute so the
+     leak can't win (attribute selector out-specifies a bare `text`). */
+  .public-svg :global(text[font-family='Inter']) {
+    font-family: var(--font-diagram);
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .public-svg :global(text[font-family='JetBrains Mono']) {
+    font-family: var(--font-mono);
+  }
+
+</style>

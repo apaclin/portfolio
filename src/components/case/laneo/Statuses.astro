@@ -1,0 +1,18 @@
+---
+import PublicSvg from '../../common/PublicSvg.astro';
+
+type Lang = 'ru' | 'en';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'ru' } = Astro.props as Props;
+const src = `/assets/laneo/schemas/statuses.${lang}.svg`;
+const alt =
+  lang === 'en'
+    ? 'Laneo status lifecycles for order, shipment, invoice, payment and package'
+    : 'Жизненные циклы статусов Laneo для заказа, отгрузки, счета, платежа и упаковки';
+---
+
+<PublicSvg src={src} alt={alt} fit="container" />

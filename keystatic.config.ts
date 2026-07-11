@@ -40,7 +40,7 @@ const contentComponents = {
   }),
 };
 
-// Фабрика коллекции кейса — схема одинакова для EN и RU, различаются папки.
+// Фабрика коллекции кейса для единого каталога src/content/cases.
 function caseCollection(label: string, path: `${string}/*`) {
   return collection({
     label,
@@ -70,8 +70,7 @@ export default config({
   // Админка работает в dev (`astro dev` → /keystatic), правит реальные MDX.
   storage: { kind: 'local' },
   collections: {
-    // Мапятся на реальные папки контента (см. src/content.config.ts).
-    'cases-en': caseCollection('Cases (EN)', 'src/content/cases-en/*'),
-    'cases-ru': caseCollection('Cases (RU)', 'src/content/cases-ru/*'),
+    // Один каталог; локаль хранится в имени файла: <slug>-ru.mdx / <slug>-en.mdx.
+    cases: caseCollection('Cases', 'src/content/cases/*'),
   },
 });

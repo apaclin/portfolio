@@ -67,9 +67,9 @@
 | --- | --- | --- |
 | Основная prose-колонка | `42rem` | центральная колонка статьи |
 | Горизонтальный отступ страницы | `1.25rem` mobile, `2.5rem` суммарно в prose | через CSS grid |
-| Inline image max-width | `60rem` | `Image`, `Diagram`, `Carousel`, `Hotspots` |
+| Inline image max-width | `60rem` | `Image`, `Carousel`, `PublicSvg` |
 | Breakout wrapper | `w-screen`, `overflow-x-auto`, `px-4` | для широких схем |
-| Annotated screen max-width | `1440px` | T-Taxi экран |
+| Incident walkthrough max-width | `1440px` | T-Taxi экран |
 | Обычный Breakout max-width | `1100px` | дефолт `Breakout.astro` |
 | Media margin сверху | `--space-media-before: 0.875rem` / `14px` | изображение ближе к предыдущему тексту |
 | Media margin снизу | `--space-media-after: 2.75rem` / `44px` | следующий смысловой блок отделен сильнее |
@@ -162,6 +162,23 @@
 | Hover | `--color-primary-bg-hover` / `#4a4841` | `#ffffff` | none |
 | Active | `--color-primary-bg-active` / `#2f2d28` | `#ffffff` | none |
 | Focus | same as state | same | `2px solid var(--color-accent)` outline |
+
+### Floating back / overlay nav (`CaseNav variant="floating"`)
+
+Оверлейная «назад к проектам» пилюля, плавающая поверх обложки кейса при скролле. Фон под ней меняется (тёмный герой сверху, светлые UI-мокапы ниже), поэтому кнопка должна читаться на **любом** фоне: почти непрозрачное светлое стекло (видно на тёмном) + тёмный hairline-контур и тень (очерчивают силуэт на светлом). Текст тёмный — контраст к светлой заливке независимо от фона. Не путать с primary CTA — это тихий overlay-контрол.
+
+| Свойство | Значение | Токен |
+| --- | --- | --- |
+| Background | светлое стекло ~86% | `color-mix(var(--color-bg) 86%, transparent)` |
+| Text / icon | тёмный | `--color-text` |
+| Border | тонкий тёмный контур ~10% | `color-mix(var(--color-text) 10%, transparent)` |
+| Shadow | hairline `0 0 0 1px` (8%) + `0 6px 22px` (30%) | `color-mix(var(--color-text) …, transparent)` |
+| Blur | `blur(14px) saturate(140%)` | backdrop-filter |
+| Hover | фон ~96%, контур ~16% | те же токены |
+| Focus | `2px` outline `--color-text`, offset `3px` | `--color-text` |
+| Radius | `999px` (pill) | — |
+
+Правило: floating-вариант использовать только как оверлей (поверх обложки / полноэкранного кейса). В потоке статьи — `variant="article"` (тихая текстовая ссылка).
 
 ### Carousel / Lightbox icons
 

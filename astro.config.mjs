@@ -13,13 +13,15 @@ const isDev = process.argv.includes('dev');
 
 // https://astro.build/config
 export default defineConfig({
+  prefetch: false,
+
   // Нативный i18n Astro (astro:i18n), без сторонних библиотек.
   i18n: {
-    defaultLocale: 'ru',
+    defaultLocale: 'en',
     locales: ['en', 'ru'],
     routing: {
-      // Русский (язык по умолчанию) — без префикса: «/», «/about».
-      // Английский — с префиксом: «/en/», «/en/about».
+      // English (default language) is unprefixed: "/", "/about".
+      // Russian keeps the explicit prefix: "/ru/", "/ru/about".
       prefixDefaultLocale: false,
       // ВНИМАНИЕ: redirectToDefaultLocale здесь НЕ ставим.
       // В Astro 6 он имеет смысл только при prefixDefaultLocale: true;

@@ -1,0 +1,144 @@
+---
+// Единый паттерн обычной картинки кейса для MDX, на astro:assets.
+// <Picture> даёт AVIF + WebP (+ srcset, width/height без CLS, lazy). Zoom через
+// общий Lightbox (по умолчанию вкл) — для увеличения генерируем hi-res webp.
+import { Picture, getImage } from 'astro:assets';
+
+interface Props {
+  /** Импортированное изображение из src/assets (ImageMetadata). */
+  src: ImageMetadata;
+  alt: string;
+  caption?: string;
+  class?: string;
+  /** Делать ли картинку увеличиваемой по клику (по умолчанию да). */
+  zoomable?: boolean;
+  variant?: 'case' | 'inline';
+  /** sizes для srcset (по умолчанию — под колонку 60rem / full-bleed). */
+  sizes?: string;
+  widths?: number[];
+  loading?: 'eager' | 'lazy';
+  decoding?: 'async' | 'sync' | 'auto';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  quality?: number;
+  formats?: Array<'avif' | 'webp' | 'png' | 'jpg' | 'jpeg'>;
+  /** Логическая (CSS) ширина макета для лайтбокса: 1440 / 1920. По умолч. 1440. */
+  maxWidth?: number;
+}
+const {
+  src,
+  alt,
+  caption,
+  class: className,
+  zoomable = true,
+  variant = 'case',
+  sizes = '(min-width: 64rem) 960px, 100vw',
+  widths: requestedWidths,
+  loading = 'lazy',
+  decoding = 'async',
+  fetchpriority = 'auto',
+  quality = 90,
+  formats = ['avif', 'webp'],
+  maxWidth = 1440,
+} = Astro.props as Props;
+
+const widths = (requestedWidths ?? [480, 800, 1200, 1600])
+  .filter((w) => w < src.width)
+  .concat(src.width);
+
+// Для лайтбокса — полное натуральное разрешение (1:1), webp.
+const zoom = zoomable
+  ? await getImage({ src, width: src.width, format: 'webp', quality })
+  : null;
+---
+
+<figure
+  class:list={[
+    'case-image not-prose',
+    variant === 'case' && 'full-bleed mx-auto max-w-[60rem] px-5 sm:px-6',
+    variant === 'inline' && 'case-image--inline m-0 w-full',
+  ]}
+>
+  {
+    zoomable && zoom ? (
+      <button
+        type="button"
+        data-zoomable
+        data-zoom-src={zoom.src}
+        data-zoom-alt={alt}
+        data-max-width={maxWidth}
+        aria-label={`Enlarge image: ${alt}`}
+      >
+        <Picture
+          src={src}
+          alt={alt}
+          formats={formats}
+          widths={widths}
+          sizes={sizes}
+          quality={quality}
+          class={className}
+          loading={loading}
+          decoding={decoding}
+          fetchpriority={fetchpriority}
+        />
+      </button>
+    ) : (
+      <Picture
+        src={src}
+        alt={alt}
+        formats={formats}
+        widths={widths}
+        sizes={sizes}
+        quality={quality}
+        class={className}
+        loading={loading}
+        decoding={decoding}
+        fetchpriority={fetchpriority}
+      />
+    )
+  }
+  {caption && <figcaption class="case-image__caption" set:html={caption} />}
+</figure>
+
+<style>
+  .case-image {
+    margin-block-start: var(--space-media-before);
+    padding-block-end: var(--space-media-after);
+  }
+  :global(.breakout) .case-image {
+    margin-block-start: 0;
+    padding-block-end: 0;
+  }
+  .case-image--inline {
+    margin-block-start: 0;
+    padding-block-end: 0;
+  }
+  .case-image :global(picture) {
+    display: block;
+    width: 100%;
+  }
+  .case-image :global([data-zoomable]) {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  /* Натуральный размер, по центру по горизонтали, без upscale.
+     max-width:100% — если картинка шире колонки, ужимается до неё (не вылезает). */
+  .case-image :global(img) {
+    display: block;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    margin-inline: auto;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+  }
+  .case-image__caption {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--color-text-muted);
+  }
+</style>

@@ -5,27 +5,77 @@
 // сверху/снизу от зоны (карточка узкая). Панель Назад/Далее — fixed снизу экрана.
 import { Image } from 'astro:assets';
 import Icon from '../icons/Icon.astro';
-import { incidentZones } from '../../content/t-taxi/incident-zones.ru';
-import cardFull from '../../assets/t-taxi/incident/card-full.png';
+import { incidentZones } from '../../content/data/t-taxi/incident-zones.ru';
+import { incidentZonesEn } from '../../content/data/t-taxi/incident-zones.en';
+import cardFull from '../../assets/images/cases/t-taxi/incident/card-full.png';
 
 interface Props {
+  locale?: 'en' | 'ru';
   hint?: string;
   cta?: string;
   replayCta?: string;
 }
+
+const locale = (Astro.props.locale ?? (Astro.currentLocale === 'ru' ? 'ru' : 'en')) as 'en' | 'ru';
+const ui = {
+  ru: {
+    hint: 'Наведите на область карточки или запустите пошаговый разбор.',
+    cta: 'Разобрать карточку',
+    replayCta: 'Посмотреть разбор снова',
+    first: 'В начало',
+    prev: 'Назад',
+    next: 'Далее',
+    done: 'Готово',
+    close: 'Закрыть разбор',
+    imageAlt: 'Карточка инцидента INC-2843 на карте',
+    captionIdle: 'Наведите — превью зоны. Клик по зоне или кнопке — пошаговый разбор.',
+    captionKeys: 'шаги ·',
+    captionExit: '— выход',
+    captionStarted: 'Разбор карточки запущен. Стрелки — шаги, Esc — выход.',
+    captionCompleted: 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.',
+  },
+  en: {
+    hint: 'Hover over a card area or start the step-by-step walkthrough.',
+    cta: 'Break down card',
+    replayCta: 'Watch walkthrough again',
+    first: 'Back to start',
+    prev: 'Back',
+    next: 'Next',
+    done: 'Done',
+    close: 'Close walkthrough',
+    imageAlt: 'Incident card INC-2843 on the map',
+    captionIdle: 'Hover — zone preview. Click a zone or the button for a step-by-step walkthrough.',
+    captionKeys: 'steps ·',
+    captionExit: '— exit',
+    captionStarted: 'Card walkthrough started. Arrow keys move between steps, Esc exits.',
+    captionCompleted: 'Walkthrough complete. Hover over zones to jump back to any step.',
+  },
+}[locale];
+
 const {
-  hint = 'Наведите на область карточки или запустите пошаговый разбор.',
-  cta = 'Разобрать карточку',
-  replayCta = 'Посмотреть разбор снова',
+  hint = ui.hint,
+  cta = ui.cta,
+  replayCta = ui.replayCta,
 } = Astro.props as Props;
 
-const zonesJson = JSON.stringify(incidentZones);
+const activeIncidentZones = locale === 'ru' ? incidentZones : incidentZonesEn;
+const zonesJson = JSON.stringify(activeIncidentZones);
 // Картинка теперь = карта (слева) + карточка (справа), в ширину контент-колонки
 // (1344×2402 → показ 672×1201). Карточка — правые 1000px, старт с x=344.
 const widths = [672, 1008, 1344];
 ---
 
-<section class="incw not-prose full-bleed" data-incw data-cta={cta} data-replay-cta={replayCta}>
+<section
+  class="incw not-prose full-bleed"
+  data-incw
+  data-cta={cta}
+  data-replay-cta={replayCta}
+  data-next-label={ui.next}
+  data-done-label={ui.done}
+  data-caption-idle={ui.captionIdle}
+  data-caption-started={ui.captionStarted}
+  data-caption-completed={ui.captionCompleted}
+>
   <div class="incw__intro">
     <p class="incw__hint">
       <Icon name="zap" size={16} class="incw__hint-ico" />
@@ -36,12 +86,12 @@ const widths = [672, 1008, 1344];
 
   <div class="incw__stage-wrap">
     <div class="incw__stage explore" data-stage>
-      <Image class="incw__base" src={cardFull} widths={widths} sizes="672px" alt="Карточка инцидента INC-2843 на карте" loading="lazy" />
+      <Image class="incw__base" src={cardFull} widths={widths} sizes="672px" alt={ui.imageAlt} loading="lazy" />
       <div class="incw__dim" data-dim aria-hidden="true"></div>
       <Image class="incw__sharp" src={cardFull} widths={widths} sizes="672px" alt="" aria-hidden="true" data-sharp loading="lazy" />
       <div class="incw__zones">
         {
-          incidentZones.map(
+          activeIncidentZones.map(
             (z, i) =>
               !z.whole && (
                 <button
@@ -65,27 +115,27 @@ const widths = [672, 1008, 1344];
   </div>
 
   <div class="incw__controls" data-controls>
-    <button class="incw__nav incw__nav--icon" type="button" data-first aria-label="В начало" title="В начало">
+    <button class="incw__nav incw__nav--icon" type="button" data-first aria-label={ui.first} title={ui.first}>
       <Icon name="chevron-first" size={14} />
     </button>
-    <button class="incw__nav" type="button" data-prev aria-label="Назад">
-      <Icon name="chevron-left" size={14} />Назад
+    <button class="incw__nav" type="button" data-prev aria-label={ui.prev}>
+      <Icon name="chevron-left" size={14} />{ui.prev}
     </button>
-    <button class="incw__nav incw__nav--primary" type="button" data-next aria-label="Далее">
-      <span data-next-text>Далее</span>
+    <button class="incw__nav incw__nav--primary" type="button" data-next aria-label={ui.next}>
+      <span data-next-text>{ui.next}</span>
       <Icon name="chevron-right" size={14} class="incw__next-go" />
       <Icon name="check" size={14} class="incw__next-done" />
     </button>
     <span class="incw__sep"></span>
-    <button class="incw__close" type="button" data-close aria-label="Закрыть разбор">
+    <button class="incw__close" type="button" data-close aria-label={ui.close}>
       <Icon name="x" size={16} />
     </button>
   </div>
 
   <p class="incw__caption">
-    <span data-cap-left>Наведите — превью зоны. Клик по зоне или кнопке — пошаговый разбор.</span>
+    <span data-cap-left>{ui.captionIdle}</span>
     <span class="incw__caption-keys">
-      <kbd>←</kbd> <kbd>→</kbd> шаги · <kbd>Esc</kbd> — выход
+      <kbd>←</kbd> <kbd>→</kbd> {ui.captionKeys} <kbd>Esc</kbd> {ui.captionExit}
     </span>
   </p>
 
@@ -141,6 +191,13 @@ const widths = [672, 1008, 1344];
     const N = zones.length;
     const cta = root.dataset.cta || 'Разобрать карточку';
     const replayCta = root.dataset.replayCta || 'Посмотреть разбор снова';
+    const nextLabel = root.dataset.nextLabel || 'Далее';
+    const doneLabel = root.dataset.doneLabel || 'Готово';
+    const captionIdle = root.dataset.captionIdle || 'Наведите — превью зоны. Клик по зоне или кнопке — пошаговый разбор.';
+    const captionStarted =
+      root.dataset.captionStarted || 'Разбор карточки запущен. Стрелки — шаги, Esc — выход.';
+    const captionCompleted =
+      root.dataset.captionCompleted || 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.';
     const hotspotByIndex = new Map<number, HTMLElement>();
     hotspots.forEach((h) => hotspotByIndex.set(Number(h.dataset.i), h));
 
@@ -235,7 +292,7 @@ const widths = [672, 1008, 1344];
 
     const setNextLabel = (i: number) => {
       const last = i === N - 1;
-      nextText.textContent = last ? 'Готово' : 'Далее';
+      nextText.textContent = last ? doneLabel : nextLabel;
       nextBtn.classList.toggle('is-last', last);
     };
     const setStartLabel = () => {
@@ -323,7 +380,7 @@ const widths = [672, 1008, 1344];
       setStartLabel();
       if (fromPeek) enterFromPeek(i);
       else goStep(i);
-      capLeft.textContent = 'Разбор карточки запущен. Стрелки — шаги, Esc — выход.';
+      capLeft.textContent = captionStarted;
     };
     const closeGuided = (done = false) => {
       guided = false;
@@ -340,9 +397,7 @@ const widths = [672, 1008, 1344];
       shownIdx = -1;
       currentPage = -1;
       setStartLabel();
-      capLeft.textContent = completed
-        ? 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.'
-        : 'Наведите — превью зоны. Клик по зоне или кнопке — пошаговый разбор.';
+      capLeft.textContent = completed ? captionCompleted : captionIdle;
     };
     const next = () => {
       if (idx < N - 1) goStep(idx + 1);
@@ -464,7 +519,12 @@ const widths = [672, 1008, 1344];
     window.addEventListener('scroll', checkAutoExit, { passive: true });
   };
 
-  document.querySelectorAll<HTMLElement>('[data-incw]').forEach(init);
+  const initIncidentWalkthroughs = () => {
+    document.querySelectorAll<HTMLElement>('[data-incw]').forEach(init);
+  };
+
+  document.addEventListener('astro:page-load', initIncidentWalkthroughs);
+  initIncidentWalkthroughs();
 </script>
 
 <style>

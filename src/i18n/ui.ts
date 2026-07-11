@@ -1,5 +1,5 @@
-// Словарь UI-строк. Русский — основной язык и источник набора ключей.
-export const defaultLang = 'ru' as const;
+// Словарь UI-строк. Английский — основной язык и источник набора ключей.
+export const defaultLang = 'en' as const;
 
 export const ui = {
   en: {

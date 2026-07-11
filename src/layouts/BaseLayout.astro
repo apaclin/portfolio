@@ -1,8 +1,9 @@
 ---
 import { getRelativeLocaleUrl } from 'astro:i18n';
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
-import LangSwitcher from '../components/LangSwitcher.astro';
-import Lightbox from '../components/Lightbox.astro';
+import LangSwitcher from '../components/common/LangSwitcher.astro';
+import Lightbox from '../components/common/Lightbox.astro';
 import { stripLocale } from '../i18n/paths';
 
 interface Props {
@@ -17,9 +18,9 @@ const { title, description } = Astro.props;
 // Astro.currentLocale вычисляется из URL по конфигу i18n.
 // Если в пути нет языкового сегмента (например, на «/»), он может быть
 // undefined — тогда подставляем основной язык сайта.
-const lang = Astro.currentLocale ?? 'ru';
+const lang = Astro.currentLocale ?? 'en';
 
-// hreflang: alternate-ссылки на en/ru версии ТЕКУЩЕЙ страницы + x-default → ru.
+// hreflang: alternate-ссылки на en/ru версии ТЕКУЩЕЙ страницы + x-default → en.
 const basePath = stripLocale(Astro.url.pathname);
 const enUrl = getRelativeLocaleUrl('en', basePath);
 const ruUrl = getRelativeLocaleUrl('ru', basePath);
@@ -61,8 +62,9 @@ const toAbs = (url: string) => (Astro.site ? new URL(url, Astro.site).href : url
     {description && <meta name="description" content={description} />}
     <link rel="alternate" hreflang="en" href={toAbs(enUrl)} />
     <link rel="alternate" hreflang="ru" href={toAbs(ruUrl)} />
-    <link rel="alternate" hreflang="x-default" href={toAbs(ruUrl)} />
+    <link rel="alternate" hreflang="x-default" href={toAbs(enUrl)} />
     <title>{title}</title>
+    <ClientRouter fallback="swap" />
   </head>
   <body class="font-sans">
     <header class="mx-auto flex max-w-[72rem] justify-end px-5 pt-6 sm:px-6 lg:px-8">
