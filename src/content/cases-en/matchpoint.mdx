@@ -1,10 +1,13 @@
 ---
 title: "Matchpoint | Exception workflow for AP teams"
+cardTitle: "Matchpoint"
+cardSubtitle: "Accounts payable automation"
 description: "How I turned invoice discrepancies from a long manual investigation into a manageable workflow inside the product."
 meta: "My role: Product designer · Focus: AP workflow, exception handling, data validation"
 subtitle: "How I turned invoice discrepancies from a long manual investigation into a manageable workflow inside the product."
 date: 2026-06-25
 order: 1
+cover: "/src/assets/images/project-covers/matchpoint.webp"
 ---
 
 import vendor from "../../assets/images/cases/matchpoint/vendor.png";
@@ -50,7 +53,7 @@ The problem is not the discrepancy itself. The problem is that the system usuall
 
 Competitors such as Bill.com, Tipalti and Coupa optimize the happy path and treat exceptions as warnings: the system raises a flag, while the person has to find the cause, owner and next step. I built Matchpoint from the opposite premise: a discrepancy is not an error in a table, but a managed object with a lifecycle: Detect → Diagnose → Route → Resolve → Trace. The scope of this case is Detect and Diagnose, the weakest part competitors still leave to the user.
 
-<Breakout maxWidth="672px">
+<Breakout maxWidth="700px" minWidth="700px" align="content">
   <Flows lang="en" />
 </Breakout>
 
@@ -76,7 +79,9 @@ This is a solo concept without real data or live users, so every baseline value 
 
 The scope includes two exception types: purchase order mismatch and possible duplicate invoice. Out of scope: stuck approvals, SLAs, escalations and document recognition quality.
 
-<Problems lang="en" />
+<Breakout maxWidth="544px" minWidth="544px" align="content">
+  <Problems lang="en" />
+</Breakout>
 
 ## 3. Discovery
 
@@ -96,7 +101,7 @@ I started with desk research: reviews of Bill.com, Coupa and Tipalti, public AP 
 - **Delay costs money.**  
   Stuck exceptions directly affect the business: payments are late, the vendor waits for an answer, relationships suffer and some contracts can introduce penalties for each day of delay.
 
-<Breakout maxWidth="1264px">
+<Breakout maxWidth="1264px" minWidth="960px">
   <FlowsAsIs lang="en" />
 </Breakout>
 
@@ -203,7 +208,7 @@ The whole interface sits on a single white background without branded color: col
 
 I kept only the signals that help make a decision and change meaningfully depending on the seriousness of the warning: confidence, severity, vendor status, exception type, resolution state, cause and detection method.
 
-<Breakout>
+<Breakout maxWidth="700px" minWidth="700px" align="content">
   <Statuses4 lang="en" />
 </Breakout>
 
@@ -274,7 +279,7 @@ The profile brings together data that users usually have to search for in differ
 
 This helps the user understand whether the problem is in the specific invoice or in the vendor’s behavior. From here, they can also message the vendor, download history, update banking details or flag the vendor for review.
 
-<Breakout maxWidth="704px">
+<Breakout maxWidth="704px" minWidth="704px" align="content">
   <Actions lang="en" />
 </Breakout>
 

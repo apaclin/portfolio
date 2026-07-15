@@ -1,10 +1,11 @@
 ---
 import { getRelativeLocaleUrl } from 'astro:i18n';
-import { useTranslations, type Locale } from '../../i18n/ui';
+import { useTranslations } from '../../i18n/ui';
 import { stripLocale } from '../../i18n/paths';
+import { alternateLocale, resolveLocale } from '../../lib/i18n';
 
-const current: Locale = (Astro.currentLocale ?? 'en') as Locale;
-const other: Locale = current === 'en' ? 'ru' : 'en';
+const current = resolveLocale(Astro.currentLocale);
+const other = alternateLocale(current);
 
 // «Логический путь» без языкового префикса (общий хелпер).
 const basePath = stripLocale(Astro.url.pathname);

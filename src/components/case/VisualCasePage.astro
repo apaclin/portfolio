@@ -1,0 +1,170 @@
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { ClientRouter } from 'astro:transitions';
+import { stripLocale } from '../../i18n/paths';
+import { defaultLocale, type Locale } from '../../lib/i18n';
+import CaseNav from './CaseNav.astro';
+import CaseSliceImage from './CaseSliceImage.astro';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  ariaLabel: string;
+  sliceAltPrefix: string;
+  slices: ImageMetadata[];
+  background: string;
+  /** CSS width that keeps 2x-exported boards legible on narrow screens. */
+  mobileCanvasWidth?: string;
+}
+
+const {
+  locale,
+  title,
+  description,
+  ariaLabel,
+  sliceAltPrefix,
+  slices,
+  background,
+  mobileCanvasWidth = '960px',
+} = Astro.props as Props;
+
+const basePath = stripLocale(Astro.url.pathname);
+const enUrl = getRelativeLocaleUrl(defaultLocale, basePath);
+const ruUrl = getRelativeLocaleUrl('ru', basePath);
+const homeUrl = getRelativeLocaleUrl(locale, '');
+const homeLabel = locale === 'ru' ? 'Все проекты' : 'All projects';
+const canvasLabel =
+  locale === 'ru'
+    ? 'Прокручиваемые визуальные материалы кейса'
+    : 'Scrollable visual case boards';
+const responsiveSizes = `(max-width: 47.9375rem) ${mobileCanvasWidth}, 100vw`;
+---
+
+<!doctype html>
+<html lang={locale} style={`--visual-case-bg:${background}`}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style is:inline>
+      html,
+      body {
+        margin: 0;
+        background: var(--visual-case-bg, #000);
+      }
+      html {
+        color-scheme: dark;
+      }
+    </style>
+    <meta name="description" content={description} />
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="ru" href={ruUrl} />
+    <link rel="alternate" hreflang="x-default" href={enUrl} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <ClientRouter fallback="swap" />
+  </head>
+  <body>
+    <CaseNav variant="floating" href={homeUrl} label={homeLabel} />
+    <main
+      class="visual-case__scroller"
+      aria-label={ariaLabel}
+      tabindex="0"
+    >
+      <div
+        class="visual-case__canvas"
+        role="region"
+        aria-label={canvasLabel}
+        style={`--visual-case-mobile-width:${mobileCanvasWidth}`}
+      >
+        {
+          slices.map((slice, index) => (
+            <CaseSliceImage
+              src={slice}
+              alt={`${sliceAltPrefix} ${String(index + 1).padStart(2, '0')}`}
+              eager={index === 0}
+              sizes={responsiveSizes}
+            />
+          ))
+        }
+      </div>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  html,
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: var(--visual-case-bg, #000);
+  }
+
+  html {
+    color-scheme: dark;
+    scrollbar-color: rgba(148, 148, 148, 0.58) transparent;
+    scrollbar-width: thin;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .visual-case__scroller,
+  .visual-case__canvas {
+    width: 100%;
+    background: var(--visual-case-bg, #000);
+  }
+
+  .visual-case__scroller:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: -2px;
+  }
+
+  @media (max-width: 47.9375rem) {
+    .visual-case__scroller {
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+    }
+
+    .visual-case__canvas {
+      min-width: var(--visual-case-mobile-width, 960px);
+    }
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    image-rendering: auto;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    min-height: 48px;
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: rgba(148, 148, 148, 0.58);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(188, 188, 188, 0.72);
+    background-clip: content-box;
+  }
+</style>

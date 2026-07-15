@@ -1,10 +1,13 @@
 ---
 title: "T-Taxi | Autonomous Fleet Management System"
+cardTitle: "T-Taxi"
+cardSubtitle: "Autonomous fleet operations"
 description: "A case study on a NOC interface for monitoring autonomous taxis: incident queue, map, prioritization, and resolution card."
 meta: "My role: Product Designer · Focus: NOC, fleet ops, incident triage, operational dashboard"
 subtitle: "How I separated the stream of raw alerts from real incidents so a single engineer could run a shift of dozens of vehicles without missing critical events."
 date: 2026-07-01
 order: 2
+cover: "/src/assets/images/project-covers/t-taxi.webp"
 ---
 
 import Cover from "../../assets/images/cases/t-taxi/cover-2.jpg";
@@ -111,7 +114,7 @@ After the scenarios, I picked out where the interface can actually reduce the en
 
 Triage and resolution are the most frequent high-weight sub-jobs. Those are my focus: they account for most of an on-duty engineer's time.
 
-<Breakout maxWidth="960px">
+<Breakout maxWidth="960px" align="content">
   <PublicSvg
     src="/assets/t-taxi/schemas/opportunity-map.en.svg"
     alt="Opportunity map for the T-Taxi case study"
@@ -134,7 +137,7 @@ The core idea is to separate incoming signals from the engineer's work objects. 
 
 Several signals from one vehicle — connection loss, low charge, a fault code, a repeat signal — converge into a single incident. All the working context gathers around it: the vehicle, fault codes, actions, the operator, and the shift note. This is the object the engineer actually works with.
 
-<Breakout maxWidth="672px">
+<Breakout maxWidth="672px" align="content">
   <figure class="not-prose m-0 w-full rounded-lg border border-[var(--color-border)] p-10">
     <button
       type="button"
@@ -168,6 +171,7 @@ The queue answers "what to work first," the map answers "where," and the right c
   alt="T-Taxi fleet monitoring main screen"
   title="Fleet monitoring on the map"
   description="The incident queue, a map with vehicle statuses, and shift metrics. Hover over the elements to break the interface down piece by piece."
+  touchDescription="The incident queue, a map with vehicle statuses, and shift metrics. Tap an area to break the interface down piece by piece."
   zones={zones}
 />
 

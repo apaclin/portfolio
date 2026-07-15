@@ -38,12 +38,34 @@ const {
 </a>
 
 <script>
+  let activeFloatingNavs: HTMLElement[] = [];
+  let cleanupCaseNav: (() => void) | undefined;
+
   const initCaseNav = () => {
     const floatingNavs = Array.from(
       document.querySelectorAll<HTMLElement>('.case-nav--floating'),
-    ).filter((nav) => nav.dataset.caseNavReady !== 'true');
+    );
+
+    const isSamePage =
+      floatingNavs.length === activeFloatingNavs.length &&
+      floatingNavs.every((nav, index) => nav === activeFloatingNavs[index]);
+    if (isSamePage) return;
+
+    cleanupCaseNav?.();
+    cleanupCaseNav = undefined;
+    activeFloatingNavs = floatingNavs;
 
     if (floatingNavs.length === 0) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const cleanup = () => {
+      controller.abort();
+      if (activeFloatingNavs === floatingNavs) activeFloatingNavs = [];
+      if (cleanupCaseNav === cleanup) cleanupCaseNav = undefined;
+    };
+    cleanupCaseNav = cleanup;
+    document.addEventListener('astro:before-swap', cleanup, { once: true, signal });
 
     floatingNavs.forEach((nav) => {
       nav.dataset.caseNavReady = 'true';
@@ -90,7 +112,9 @@ const {
 
     const requestSourceUpdate = () => {
       if (!sourceTicking) {
-        window.requestAnimationFrame(updateFromSource);
+        window.requestAnimationFrame(() => {
+          if (!signal.aborted) updateFromSource();
+        });
         sourceTicking = true;
       }
     };
@@ -100,18 +124,20 @@ const {
         'scroll',
         () => {
           if (!ticking) {
-            window.requestAnimationFrame(update);
+            window.requestAnimationFrame(() => {
+              if (!signal.aborted) update();
+            });
             ticking = true;
           }
         },
-        { passive: true },
+        { passive: true, signal },
       );
     }
 
     if (afterArticleNavs.length > 0 && sourceNav) {
       updateFromSource();
-      window.addEventListener('scroll', requestSourceUpdate, { passive: true });
-      window.addEventListener('resize', requestSourceUpdate);
+      window.addEventListener('scroll', requestSourceUpdate, { passive: true, signal });
+      window.addEventListener('resize', requestSourceUpdate, { signal });
     }
 
     floatingNavs.forEach((nav) => {
@@ -121,14 +147,14 @@ const {
         } else {
           setHidden([nav], false);
         }
-      });
+      }, { signal });
       nav.addEventListener('mouseenter', () => {
         if (nav.dataset.reveal === 'after-article') {
           requestSourceUpdate();
         } else {
           setHidden([nav], false);
         }
-      });
+      }, { signal });
     });
   };
 

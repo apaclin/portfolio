@@ -12,15 +12,18 @@
 import { Picture } from 'astro:assets';
 import Icon from '../icons/Icon.astro';
 import type { Zone } from '../../content/data/t-taxi/zones';
+import { cappedImageWidths } from '../../lib/images';
 
 interface Props {
   src: ImageMetadata;
   alt: string;
   title: string;
   description: string;
+  touchDescription?: string;
   zones: Zone[];
   locale?: 'en' | 'ru';
   hint?: string;
+  touchHint?: string;
   cta?: string;
   replayCta?: string;
   maxWidth?: string;
@@ -30,6 +33,7 @@ const locale = (Astro.props.locale ?? (Astro.currentLocale === 'ru' ? 'ru' : 'en
 const ui = {
   ru: {
     hint: 'Наведите на области экрана или запустите пошаговый разбор.',
+    touchHint: 'Коснитесь области экрана или запустите пошаговый разбор.',
     cta: 'Разобрать экран',
     replayCta: 'Посмотреть разбор снова',
     first: 'В начало',
@@ -38,14 +42,19 @@ const ui = {
     done: 'Готово',
     close: 'Закрыть разбор',
     captionIdle: 'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.',
+    captionIdleTouch: 'Коснитесь области, чтобы начать пошаговый разбор.',
     captionKeys: 'двигают рамку между шагами · клик по экрану /',
     captionExit: '— выход',
     captionStarted:
       'Разбор запущен. Стрелки двигают рамку между шагами. Клик по экрану или Esc — выход.',
+    captionStartedTouch:
+      'Разбор запущен. Используйте кнопки ниже для перехода между шагами.',
     captionCompleted: 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.',
+    captionCompletedTouch: 'Разбор пройден. Коснитесь области, чтобы открыть её снова.',
   },
   en: {
     hint: 'Hover over screen areas or start the step-by-step walkthrough.',
+    touchHint: 'Tap a screen area or start the step-by-step walkthrough.',
     cta: 'Break down screen',
     replayCta: 'Watch walkthrough again',
     first: 'Back to start',
@@ -54,11 +63,15 @@ const ui = {
     done: 'Done',
     close: 'Close walkthrough',
     captionIdle: 'Hover — outline first, preview follows. Click — step-by-step walkthrough.',
+    captionIdleTouch: 'Tap an area to start the step-by-step walkthrough.',
     captionKeys: 'move the frame between steps · click the screen /',
     captionExit: '— exit',
     captionStarted:
       'Walkthrough started. Arrow keys move the frame between steps. Click the screen or press Esc to exit.',
+    captionStartedTouch:
+      'Walkthrough started. Use the controls below to move between steps.',
     captionCompleted: 'Walkthrough complete. Hover over zones to jump back to any step.',
+    captionCompletedTouch: 'Walkthrough complete. Tap an area to open it again.',
   },
 }[locale];
 
@@ -67,14 +80,16 @@ const {
   alt,
   title,
   description,
+  touchDescription = description,
   zones,
   hint = ui.hint,
+  touchHint = ui.touchHint,
   cta = ui.cta,
   replayCta = ui.replayCta,
   maxWidth = '1440px',
 } = Astro.props as Props;
 
-const widths = [720, 960, 1200, 1440, 1920].filter((w) => w < src.width).concat(src.width);
+const widths = cappedImageWidths(src.width, [720, 960, 1200, 1440, 1920]);
 const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 ---
 
@@ -86,16 +101,23 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   data-next-label={ui.next}
   data-done-label={ui.done}
   data-caption-idle={ui.captionIdle}
+  data-caption-idle-touch={ui.captionIdleTouch}
   data-caption-started={ui.captionStarted}
+  data-caption-started-touch={ui.captionStartedTouch}
   data-caption-completed={ui.captionCompleted}
+  data-caption-completed-touch={ui.captionCompletedTouch}
 >
   <div class="walkthrough__intro">
     <div>
       <h2>{title}</h2>
-      <p>{description}</p>
+      <p>
+        <span class="walkthrough__pointer-copy">{description}</span>
+        <span class="walkthrough__touch-copy">{touchDescription}</span>
+      </p>
       <p class="walkthrough__hint">
         <Icon name="zap" size={16} class="walkthrough__hint-ico" />
-        {hint}
+        <span class="walkthrough__pointer-copy">{hint}</span>
+        <span class="walkthrough__touch-copy">{touchHint}</span>
       </p>
     </div>
     <button class="walkthrough__start" type="button" data-start>{cta}</button>
@@ -108,7 +130,8 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
           <Picture
             src={src}
             alt={alt}
-            formats={['avif', 'webp']}
+            formats={['avif']}
+            fallbackFormat="webp"
             widths={widths}
             sizes={sizes}
             loading="lazy"
@@ -120,7 +143,8 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
           <Picture
             src={src}
             alt=""
-            formats={['avif', 'webp']}
+            formats={['avif']}
+            fallbackFormat="webp"
             widths={widths}
             sizes={sizes}
             loading="lazy"
@@ -196,7 +220,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 </section>
 
 <script>
-  const initWalkthrough = (root: HTMLElement) => {
+  const initWalkthrough = (root: HTMLElement, signal: AbortSignal) => {
     if (root.dataset.ready === 'true') return;
     root.dataset.ready = 'true';
 
@@ -262,12 +286,16 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     const replayCta = root.dataset.replayCta || 'Посмотреть разбор снова';
     const nextLabel = root.dataset.nextLabel || 'Далее';
     const doneLabel = root.dataset.doneLabel || 'Готово';
-    const captionIdle = root.dataset.captionIdle || 'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.';
+    const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    const captionIdle =
+      (coarsePointer ? root.dataset.captionIdleTouch : root.dataset.captionIdle) ||
+      'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.';
     const captionStarted =
-      root.dataset.captionStarted ||
+      (coarsePointer ? root.dataset.captionStartedTouch : root.dataset.captionStarted) ||
       'Разбор запущен. Стрелки двигают рамку между шагами. Клик по экрану или Esc — выход.';
     const captionCompleted =
-      root.dataset.captionCompleted || 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.';
+      (coarsePointer ? root.dataset.captionCompletedTouch : root.dataset.captionCompleted) ||
+      'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.';
 
     let idx = -1;
     let guided = false;
@@ -515,7 +543,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
     document.addEventListener('t-walkthrough-open', (e) => {
       if ((e as CustomEvent).detail !== root && guided) closeGuided();
-    });
+    }, { signal });
 
     // Выход — только клик ВНЕ скриншота (не по сцене, панели и кнопке запуска).
     document.addEventListener('click', (e) => {
@@ -523,7 +551,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       const t = e.target as Node;
       if (stage.contains(t) || controls.contains(t) || startBtn.contains(t)) return;
       closeGuided();
-    });
+    }, { signal });
 
     startBtn.addEventListener('click', () => enterGuided(0, false));
     firstBtn.addEventListener('click', (e) => {
@@ -564,7 +592,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
         e.preventDefault();
         closeGuided();
       }
-    });
+    }, { signal });
 
     let rt: number;
     window.addEventListener('resize', () => {
@@ -573,7 +601,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
         if (guided && idx >= 0) placeCard(zones[idx], true);
         else if (cardShownIdx >= 0) placeCard(zones[cardShownIdx], false);
       }, 80);
-    });
+    }, { signal });
 
     // ── Автовыход при уходе сцены из вида ──
     // Сцена скрылась (проскроллили по вертикали или увели вбок во внутреннем
@@ -603,12 +631,40 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       });
     };
 
-    window.addEventListener('scroll', checkAutoExit, { passive: true });
-    wide?.addEventListener('scroll', checkAutoExit, { passive: true });
+    window.addEventListener('scroll', checkAutoExit, { passive: true, signal });
+    wide?.addEventListener('scroll', checkAutoExit, { passive: true, signal });
+
+    signal.addEventListener('abort', () => {
+      window.clearTimeout(rt);
+      window.cancelAnimationFrame(exitRaf);
+    }, { once: true });
   };
 
+  let activeWalkthroughRoots: HTMLElement[] = [];
+  let cleanupWalkthroughs: (() => void) | undefined;
+
   const initWalkthroughs = () => {
-    document.querySelectorAll<HTMLElement>('[data-walkthrough]').forEach(initWalkthrough);
+    const roots = [...document.querySelectorAll<HTMLElement>('[data-walkthrough]')];
+    const isSamePage =
+      roots.length === activeWalkthroughRoots.length &&
+      roots.every((root, index) => root === activeWalkthroughRoots[index]);
+    if (isSamePage) return;
+
+    cleanupWalkthroughs?.();
+    cleanupWalkthroughs = undefined;
+    activeWalkthroughRoots = roots;
+    if (roots.length === 0) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const cleanup = () => {
+      controller.abort();
+      if (activeWalkthroughRoots === roots) activeWalkthroughRoots = [];
+      if (cleanupWalkthroughs === cleanup) cleanupWalkthroughs = undefined;
+    };
+    cleanupWalkthroughs = cleanup;
+    document.addEventListener('astro:before-swap', cleanup, { once: true, signal });
+    roots.forEach((root) => initWalkthrough(root, signal));
   };
 
   document.addEventListener('astro:page-load', initWalkthroughs);
@@ -664,6 +720,9 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   }
   .walkthrough__hint :global(.walkthrough__hint-ico) {
     flex: none;
+  }
+  .walkthrough__touch-copy {
+    display: none;
   }
   .walkthrough__start {
     flex: 0 0 auto;
@@ -1023,6 +1082,27 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     }
     .walkthrough__stage-wrap {
       min-width: 760px;
+    }
+    .walkthrough__controls {
+      position: fixed;
+      left: 50%;
+      bottom: max(0.75rem, env(safe-area-inset-bottom));
+      max-width: calc(100vw - 1.5rem);
+      transform: translateX(-50%) translateY(4px);
+      z-index: 50;
+    }
+    .walkthrough__stage.guided .walkthrough__controls {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (pointer: coarse) {
+    .walkthrough__pointer-copy,
+    .walkthrough__caption-keys {
+      display: none;
+    }
+    .walkthrough__touch-copy {
+      display: inline;
     }
   }
 </style>

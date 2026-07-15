@@ -40,7 +40,6 @@ const contentComponents = {
   }),
 };
 
-// Фабрика коллекции кейса для единого каталога src/content/cases.
 function caseCollection(label: string, path: `${string}/*`) {
   return collection({
     label,
@@ -51,11 +50,41 @@ function caseCollection(label: string, path: `${string}/*`) {
     schema: {
       // fields.slug кладёт читаемый title во frontmatter, а slug — в имя файла.
       title: fields.slug({ name: { label: 'Title' } }),
-      description: fields.text({ label: 'Description', multiline: true }),
-      date: fields.date({ label: 'Date' }),
-      order: fields.integer({ label: 'Order', defaultValue: 1 }),
-      // cover — опциональное поле из zod-схемы (z.string().optional()).
-      cover: fields.text({ label: 'Cover (optional)' }),
+      description: fields.text({
+        label: 'Description',
+        multiline: true,
+        validation: { isRequired: true },
+      }),
+      meta: fields.text({ label: 'Meta', multiline: true }),
+      subtitle: fields.text({ label: 'Subtitle', multiline: true }),
+      cardTitle: fields.text({
+        label: 'Card title',
+        description: 'Short brand name shown on the projects-page card.',
+      }),
+      cardSubtitle: fields.text({
+        label: 'Card subtitle',
+        description: 'One-line tagline shown under the card title.',
+      }),
+      date: fields.date({
+        label: 'Date',
+        validation: { isRequired: true },
+      }),
+      order: fields.integer({
+        label: 'Order',
+        defaultValue: 1,
+        validation: { isRequired: true },
+      }),
+      cover: fields.image({
+        label: 'Cover',
+        directory: 'src/assets/images/project-covers',
+        publicPath: '/src/assets/images/project-covers/',
+        validation: { isRequired: true },
+      }),
+      fallbackAllowed: fields.checkbox({
+        label: 'Allow locale fallback',
+        description: 'Publish this case in the other locale until its translation is ready.',
+        defaultValue: false,
+      }),
       // Основной контент кейса (MDX) + кастомные component blocks.
       content: fields.mdx({
         label: 'Content',
@@ -70,7 +99,7 @@ export default config({
   // Админка работает в dev (`astro dev` → /keystatic), правит реальные MDX.
   storage: { kind: 'local' },
   collections: {
-    // Один каталог; локаль хранится в имени файла: <slug>-ru.mdx / <slug>-en.mdx.
-    cases: caseCollection('Cases', 'src/content/cases/*'),
+    casesEn: caseCollection('Cases — English', 'src/content/cases-en/*'),
+    casesRu: caseCollection('Кейсы — Русский', 'src/content/cases-ru/*'),
   },
 });

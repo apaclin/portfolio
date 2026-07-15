@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import react from '@astrojs/react';
 import keystatic from '@keystatic/astro';
 import tailwindcss from '@tailwindcss/vite';
+import { defaultLocale, locales } from './src/lib/i18n.ts';
 
 // Keystatic-админка — это серверные роуты (React-приложение + local API).
 // Чтобы прод-сборка оставалась ЧИСТЫМ SSG (без адаптера и без React в бандле
@@ -17,8 +18,8 @@ export default defineConfig({
 
   // Нативный i18n Astro (astro:i18n), без сторонних библиотек.
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en', 'ru'],
+    defaultLocale,
+    locales: [...locales],
     routing: {
       // English (default language) is unprefixed: "/", "/about".
       // Russian keeps the explicit prefix: "/ru/", "/ru/about".

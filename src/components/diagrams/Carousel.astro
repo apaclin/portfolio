@@ -3,8 +3,9 @@
 // Раскладка и swipe — нативный CSS Scroll Snap (ноль JS). Крошечный скрипт
 // только для Prev/Next, стрелок клавиатуры и disabled на краях.
 // Без библиотек, без autoplay/loop/dots/thumbnails — простой переход.
-// Изображения — astro:assets (AVIF+WebP+fallback srcset, width/height, lazy).
-import { getImage } from 'astro:assets';
+// Изображения — astro:assets (AVIF + WebP fallback, width/height, lazy).
+import { Picture, getImage } from 'astro:assets';
+import { cappedImageWidths, cappedZoomWidth } from '../../lib/images';
 
 interface CarouselItem {
   /** Импортированное изображение из src/assets (ImageMetadata). */
@@ -38,54 +39,25 @@ const {
 } = Astro.props as Props;
 const total = items.length;
 
-const sizes = '(min-width: 64rem) 960px, 100vw';
-const cacheVersion = Date.now().toString(36);
-const withVersion = (url: string) =>
-  `${url}${url.includes('?') ? '&' : '?'}v=${cacheVersion}`;
-const toSrcset = (
-  images: Array<{ src: string; width: number }>
-) => images.map((image) => `${withVersion(image.src)} ${image.width}w`).join(', ');
+const sizes = flush
+  ? '(min-width: 64rem) 960px, calc(100vw - 3rem)'
+  : '(min-width: 64rem) 912px, calc(100vw - 3rem)';
 
-// Astro image cache не всегда инвалидируется, если файл заменили тем же именем.
-// Добавляем версию к src: она входит в hash трансформации и не меняет пиксели.
-const versionedSource = (src: ImageMetadata): ImageMetadata => ({
-  ...src,
-  src: withVersion(src.src),
-});
-const imageOptions = (src: ImageMetadata, width: number, format: string) => ({
-  src: versionedSource(src),
-  width,
-  format,
-});
-
-// Оптимизированные варианты каждого слайда + hi-res для лайтбокса.
+// Display srcsets are capped independently from the single 2× Lightbox asset.
 const slides = await Promise.all(
   items.map(async (item) => {
-    const widths = [480, 800, 1200, 1600].filter((w) => w < item.src.width).concat(item.src.width);
-    const [avif, webp, fallback, zoom] = await Promise.all([
-      Promise.all(widths.map(async (width) => ({
-        width,
-        src: (await getImage(imageOptions(item.src, width, 'avif'))).src,
-      }))),
-      Promise.all(widths.map(async (width) => ({
-        width,
-        src: (await getImage(imageOptions(item.src, width, 'webp'))).src,
-      }))),
-      Promise.all(widths.map(async (width) => ({
-        width,
-        src: (await getImage(imageOptions(item.src, width, item.src.format))).src,
-      }))),
-      getImage(imageOptions(item.src, item.src.width, 'webp')),
-    ]);
-    const fallbackImage = fallback[fallback.length - 1];
+    const widths = cappedImageWidths(item.src.width);
+    const zoom = await getImage({
+      src: item.src,
+      width: cappedZoomWidth(item.src.width, maxWidth),
+      format: 'webp',
+      quality: 90,
+    });
 
     return {
       ...item,
-      avifSrcset: toSrcset(avif),
-      webpSrcset: toSrcset(webp),
-      fallbackSrcset: toSrcset(fallback),
-      fallbackSrc: withVersion(fallbackImage.src),
-      zoom: withVersion(zoom.src),
+      widths,
+      zoom: zoom.src,
     };
   })
 );
@@ -120,20 +92,17 @@ const slides = await Promise.all(
               data-max-width={maxWidth}
               aria-label={`Enlarge image: ${item.alt}`}
             >
-              <picture>
-                <source srcset={item.avifSrcset} type="image/avif" sizes={sizes} />
-                <source srcset={item.webpSrcset} type="image/webp" sizes={sizes} />
-                <img
-                  src={item.fallbackSrc}
-                  srcset={item.fallbackSrcset}
-                  alt={item.alt}
-                  sizes={sizes}
-                  loading={eager && i === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                  width={item.src.width}
-                  height={item.src.height}
-                />
-              </picture>
+              <Picture
+                src={item.src}
+                alt={item.alt}
+                formats={['avif']}
+                fallbackFormat="webp"
+                widths={item.widths}
+                sizes={sizes}
+                quality={90}
+                loading={eager && i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
             </button>
             {item.caption && <span class="carousel__caption" set:html={item.caption} />}
           </li>
@@ -217,11 +186,11 @@ const slides = await Promise.all(
     display: block;
     width: 100%;
   }
-  /* Натуральный размер по центру, без растяжения/upscale — как у обычных картинок. */
+  /* Кадр заполняет всю доступную ширину карусели. */
   .carousel__slide :global(img) {
     display: block;
     max-width: 100%;
-    width: auto;
+    width: 100%;
     height: auto;
     margin-inline: auto;
     background-color: var(--color-bg-subtle);
@@ -274,12 +243,48 @@ const slides = await Promise.all(
 </style>
 
 <script>
+  let activeCarouselRoots: HTMLElement[] = [];
+  let cleanupCarousels: (() => void) | undefined;
+
   const initCarousels = () => {
+    const roots = [...document.querySelectorAll<HTMLElement>('.carousel')];
+    const isSamePage =
+      roots.length === activeCarouselRoots.length &&
+      roots.every((root, index) => root === activeCarouselRoots[index]);
+    if (isSamePage) return;
+
+    cleanupCarousels?.();
+    cleanupCarousels = undefined;
+    activeCarouselRoots = roots;
+    if (roots.length === 0) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const observers: Array<ResizeObserver | IntersectionObserver> = [];
+    const timeoutIds = new Set<number>();
+    const schedule = (callback: () => void, delay: number) => {
+      const id = window.setTimeout(() => {
+        timeoutIds.delete(id);
+        if (!signal.aborted) callback();
+      }, delay);
+      timeoutIds.add(id);
+    };
+    const cleanup = () => {
+      controller.abort();
+      observers.forEach((observer) => observer.disconnect());
+      timeoutIds.forEach((id) => window.clearTimeout(id));
+      timeoutIds.clear();
+      if (activeCarouselRoots === roots) activeCarouselRoots = [];
+      if (cleanupCarousels === cleanup) cleanupCarousels = undefined;
+    };
+    cleanupCarousels = cleanup;
+    document.addEventListener('astro:before-swap', cleanup, { once: true, signal });
+
     const reduceMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches;
 
-    document.querySelectorAll<HTMLElement>('.carousel').forEach((root) => {
+    roots.forEach((root) => {
       if (root.dataset.carouselReady === 'true') return;
       root.dataset.carouselReady = 'true';
 
@@ -321,7 +326,7 @@ const slides = await Promise.all(
 
       const images = Array.from(track.querySelectorAll<HTMLImageElement>('img'));
       images.forEach((img, index) => {
-        window.setTimeout(() => {
+        schedule(() => {
           const src = img.currentSrc || img.src;
           if (!src) return;
           const preload = new window.Image();
@@ -332,8 +337,8 @@ const slides = await Promise.all(
       });
     };
 
-    prev?.addEventListener('click', () => go(-1));
-    next?.addEventListener('click', () => go(1));
+    prev?.addEventListener('click', () => go(-1), { signal });
+    next?.addEventListener('click', () => go(1), { signal });
 
     // Стрелки клавиатуры работают, пока фокус внутри карусели.
     root.addEventListener('keydown', (event) => {
@@ -344,15 +349,24 @@ const slides = await Promise.all(
         event.preventDefault();
         go(1);
       }
-    });
+    }, { signal });
 
-    track.addEventListener('scroll', () => requestAnimationFrame(sync), {
+    track.addEventListener('scroll', () => requestAnimationFrame(() => {
+      if (!signal.aborted) sync();
+    }), {
       passive: true,
+      signal,
     });
     if ('ResizeObserver' in window) {
-      new ResizeObserver(() => requestAnimationFrame(sync)).observe(track);
+      const observer = new ResizeObserver(() => requestAnimationFrame(() => {
+        if (!signal.aborted) sync();
+      }));
+      observer.observe(track);
+      observers.push(observer);
     }
-    root.addEventListener('carousel:sync', () => requestAnimationFrame(sync));
+    root.addEventListener('carousel:sync', () => requestAnimationFrame(() => {
+      if (!signal.aborted) sync();
+    }), { signal });
 
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver(
@@ -364,8 +378,9 @@ const slides = await Promise.all(
         { rootMargin: '800px 0px' }
       );
       observer.observe(root);
+      observers.push(observer);
     } else {
-      setTimeout(preloadSlideImages, 600);
+      schedule(preloadSlideImages, 600);
     }
     sync();
   });

@@ -86,9 +86,10 @@ const widths = [672, 1008, 1344];
 
   <div class="incw__stage-wrap">
     <div class="incw__stage explore" data-stage>
-      <Image class="incw__base" src={cardFull} widths={widths} sizes="672px" alt={ui.imageAlt} loading="lazy" />
+      <Image class="incw__base" src={cardFull} widths={widths} sizes="(min-width: 45rem) 672px, calc(100vw - 3rem)" format="webp" alt={ui.imageAlt} loading="lazy" />
       <div class="incw__dim" data-dim aria-hidden="true"></div>
-      <Image class="incw__sharp" src={cardFull} widths={widths} sizes="672px" alt="" aria-hidden="true" data-sharp loading="lazy" />
+      <Image class="incw__sharp" src={cardFull} widths={widths} sizes="(min-width: 45rem) 672px, calc(100vw - 3rem)" format="webp" alt="" aria-hidden="true" data-sharp loading="lazy" />
+      <div class="incw__frame" data-frame aria-hidden="true"></div>
       <div class="incw__zones">
         {
           activeIncidentZones.map(
@@ -139,7 +140,7 @@ const widths = [672, 1008, 1344];
     </span>
   </p>
 
-  <script type="application/json" data-zones set:html={zonesJson} />
+  <script is:inline type="application/json" data-zones set:html={zonesJson} />
 </section>
 
 <script>
@@ -157,12 +158,13 @@ const widths = [672, 1008, 1344];
   const LEFT = 27.16;
   const WIDTH = 71.28;
 
-  const init = (root: HTMLElement) => {
+  const init = (root: HTMLElement, signal: AbortSignal) => {
     if (root.dataset.ready === 'true') return;
     root.dataset.ready = 'true';
 
     const stage = root.querySelector<HTMLElement>('[data-stage]');
     const sharp = root.querySelector<HTMLElement>('[data-sharp]');
+    const frame = root.querySelector<HTMLElement>('[data-frame]');
     const tip = root.querySelector<HTMLElement>('[data-tip]');
     const tipStep = root.querySelector<HTMLElement>('[data-tip-step]');
     const tipTitle = root.querySelector<HTMLElement>('[data-tip-title]');
@@ -180,7 +182,7 @@ const widths = [672, 1008, 1344];
     const hotspots = [...root.querySelectorAll<HTMLButtonElement>('[data-zone]')];
 
     if (
-      !stage || !sharp || !tip || !tipStep || !tipTitle || !tipBody || !controls ||
+      !stage || !sharp || !frame || !tip || !tipStep || !tipTitle || !tipBody || !controls ||
       !firstBtn || !prevBtn || !nextBtn || !nextText || !closeBtn || !startBtn ||
       !capLeft || !zonesEl
     ) {
@@ -198,16 +200,12 @@ const widths = [672, 1008, 1344];
       root.dataset.captionStarted || 'Разбор карточки запущен. Стрелки — шаги, Esc — выход.';
     const captionCompleted =
       root.dataset.captionCompleted || 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.';
-    const hotspotByIndex = new Map<number, HTMLElement>();
-    hotspots.forEach((h) => hotspotByIndex.set(Number(h.dataset.i), h));
-
     let idx = -1;
     let guided = false;
     let completed = false;
     let hoverIdx = -1;
     let shownIdx = -1;
     let busy = false;
-    let stepT = 0;
     let suppressExitUntil = 0;
     // Разбор скроллится «постранично», а не к каждой зоне: шаги 1–3 (верх карточки)
     // и 4–5 (низ) умещаются в экран, поэтому внутри страницы скролла нет.
@@ -221,17 +219,19 @@ const widths = [672, 1008, 1344];
       return `inset(${z.top}% ${(100 - LEFT - WIDTH).toFixed(2)}% ${bottom}% ${LEFT}% round 8px)`;
     };
 
+    const reflow = (el: HTMLElement) => void el.offsetWidth;
+    const setFramePos = (i: number) => {
+      const z = zones[i];
+      frame.style.left = (z.whole ? 0 : LEFT) + '%';
+      frame.style.top = (z.whole ? 0 : z.top) + '%';
+      frame.style.width = (z.whole ? 100 : WIDTH) + '%';
+      frame.style.height = (z.whole ? 100 : z.height) + '%';
+    };
+
     const clearActive = () => {
       hotspots.forEach((h) => h.classList.remove('is-active'));
       stage.classList.remove('whole-active');
     };
-    const setActive = (i: number) => {
-      clearActive();
-      if (i < 0) return;
-      if (zones[i].whole) stage.classList.add('whole-active');
-      else hotspotByIndex.get(i)?.classList.add('is-active');
-    };
-
     const fillTip = (i: number, withStep: boolean) => {
       tipStep.textContent = withStep ? `${i + 1} / ${N}` : '';
       tipTitle.textContent = zones[i].title;
@@ -326,27 +326,34 @@ const widths = [672, 1008, 1344];
       }
     };
 
-    // ── Guided: fade-out → clip к зоне + скролл страницы → fade-in ──
+    // ── Guided: рамка, резкая зона и тултип перелетают между шагами. ──
     // Счётчик показан сразу (step-static) — при кнопке/навигации не «растёт».
     const goStep = (i: number) => {
+      const isFirst = idx < 0;
       idx = i;
       clearActive();
-      tip.classList.remove('show');
       tip.classList.add('step-static');
-      sharp.style.opacity = '0';
+      if (isFirst) {
+        frame.classList.remove('moving');
+        sharp.classList.remove('moving');
+        tip.classList.remove('moving');
+      } else {
+        frame.classList.add('moving');
+        sharp.classList.add('moving');
+        tip.classList.add('moving');
+      }
+      reflow(frame);
+      setFramePos(i);
+      sharp.style.clipPath = clipFor(i);
       fillTip(i, true);
+      placeTip(i);
       setNextLabel(i);
       prevBtn.disabled = i === 0;
       firstBtn.disabled = i === 0;
       scrollForStep(i);
-      window.clearTimeout(stepT);
-      stepT = window.setTimeout(() => {
-        sharp.style.clipPath = clipFor(i);
-        setActive(i);
-        placeTip(i);
-        sharp.style.opacity = '1';
-        tip.classList.add('show');
-      }, 210);
+      frame.classList.add('on');
+      sharp.style.opacity = '1';
+      tip.classList.add('show');
     };
 
     // Вход из уже видимого peek: тултип не пропадает — счётчик «дорастает»
@@ -359,8 +366,12 @@ const widths = [672, 1008, 1344];
       prevBtn.disabled = i === 0;
       firstBtn.disabled = i === 0;
       scrollForStep(i);
+      frame.classList.remove('moving');
+      sharp.classList.remove('moving');
+      tip.classList.remove('moving');
+      setFramePos(i);
       sharp.style.clipPath = clipFor(i);
-      setActive(i);
+      frame.classList.add('on');
       sharp.style.opacity = '1';
     };
 
@@ -384,13 +395,14 @@ const widths = [672, 1008, 1344];
     };
     const closeGuided = (done = false) => {
       guided = false;
-      window.clearTimeout(stepT);
       if (done) completed = true;
       stage.classList.remove('guided');
       stage.classList.add('explore');
       root.classList.remove('is-guided');
       clearActive();
-      tip.classList.remove('show');
+      frame.classList.remove('on', 'moving');
+      sharp.classList.remove('moving');
+      tip.classList.remove('show', 'moving');
       sharp.style.opacity = '0';
       idx = -1;
       hoverIdx = -1;
@@ -430,7 +442,7 @@ const widths = [672, 1008, 1344];
 
     document.addEventListener('t-walkthrough-open', (e) => {
       if ((e as CustomEvent).detail !== root && guided) closeGuided();
-    });
+    }, { signal });
 
     // Выход — только клик ВНЕ скриншота (не по сцене, панели и кнопке запуска).
     document.addEventListener('click', (e) => {
@@ -438,7 +450,7 @@ const widths = [672, 1008, 1344];
       const t = e.target as Node;
       if (stage.contains(t) || controls.contains(t) || startBtn.contains(t)) return;
       closeGuided();
-    });
+    }, { signal });
 
     startBtn.addEventListener('click', () => enterGuided(0));
     firstBtn.addEventListener('click', (e) => {
@@ -479,7 +491,7 @@ const widths = [672, 1008, 1344];
         e.preventDefault();
         closeGuided();
       }
-    });
+    }, { signal });
 
     let rt: number;
     window.addEventListener('resize', () => {
@@ -488,7 +500,7 @@ const widths = [672, 1008, 1344];
         if (guided && idx >= 0) placeTip(idx);
         else if (shownIdx >= 0) placeTip(shownIdx);
       }, 80);
-    });
+    }, { signal });
 
     // ── Автовыход при уходе сцены из вида ──
     // Проскроллили так, что карточку почти не видно → выходим из разбора. Порог —
@@ -516,11 +528,39 @@ const widths = [672, 1008, 1344];
       });
     };
 
-    window.addEventListener('scroll', checkAutoExit, { passive: true });
+    window.addEventListener('scroll', checkAutoExit, { passive: true, signal });
+
+    signal.addEventListener('abort', () => {
+      window.clearTimeout(rt);
+      window.cancelAnimationFrame(exitRaf);
+    }, { once: true });
   };
 
+  let activeIncidentRoots: HTMLElement[] = [];
+  let cleanupIncidentWalkthroughs: (() => void) | undefined;
+
   const initIncidentWalkthroughs = () => {
-    document.querySelectorAll<HTMLElement>('[data-incw]').forEach(init);
+    const roots = [...document.querySelectorAll<HTMLElement>('[data-incw]')];
+    const isSamePage =
+      roots.length === activeIncidentRoots.length &&
+      roots.every((root, index) => root === activeIncidentRoots[index]);
+    if (isSamePage) return;
+
+    cleanupIncidentWalkthroughs?.();
+    cleanupIncidentWalkthroughs = undefined;
+    activeIncidentRoots = roots;
+    if (roots.length === 0) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const cleanup = () => {
+      controller.abort();
+      if (activeIncidentRoots === roots) activeIncidentRoots = [];
+      if (cleanupIncidentWalkthroughs === cleanup) cleanupIncidentWalkthroughs = undefined;
+    };
+    cleanupIncidentWalkthroughs = cleanup;
+    document.addEventListener('astro:before-swap', cleanup, { once: true, signal });
+    roots.forEach((root) => init(root, signal));
   };
 
   document.addEventListener('astro:page-load', initIncidentWalkthroughs);
@@ -606,6 +646,11 @@ const widths = [672, 1008, 1344];
     pointer-events: none;
     transition: opacity 0.22s ease;
   }
+  .incw__sharp.moving {
+    transition:
+      opacity 0.22s ease,
+      clip-path 0.42s var(--ease);
+  }
 
   /* Затемнение: blur + тёмный слой поверх; активная зона поверх — резкая копия. */
   .incw__dim {
@@ -621,6 +666,36 @@ const widths = [672, 1008, 1344];
   }
   .incw__stage.guided .incw__dim {
     opacity: 1;
+  }
+
+  /* Единая рамка guided-режима плавно перемещается между зонами. */
+  .incw__frame {
+    position: absolute;
+    z-index: 5;
+    border: 1px solid rgb(255 255 255 / 0%);
+    border-radius: 8px;
+    box-shadow: 0 12px 34px -6px rgb(0 0 0 / 45%);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.24s ease,
+      border-width 0.24s ease,
+      border-color 0.24s ease;
+  }
+  .incw__frame.moving {
+    transition:
+      opacity 0.24s ease,
+      border-width 0.24s ease,
+      border-color 0.24s ease,
+      left 0.42s var(--ease),
+      top 0.42s var(--ease),
+      width 0.42s var(--ease),
+      height 0.42s var(--ease);
+  }
+  .incw__frame.on {
+    opacity: 1;
+    border-width: 2.5px;
+    border-color: rgb(255 255 255 / 96%);
   }
 
   /* Зоны — они же подсветка (inset-рамка). */
@@ -651,28 +726,8 @@ const widths = [672, 1008, 1344];
   .incw__stage.explore .incw__zone:hover {
     box-shadow: inset 0 0 0 2px rgb(255 255 255 / 65%);
   }
-  .incw__zone.is-active {
-    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 60%);
-  }
   .incw__stage.guided .incw__zone {
     pointer-events: none;
-  }
-  .incw__stage.guided .incw__zone.is-active {
-    box-shadow: inset 0 0 0 2.5px rgb(255 255 255 / 96%);
-  }
-  /* Подсветка «Панель» — рамка по всей карточке (над резкой копией). */
-  .incw__stage::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    border-radius: inherit;
-    pointer-events: none;
-    box-shadow: inset 0 0 0 2.5px rgb(255 255 255 / 0%);
-    transition: box-shadow 0.22s ease;
-  }
-  .incw__stage.whole-active::after {
-    box-shadow: inset 0 0 0 2.5px rgb(255 255 255 / 96%);
   }
 
   /* Тултип — сверху/снизу от зоны (карточка узкая). */
@@ -694,6 +749,13 @@ const widths = [672, 1008, 1344];
   .incw__tip.show {
     opacity: 1;
     transform: translateY(0);
+  }
+  .incw__tip.moving {
+    transition:
+      opacity 0.22s ease,
+      transform 0.22s var(--ease),
+      left 0.42s var(--ease),
+      top 0.42s var(--ease);
   }
   .incw__stage.guided .incw__tip {
     pointer-events: auto;
@@ -855,6 +917,7 @@ const widths = [672, 1008, 1344];
   @media (prefers-reduced-motion: reduce) {
     .incw__dim,
     .incw__sharp,
+    .incw__frame,
     .incw__zone,
     .incw__tip {
       transition-duration: 0.001ms !important;

@@ -1,5 +1,6 @@
 ---
-import { getImage } from 'astro:assets';
+import { Picture } from 'astro:assets';
+import { cappedImageWidths } from '../../lib/images';
 
 interface Props {
   src: ImageMetadata;
@@ -10,46 +11,25 @@ interface Props {
 
 const { src, alt, eager = false, sizes = '100vw' } = Astro.props as Props;
 
-const widths = [960, 1440, 1920]
-  .filter((width) => width < src.width)
-  .concat(src.width);
-
-const buildSet = async (format: string, quality?: number) =>
-  Promise.all(
-    widths.map(async (width) => {
-      const image = await getImage({ src, width, format, quality });
-      return { src: image.src, width };
-    })
-  );
-
-const [webp, fallback] = await Promise.all([
-  buildSet('webp', 90),
-  Promise.resolve([{ src: src.src, width: src.width }]),
-]);
-
-const toSrcset = (images: Array<{ src: string; width: number }>) =>
-  images.map((image) => `${image.src} ${image.width}w`).join(', ');
-
-const fallbackImage = fallback[fallback.length - 1];
+const widths = cappedImageWidths(src.width);
 ---
 
-<picture class="case-slice">
-  <source srcset={toSrcset(webp)} type="image/webp" sizes={sizes} />
-  <img
-    src={fallbackImage.src}
-    srcset={toSrcset(fallback)}
-    sizes={sizes}
-    width={src.width}
-    height={src.height}
-    alt={alt}
-    loading={eager ? 'eager' : 'lazy'}
-    decoding={eager ? 'sync' : 'async'}
-    fetchpriority={eager ? 'high' : 'auto'}
-  />
-</picture>
+<Picture
+  pictureAttributes={{ class: 'case-slice' }}
+  src={src}
+  alt={alt}
+  formats={['avif']}
+  fallbackFormat="webp"
+  widths={widths}
+  sizes={sizes}
+  quality={90}
+  loading={eager ? 'eager' : 'lazy'}
+  decoding={eager ? 'sync' : 'async'}
+  fetchpriority={eager ? 'high' : 'auto'}
+/>
 
 <style>
-  .case-slice {
+  :global(.case-slice) {
     display: block;
     width: 100%;
   }

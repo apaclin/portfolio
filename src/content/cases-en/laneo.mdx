@@ -1,10 +1,13 @@
 ---
 title: 'Laneo CRM — an order overview for complex B2B supply'
+cardTitle: 'Laneo CRM'
+cardSubtitle: 'Complex B2B order control'
 description: 'How I designed an order overview for a B2B CRM so a manager can see goods, shipments and payment without investigating across several systems.'
 meta: 'My role: product designer · Focus: Order Management, CRM, B2B, status architecture'
 subtitle: 'How I turned a complex B2B order from one blurry status into a clear overview — goods, shipments, payment and problems on a single screen.'
 date: 2026-07-04
 order: 3
+cover: '/src/assets/images/project-covers/laneo.png'
 ---
 
 import hero from '../../assets/images/cases/laneo/hero.png';
@@ -26,10 +29,11 @@ import ScenarioFlows from '../../components/diagrams/ScenarioFlows.astro';
 import Carousel from '../../components/diagrams/Carousel.astro';
 import Statuses from '../../components/case/laneo/Statuses.astro';
 
-<Breakout maxWidth="672px">
+<Breakout maxWidth="672px" align="content">
   <Image
     src={hero}
     alt="Laneo CRM order screen on a monitor"
+    zoomable={false}
     variant="inline"
     class="w-full h-auto object-contain mx-auto"
     widths={[480, 800, 1200, 1600, 2200]}
@@ -213,7 +217,7 @@ Shipment and invoice are the second level. The overview closes the conversation 
 
 The shipment page is built around the batch: which line items went into it, how many units left, which invoices cover it. This is an answer to the logistician's question, not the client's.
 
-<Breakout maxWidth="912px">
+<Breakout maxWidth="960px">
   <Image
     src={shipment}
     alt="Laneo CRM shipment screen with related line items and invoices"
@@ -221,7 +225,7 @@ The shipment page is built around the batch: which line items went into it, how 
     variant="inline"
     class="w-full h-auto object-contain mx-auto"
     widths={[480, 800, 1200, 1600, 2200]}
-    sizes="(min-width: 64rem) 912px, 100vw"
+    sizes="(min-width: 64rem) 960px, 100vw"
     maxWidth={1920}
   />
 </Breakout>
@@ -245,7 +249,7 @@ The invoice page is a mirror slice. The same set of links, but the entry point i
 
 I fixed the lifecycles in advance — one per entity.
 
-<Breakout maxWidth="1440px">
+<Breakout maxWidth="1440px" minWidth="960px">
   <figure class="not-prose m-0">
     <Statuses lang="en" />
     <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Five entities, five cycles. The order indicator shows the most critical status among them.</figcaption>
@@ -254,13 +258,13 @@ I fixed the lifecycles in advance — one per entity.
 
 The order list is where the priority rule pays off. People come here not to read but to find. A row carries the lifecycle status plus separate indicators for invoice, payment and shipment: three axes collapsed to dots. A problem order is visible without opening it. The full aggregation stays on the order page — in the list it would be noise.
 
-<Breakout maxWidth="960px">
+<Breakout maxWidth="912px">
   <Image
     src={orders}
     alt="Laneo CRM order list with statuses for invoice, payment and shipment"
     class="w-full h-auto object-contain mx-auto"
     widths={[480, 800, 1200, 1600, 2200]}
-    sizes="(min-width: 64rem) 960px, 100vw"
+    sizes="(min-width: 64rem) 912px, 100vw"
     maxWidth={1920}
   />
 </Breakout>

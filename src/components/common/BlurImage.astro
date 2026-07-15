@@ -2,9 +2,11 @@
 // Responsive image frame for the homepage. It intentionally avoids LQIP:
 // images load as sharp frames without a placeholder effect.
 import { Image } from 'astro:assets';
+import { cappedImageWidths } from '../../lib/images';
+import { resolveImageAsset } from '../../lib/assets';
 
 interface Props {
-  src: ImageMetadata;
+  src: ImageMetadata | string;
   alt: string;
   widths?: number[];
   sizes?: string;
@@ -17,7 +19,7 @@ interface Props {
 }
 
 const {
-  src,
+  src: source,
   alt,
   widths = [480, 720, 960],
   sizes,
@@ -25,14 +27,18 @@ const {
   imgClass,
   eager = false,
 } = Astro.props as Props;
+
+const src = resolveImageAsset(source, 'BlurImage.astro');
+const responsiveWidths = cappedImageWidths(src.width, widths);
 ---
 
 <div class:list={['image-frame', frameClass]}>
   <Image
     src={src}
     alt={alt}
-    widths={widths}
+    widths={responsiveWidths}
     sizes={sizes}
+    format="webp"
     class:list={['frame-img', imgClass]}
     loading={eager ? 'eager' : 'lazy'}
     fetchpriority={eager ? 'high' : 'auto'}

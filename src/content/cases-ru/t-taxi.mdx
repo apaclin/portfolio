@@ -1,10 +1,13 @@
 ---
 title: "Т-Такси | Система управления беспилотным флотом"
+cardTitle: "Т-Такси"
+cardSubtitle: "Управление беспилотным флотом"
 description: "Кейс про NOC-интерфейс для мониторинга беспилотных такси: очередь инцидентов, карта, приоритизация и карточка решения."
 meta: "Моя роль: Продуктовый дизайнер · Фокус: NOC, fleet ops, incident triage, operational dashboard"
 subtitle: "Как я разделил поток сырых алертов и реальные инциденты, чтобы один инженер мог вести смену из десятков машин без потери критичных событий."
 date: 2026-07-01
 order: 2
+cover: "/src/assets/images/project-covers/t-taxi.webp"
 ---
 
 import Cover from "../../assets/images/cases/t-taxi/cover-2.jpg";
@@ -111,7 +114,7 @@ import { researchHighlights } from "../data/t-taxi/research";
 
 Триаж и разрешение — самые частые подработы с высоким весом. Их я и беру в фокус: они закрывают основную часть времени дежурного инженера.
 
-<Breakout maxWidth="960px">
+<Breakout maxWidth="960px" align="content">
   <PublicSvg
     src="/assets/t-taxi/schemas/opportunity-map.ru.svg"
     alt="Opportunity map для кейса Т-Такси"
@@ -134,7 +137,7 @@ import { researchHighlights } from "../data/t-taxi/research";
 
 Несколько сигналов от одной машины — потеря связи, низкий заряд, код неисправности, повторный сигнал — сходятся в один инцидент. Вокруг него собран весь рабочий контекст: машина, коды неисправности, действия, оператор и заметка смены. Это тот объект, с которым инженер реально работает.
 
-<Breakout maxWidth="672px">
+<Breakout maxWidth="672px" align="content">
   <figure class="not-prose m-0 w-full rounded-lg border border-[var(--color-border)] p-10">
     <button
       type="button"
@@ -168,6 +171,7 @@ import { researchHighlights } from "../data/t-taxi/research";
   alt="Главный экран мониторинга парка Т-Такси"
   title="Мониторинг парка на карте"
   description="Очередь инцидентов, карта со статусами машин и метрики смены. Наведите на элементы, чтобы разобрать интерфейс по частям."
+  touchDescription="Очередь инцидентов, карта со статусами машин и метрики смены. Коснитесь области, чтобы разобрать интерфейс по частям."
   zones={zones}
 />
 

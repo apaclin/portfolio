@@ -8,6 +8,8 @@
     "start": "astro dev",
     "build": "astro build",
     "check": "astro check",
+    "verify:content": "node scripts/verify-content.ts",
+    "verify": "npm run verify:content && astro check && astro build",
     "preview": "astro preview",
     "astro": "astro"
   },

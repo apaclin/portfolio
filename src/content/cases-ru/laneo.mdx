@@ -1,10 +1,13 @@
 ---
 title: 'Laneo CRM — обзор заказа для сложных B2B-поставок'
+cardTitle: 'Laneo CRM'
+cardSubtitle: 'Контроль сложных B2B-заказов'
 description: 'Как я спроектировал обзор заказа для B2B-CRM, чтобы менеджер видел товар, отгрузки и оплату без расследования по нескольким системам.'
 meta: 'Моя роль: продуктовый дизайнер · Фокус: Order Management, CRM, B2B, архитектура статусов'
 subtitle: 'Как я превратил сложный B2B-заказ из одного размытого статуса в понятный обзор с товарами, отгрузками, оплатой и проблемами на одном экране.'
 date: 2026-07-04
 order: 3
+cover: '/src/assets/images/project-covers/laneo.png'
 ---
 
 import hero from '../../assets/images/cases/laneo/hero.png';
@@ -26,10 +29,11 @@ import ScenarioFlows from '../../components/diagrams/ScenarioFlows.astro';
 import Carousel from '../../components/diagrams/Carousel.astro';
 import Statuses from '../../components/case/laneo/Statuses.astro';
 
-<Breakout maxWidth="672px">
+<Breakout maxWidth="672px" align="content">
   <Image
     src={hero}
     alt="Главный экран заказа Laneo CRM на мониторе"
+    zoomable={false}
     variant="inline"
     class="w-full h-auto object-contain mx-auto"
     widths={[480, 800, 1200, 1600, 2200]}
@@ -213,7 +217,7 @@ Order Overview я спроектировал как верхний слой на
 
 Страница отгрузки собрана вокруг партии: какие позиции в неё вошли, сколько единиц уехало, какие счета её покрывают. Это ответ на вопрос логиста, а не клиента.
 
-<Breakout maxWidth="912px">
+<Breakout maxWidth="960px">
   <Image
     src={shipment}
     alt="Экран отгрузки Laneo CRM со связанными позициями и счетами"
@@ -221,7 +225,7 @@ Order Overview я спроектировал как верхний слой на
     variant="inline"
     class="w-full h-auto object-contain mx-auto"
     widths={[480, 800, 1200, 1600, 2200]}
-    sizes="(min-width: 64rem) 912px, 100vw"
+    sizes="(min-width: 64rem) 960px, 100vw"
     maxWidth={1920}
   />
 </Breakout>
@@ -245,7 +249,7 @@ Order Overview я спроектировал как верхний слой на
 
 Жизненные циклы я зафиксировал заранее — по одному на сущность.
 
-<Breakout maxWidth="1440px">
+<Breakout maxWidth="1440px" minWidth="960px">
   <figure class="not-prose m-0">
     <Statuses lang="ru" />
     <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Пять сущностей, пять циклов. Индикатор заказа показывает самый критичный статус среди них.</figcaption>
@@ -254,13 +258,13 @@ Order Overview я спроектировал как верхний слой на
 
 Список заказов — место, где правило приоритета окупается. Сюда приходят не читать, а находить. Строка несёт статус жизненного цикла и отдельные индикаторы по счёту, оплате и отгрузке: три оси, свёрнутые до точек. Проблемный заказ видно, не открывая его. Полная агрегация остаётся на странице заказа — в списке она была бы шумом.
 
-<Breakout maxWidth="960px">
+<Breakout maxWidth="912px">
   <Image
     src={orders}
     alt="Список заказов Laneo CRM со статусами по счёту, оплате и отгрузке"
     class="w-full h-auto object-contain mx-auto"
     widths={[480, 800, 1200, 1600, 2200]}
-    sizes="(min-width: 64rem) 960px, 100vw"
+    sizes="(min-width: 64rem) 912px, 100vw"
     maxWidth={1920}
   />
 </Breakout>

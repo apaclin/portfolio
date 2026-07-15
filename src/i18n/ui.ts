@@ -1,5 +1,11 @@
+import {
+  defaultLocale,
+  resolveLocale,
+  type Locale,
+} from '../lib/i18n';
+
 // Словарь UI-строк. Английский — основной язык и источник набора ключей.
-export const defaultLang = 'en' as const;
+export const defaultLang = defaultLocale;
 
 export const ui = {
   en: {
@@ -28,10 +34,9 @@ export const ui = {
     'notice.fallbackToRu':
       'Эта страница доступна только на русском — показана русская версия.',
   },
-} as const;
+} as const satisfies Record<Locale, Record<string, string>>;
 
-// Поддерживаемые локали словаря: 'en' | 'ru'.
-export type Locale = keyof typeof ui;
+export type { Locale } from '../lib/i18n';
 // Допустимые ключи строк выводятся из основного языка.
 export type UiKey = keyof (typeof ui)[typeof defaultLang];
 
@@ -41,7 +46,7 @@ export type UiKey = keyof (typeof ui)[typeof defaultLang];
  * к поддерживаемой локали; если язык не распознан — английский по умолчанию.
  */
 export function useTranslations(locale: string | undefined) {
-  const lang: Locale = locale && locale in ui ? (locale as Locale) : defaultLang;
+  const lang: Locale = resolveLocale(locale);
   return function t(key: UiKey): string {
     return ui[lang][key];
   };

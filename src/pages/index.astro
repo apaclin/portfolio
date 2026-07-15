@@ -1,8 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProjectsPage from '../components/pages/ProjectsPage.astro';
+import { defaultLocale } from '../lib/i18n';
 ---
 
 <BaseLayout title="Portfolio" description="Personal portfolio">
-  <ProjectsPage locale="en" />
+  <ProjectsPage locale={defaultLocale} />
 </BaseLayout>

@@ -1,14 +1,14 @@
 ---
 import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import BlurImage from '../common/BlurImage.astro';
 import TranslationNotice from '../common/TranslationNotice.astro';
-import matchpointCover from '../../assets/images/project-covers/matchpoint.webp';
-import tTaxiCover from '../../assets/images/project-covers/t-taxi.webp';
-import laneoCover from '../../assets/images/project-covers/laneo.png';
 import onlineCinemaCover from '../../assets/images/project-covers/online-cinema.webp';
 import architectureStudioCover from '../../assets/images/project-covers/architecture-studio.webp';
 import radixCover from '../../assets/images/pet-projects/radix-cover.png';
 import portrait from '../../assets/images/profile/alexander-paklin.jpg';
+import { resolveImageAsset } from '../../lib/assets';
+import type { Locale } from '../../lib/i18n';
 
 interface ProjectItem {
   title: string;
@@ -31,16 +31,26 @@ interface LinkItem {
   external?: boolean;
 }
 
-type Locale = 'en' | 'ru';
+interface ProjectsContent {
+  portraitAlt: string;
+  role: string;
+  name: string;
+  intro: string;
+  openLabel: string;
+  contactLinks: LinkItem[];
+  casesTitle: string;
+  visualTitle: string;
+  petTitle: string;
+}
 
 interface Props {
   locale?: Locale;
-  fallbackContentLocale?: 'ru' | 'en';
+  fallbackContentLocale?: Locale;
 }
 
 const { locale = 'en', fallbackContentLocale } = Astro.props as Props;
 
-const localized = {
+const localized: Record<Locale, ProjectsContent> = {
   en: {
     portraitAlt: 'Alexander Paklin',
     role: 'Product / UX Designer',
@@ -64,65 +74,9 @@ const localized = {
         href: 'mailto:apaclin@gmail.com',
       },
     ],
-    sections: [
-      {
-        title: 'B2B Web Services',
-        items: [
-          {
-            title: 'Matchpoint',
-            subtitle: 'Accounts payable automation',
-            href: '/cases/matchpoint',
-            image: matchpointCover,
-            imageAlt: 'Matchpoint interface on a light mockup',
-          },
-          {
-            title: 'T-Taxi',
-            subtitle: 'Autonomous fleet operations',
-            href: '/cases/t-taxi',
-            image: tTaxiCover,
-            imageAlt: 'Dark T-Taxi monitoring interface on a screen',
-          },
-          {
-            title: 'Laneo CRM',
-            subtitle: 'Complex B2B order control',
-            href: '/cases/laneo',
-            image: laneoCover,
-            imageAlt: 'Laneo CRM interface on a light mockup',
-          },
-        ],
-      },
-      {
-        title: 'Apps and Websites',
-        items: [
-          {
-            title: 'Filmaze',
-            subtitle: 'Online cinema',
-            href: '/cases/online-cinema',
-            image: onlineCinemaCover,
-            imageAlt: 'Filmaze mobile online cinema interface',
-          },
-          {
-            title: 'Bergström',
-            subtitle: 'Architecture studio website',
-            href: '/cases/architecture-studio',
-            image: architectureStudioCover,
-            imageAlt: 'Bergstrom architecture studio website on a laptop',
-          },
-        ],
-      },
-      {
-        title: 'Pet Projects',
-        items: [
-          {
-            title: 'Tone Ramp Generator',
-            href: 'https://www.figma.com/community/plugin/1636766593436362521',
-            external: true,
-            image: radixCover,
-            imageAlt: 'Radix Colors to Variables plugin cover',
-          },
-        ],
-      },
-    ] satisfies ProjectSection[],
+    casesTitle: 'B2B web services',
+    visualTitle: 'Apps and websites',
+    petTitle: 'Pet projects',
   },
   ru: {
     portraitAlt: 'Александр Паклин',
@@ -147,78 +101,98 @@ const localized = {
         href: 'mailto:apaclin@gmail.com',
       },
     ],
-    sections: [
-      {
-        title: 'B2B веб-сервисы',
-        items: [
-          {
-            title: 'Matchpoint',
-            subtitle: 'Автоматизация счетов к оплате',
-            href: '/ru/cases/matchpoint',
-            image: matchpointCover,
-            imageAlt: 'Интерфейс Matchpoint на светлом мокапе',
-          },
-          {
-            title: 'Т-Такси',
-            subtitle: 'Управление беспилотным флотом',
-            href: '/ru/cases/t-taxi',
-            image: tTaxiCover,
-            imageAlt: 'Темный мониторинг Т-Такси на экране',
-          },
-          {
-            title: 'Laneo CRM',
-            subtitle: 'Контроль сложных B2B-заказов',
-            href: '/ru/cases/laneo',
-            image: laneoCover,
-            imageAlt: 'Интерфейс Laneo CRM на светлом мокапе',
-          },
-        ],
-      },
-      {
-        title: 'Приложения и сайты',
-        items: [
-          {
-            title: 'Filmaze',
-            subtitle: 'Онлайн-кинотеатр',
-            href: '/cases/online-cinema',
-            image: onlineCinemaCover,
-            imageAlt: 'Мобильный интерфейс онлайн-кинотеатра Filmaze',
-          },
-          {
-            title: 'Bergström',
-            subtitle: 'Сайт архитектурной студии',
-            href: '/cases/architecture-studio',
-            image: architectureStudioCover,
-            imageAlt: 'Сайт архитектурной студии Bergstrom на ноутбуке',
-          },
-        ],
-      },
-      {
-        title: 'Pet-проекты',
-        items: [
-          {
-            title: 'Генератор тоновых растяжек',
-            href: 'https://www.figma.com/community/plugin/1636766593436362521',
-            external: true,
-            image: radixCover,
-            imageAlt: 'Обложка плагина Radix Colors to Variables',
-          },
-        ],
-      },
-    ] satisfies ProjectSection[],
+    casesTitle: 'B2B веб-сервисы',
+    visualTitle: 'Приложения и сайты',
+    petTitle: 'Pet-проекты',
   },
-} satisfies Record<Locale, {
-  portraitAlt: string;
-  role: string;
-  name: string;
-  intro: string;
-  openLabel: string;
-  contactLinks: LinkItem[];
-  sections: ProjectSection[];
-}>;
+};
 
 const content = localized[locale];
-const { contactLinks, sections } = content;
+const { contactLinks } = content;
+
+const collectionName = locale === 'ru' ? 'casesRu' : 'casesEn';
+const rawCases = await getCollection(collectionName);
+const caseItems: ProjectItem[] = [...rawCases]
+  .sort((a, b) => a.data.order - b.data.order || a.id.localeCompare(b.id))
+  .map((entry) => {
+    // With the `cases-en` / `cases-ru` glob collections the id is already the
+    // bare slug (e.g. "matchpoint"); no locale suffix to strip.
+    const slug = entry.id;
+    // Card title/subtitle come from frontmatter (see content schema); fall back
+    // to the full title so a case is never renderless if the fields are unset.
+    const title = entry.data.cardTitle ?? entry.data.title;
+
+    return {
+      title,
+      subtitle: entry.data.cardSubtitle,
+      href: locale === 'ru' ? `/ru/cases/${slug}` : `/cases/${slug}`,
+      image: resolveImageAsset(entry.data.cover, 'ProjectsPage.astro'),
+      imageAlt:
+        locale === 'ru' ? `Обложка проекта ${title}` : `${title} project cover`,
+    };
+  });
+
+const visualProjects: Record<Locale, ProjectItem[]> = {
+  en: [
+    {
+      title: 'Filmaze',
+      subtitle: 'Online cinema',
+      href: '/cases/online-cinema',
+      image: onlineCinemaCover,
+      imageAlt: 'Filmaze mobile online cinema interface',
+    },
+    {
+      title: 'Bergström',
+      subtitle: 'Architecture studio website',
+      href: '/cases/architecture-studio',
+      image: architectureStudioCover,
+      imageAlt: 'Bergstrom architecture studio website on a laptop',
+    },
+  ],
+  ru: [
+    {
+      title: 'Filmaze',
+      subtitle: 'Онлайн-кинотеатр',
+      href: '/ru/cases/online-cinema',
+      image: onlineCinemaCover,
+      imageAlt: 'Мобильный интерфейс онлайн-кинотеатра Filmaze',
+    },
+    {
+      title: 'Bergström',
+      subtitle: 'Сайт архитектурной студии',
+      href: '/ru/cases/architecture-studio',
+      image: architectureStudioCover,
+      imageAlt: 'Сайт архитектурной студии Bergstrom на ноутбуке',
+    },
+  ],
+};
+
+const petProjects: Record<Locale, ProjectItem[]> = {
+  en: [
+    {
+      title: 'Tone Ramp Generator',
+      href: 'https://www.figma.com/community/plugin/1636766593436362521',
+      external: true,
+      image: radixCover,
+      imageAlt: 'Radix Colors to Variables plugin cover',
+    },
+  ],
+  ru: [
+    {
+      title: 'Генератор тоновых растяжек',
+      href: 'https://www.figma.com/community/plugin/1636766593436362521',
+      external: true,
+      image: radixCover,
+      imageAlt: 'Обложка плагина Radix Colors to Variables',
+    },
+  ],
+};
+
+const sections: ProjectSection[] = [
+  { title: content.casesTitle, items: caseItems },
+  { title: content.visualTitle, items: visualProjects[locale] },
+  { title: content.petTitle, items: petProjects[locale] },
+];
 ---
 
 {/* Ставим html.js ДО отрисовки: с JS контент стартует скрытым и плавно
@@ -267,9 +241,9 @@ const { contactLinks, sections } = content;
     <div class="mt-12 lg:mt-0 lg:flex-1 space-y-14">
     {
       sections.map((section, sectionIndex) => (
-        <section aria-labelledby={`section-${section.title}`}>
+        <section aria-labelledby={`section-${sectionIndex}`}>
           <h2
-            id={`section-${section.title}`}
+            id={`section-${sectionIndex}`}
             class="text-xl font-semibold tracking-normal text-[var(--color-text)]"
           >
             {section.title}
@@ -287,6 +261,7 @@ const { contactLinks, sections } = content;
                             alt={item.imageAlt ?? item.title}
                             widths={[480, 720, 960]}
                             sizes="(min-width: 64rem) 350px, (min-width: 40rem) 50vw, calc(100vw - 2.5rem)"
+                            format="webp"
                             class="h-full w-full scale-[1.22] object-cover opacity-65"
                             loading="lazy"
                             decoding="async"

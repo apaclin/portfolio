@@ -2,9 +2,10 @@
 import type { GetStaticPaths } from 'astro';
 import CasePage from '../../components/case/CasePage.astro';
 import { getLocalizedCasePaths } from '../../lib/cases';
+import { defaultLocale } from '../../lib/i18n';
 
 export const getStaticPaths = (async () => {
-  return getLocalizedCasePaths('en');
+  return getLocalizedCasePaths(defaultLocale);
 }) satisfies GetStaticPaths;
 ---
 

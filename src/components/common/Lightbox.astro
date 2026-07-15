@@ -65,24 +65,22 @@
   .lightbox__media :global(img),
   .lightbox__media :global(svg) {
     display: block;
-    /* Базовое состояние (Fit Width): до логической ширины макета, но не шире
-       контейнера и без upscale (width:auto). Физический @2x-файл показывается
-       в логическом размере → интерфейсы не «взрывают» верстку. */
-    max-width: min(var(--lightbox-lw, 1440px), 100%);
+    /* Contain по умолчанию: даже @2x-экспорт не может выйти за вьюпорт. */
+    max-width: min(var(--lightbox-lw, 1440px), 90vw);
+    max-height: 85vh;
     width: auto;
     height: auto;
+    object-fit: contain;
     border-radius: 0.5rem;
     background-color: var(--color-bg);
     user-select: none;
     -webkit-user-drag: none; /* не запускать нативный drag картинки */
   }
-  .lightbox[data-fit='contain'] .lightbox__media :global(img),
-  .lightbox[data-fit='contain'] .lightbox__media :global(svg) {
-    max-width: min(var(--lightbox-lw, 100vw), 100%);
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
+  /* Опциональный режим для макетов, которые намеренно нужно панорамировать. */
+  .lightbox[data-fit='width'] .lightbox__media :global(img),
+  .lightbox[data-fit='width'] .lightbox__media :global(svg) {
+    max-width: min(var(--lightbox-lw, 1440px), 100%);
+    max-height: none;
   }
   .lightbox__nav,
   .lightbox__close {
@@ -143,6 +141,10 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
+  html.overflow-hidden,
+  body.overflow-hidden {
+    overflow: hidden;
+  }
 </style>
 
 <script>
@@ -156,7 +158,25 @@
     let group: Element[] = [];
     let activeIndex = 0;
     let renderId = 0;
+    let scrollLocked = false;
     const preloadedZoom = new Set<string>();
+
+    const lockScroll = () => {
+      if (scrollLocked) return;
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.documentElement.classList.add('overflow-hidden');
+      document.body.classList.add('overflow-hidden');
+      scrollLocked = true;
+    };
+
+    const unlockScroll = () => {
+      document.documentElement.classList.remove('overflow-hidden');
+      document.body.classList.remove('overflow-hidden');
+      document.body.style.paddingRight = '';
+      scrollLocked = false;
+    };
 
     // is-pannable считается динамически из реального переполнения в текущем
     // состоянии. Если макет не помещается по высоте/ширине, его можно потянуть.
@@ -179,16 +199,6 @@
 
       updateButton(prevImage, !hasGroup || activeIndex <= 0);
       updateButton(nextImage, !hasGroup || activeIndex >= group.length - 1);
-    };
-
-    const waitForImage = async (img: HTMLImageElement) => {
-      if (!img.complete) {
-        await new Promise<void>((resolve) => {
-          img.addEventListener('load', () => resolve(), { once: true });
-          img.addEventListener('error', () => resolve(), { once: true });
-        });
-      }
-      await img.decode?.().catch(() => undefined);
     };
 
     const preloadZoomImage = (trigger: Element | undefined) => {
@@ -224,7 +234,7 @@
       carousel.dispatchEvent(new CustomEvent('carousel:sync'));
     };
 
-    const render = async (trigger: Element) => {
+    const render = (trigger: Element) => {
       const currentRender = ++renderId;
       media.classList.remove('is-pannable', 'is-grabbing');
       media.scrollTo({ left: 0, top: 0, behavior: 'auto' });
@@ -234,19 +244,26 @@
       // Логическая (CSS) ширина макета: из data-max-width, иначе 1440.
       logicalWidth = parseInt(trigger.getAttribute('data-max-width') ?? '', 10) || 1440;
       dialog.style.setProperty('--lightbox-lw', `${logicalWidth}px`);
-      dialog.dataset.fit = trigger.getAttribute('data-lightbox-fit') ?? 'width';
+      dialog.dataset.fit = trigger.getAttribute('data-lightbox-fit') ?? 'contain';
 
-      let img: HTMLImageElement | null = null;
       let nextNode: HTMLElement | SVGElement | null = null;
       const src = trigger.getAttribute('data-zoom-src');
       if (src) {
         // Растровое изображение: hi-res файл, но показываем в логическом размере.
-        img = document.createElement('img');
+        const img = document.createElement('img');
         img.src = src;
         img.alt = trigger.getAttribute('data-zoom-alt') ?? '';
         img.decoding = 'async';
         img.draggable = false; // не запускать нативный drag картинки — мешает pan
-        await waitForImage(img);
+        img.className =
+          'max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain';
+        img.addEventListener(
+          'load',
+          () => {
+            if (currentRender === renderId) prepare();
+          },
+          { once: true },
+        );
         nextNode = img;
       } else {
         // SVG-диаграмма (opt-in): клонируем svg из триггера в натуральном размере.
@@ -269,14 +286,7 @@
 
       media.replaceChildren(nextNode);
       syncLightboxNav();
-      if (!dialog.open) {
-        dialog.showModal();
-      }
-      document.body.style.overflow = 'hidden'; // блокируем фоновый скролл
-
-      // После раскладки пересчитываем, есть ли реальное переполнение для pan.
-      const afterLayout = () => prepare();
-      requestAnimationFrame(afterLayout);
+      prepare();
     };
 
     const open = (trigger: Element) => {
@@ -286,7 +296,12 @@
         : [trigger];
       activeIndex = Math.max(0, group.indexOf(trigger));
 
-      void render(group[activeIndex]);
+      // showModal + scroll lock происходят синхронно в обработчике клика.
+      // Загрузка/декодирование изображения больше не задерживают backdrop.
+      if (!dialog.open) dialog.showModal();
+      dialog.classList.add('is-open');
+      lockScroll();
+      render(group[activeIndex]);
     };
 
     // Делегированный клик по любому триггеру на странице.
@@ -304,7 +319,7 @@
       activeIndex = nextIndex;
       syncLightboxNav();
       preloadGroupAround(activeIndex);
-      void render(group[activeIndex]);
+      render(group[activeIndex]);
     };
 
     prevImage.addEventListener('click', (event) => {
@@ -407,10 +422,15 @@
     dialog.addEventListener('close', () => {
       syncSourceCarousel();
       renderId++;
-      document.body.style.overflow = '';
+      dialog.classList.remove('is-open');
+      unlockScroll();
       group = [];
       activeIndex = 0;
       syncLightboxNav();
+    });
+    document.addEventListener('astro:before-swap', () => {
+      if (dialog.open) dialog.close();
+      else unlockScroll();
     });
     // Esc и возврат фокуса на триггер обеспечивает сам <dialog>.
   }

@@ -25,9 +25,28 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
     heading: HTMLElement;
   };
 
+  let activeTocRoot: HTMLElement | null = null;
+  let cleanupCaseToc: (() => void) | undefined;
+
   const initCaseToc = () => {
     const tocRoot = document.querySelector<HTMLElement>('[data-case-toc]');
-    if (!tocRoot || tocRoot.dataset.ready === 'true') return;
+    if (tocRoot === activeTocRoot) return;
+
+    cleanupCaseToc?.();
+    cleanupCaseToc = undefined;
+    activeTocRoot = tocRoot;
+    if (!tocRoot) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const cleanup = () => {
+      controller.abort();
+      if (activeTocRoot === tocRoot) activeTocRoot = null;
+      if (cleanupCaseToc === cleanup) cleanupCaseToc = undefined;
+    };
+    cleanupCaseToc = cleanup;
+    document.addEventListener('astro:before-swap', cleanup, { once: true, signal });
+
     tocRoot.dataset.ready = 'true';
 
     const rail = document.querySelector<HTMLElement>('[data-toc-rail]');
@@ -82,6 +101,7 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
     const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 
     const step = (now: number) => {
+      if (signal.aborted) return;
       const progress = Math.min(1, (now - startTime) / duration);
       window.scrollTo(0, startY + distance * ease(progress));
 
@@ -182,6 +202,7 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
       if (lockToClicked || ticking) return;
 
       window.requestAnimationFrame(() => {
+        if (signal.aborted) return;
         const nextIndex = getActiveIndex();
 
         if (nextIndex !== currentIndex) {
@@ -211,18 +232,18 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
       setActive(index);
       animateScrollTo(getScrollTarget(item.heading));
       history.replaceState(null, '', `#${item.id}`);
-    });
+    }, { signal });
 
     const releaseLock = () => {
       lockToClicked = false;
     };
 
-    window.addEventListener('scroll', requestActiveUpdate, { passive: true });
-    window.addEventListener('resize', requestActiveUpdate, { passive: true });
+    window.addEventListener('scroll', requestActiveUpdate, { passive: true, signal });
+    window.addEventListener('resize', requestActiveUpdate, { passive: true, signal });
     // Only real user-driven scrolling should hand control back to scroll-spy.
-    window.addEventListener('wheel', releaseLock, { passive: true });
-    window.addEventListener('touchmove', releaseLock, { passive: true });
-    window.addEventListener('keydown', releaseLock);
+    window.addEventListener('wheel', releaseLock, { passive: true, signal });
+    window.addEventListener('touchmove', releaseLock, { passive: true, signal });
+    window.addEventListener('keydown', releaseLock, { signal });
 
       requestActiveUpdate();
     }

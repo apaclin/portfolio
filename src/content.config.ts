@@ -4,31 +4,33 @@ import { glob } from 'astro/loaders';
 // помечен @deprecated). Той же зод-зависимости astro, без новых пакетов.
 import { z } from 'astro/zod';
 
-// Строгая схема кейса. Общая для обеих локалей; локаль задается суффиксом
-// файла в едином каталоге content/cases: <slug>-ru.mdx / <slug>-en.mdx.
+// One schema shared by Astro and the two locale-specific Keystatic collections.
 const caseSchema = z.object({
   title: z.string(),
   description: z.string(),
   meta: z.string().optional(),
   subtitle: z.string().optional(),
+  // Short label + tagline shown on the projects-page card (distinct from the
+  // long hero `subtitle`). Optional so Keystatic-created drafts still validate.
+  cardTitle: z.string().optional(),
+  cardSubtitle: z.string().optional(),
   date: z.coerce.date(),
   order: z.number(),
-  cover: z.string().optional(),
+  cover: z.string(),
+  fallbackAllowed: z.boolean().optional(),
 });
 
-// Английские кейсы: ./src/content/cases/*-en.mdx
 const casesEn = defineCollection({
-  loader: glob({ pattern: '*-en.mdx', base: './src/content/cases' }),
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/cases-en' }),
   schema: caseSchema,
 });
 
-// Русские кейсы: ./src/content/cases/*-ru.mdx
 const casesRu = defineCollection({
-  loader: glob({ pattern: '*-ru.mdx', base: './src/content/cases' }),
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/cases-ru' }),
   schema: caseSchema,
 });
 
 export const collections = {
-  'cases-en': casesEn,
-  'cases-ru': casesRu,
+  casesEn,
+  casesRu,
 };

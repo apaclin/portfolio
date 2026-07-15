@@ -261,7 +261,7 @@ const scenarios: Scenario[] = [
 </style>
 
 <script>
-  const initScenarioFlows = (root: HTMLElement) => {
+  const initScenarioFlows = (root: HTMLElement, signal: AbortSignal) => {
     if (root.dataset.ready === 'true') return;
     root.dataset.ready = 'true';
 
@@ -271,6 +271,7 @@ const scenarios: Scenario[] = [
 
     const normalizeVisibleSvgs = () => {
       requestAnimationFrame(() => {
+        if (signal.aborted) return;
         root
           .querySelectorAll<SVGSVGElement>('.scenario-flows__figure svg')
           .forEach(normalizeFlowSvg);
@@ -306,7 +307,7 @@ const scenarios: Scenario[] = [
     tabs.forEach((tab, index) => {
       tab.addEventListener('click', () => {
         select(tab.dataset.sfTab!, { scroll: true });
-      });
+      }, { signal });
 
       tab.addEventListener('keydown', (event) => {
         let next = -1;
@@ -323,12 +324,19 @@ const scenarios: Scenario[] = [
         }
         event.preventDefault();
         select(tabs[next].dataset.sfTab!, { scroll: true, focus: true });
-      });
+      }, { signal });
     });
 
     normalizeVisibleSvgs();
-    window.addEventListener('resize', resetAndNormalizeVisibleSvgs, { passive: true });
-    document.fonts?.ready.then(resetAndNormalizeVisibleSvgs).catch(() => {});
+    window.addEventListener('resize', resetAndNormalizeVisibleSvgs, {
+      passive: true,
+      signal,
+    });
+    document.fonts?.ready
+      .then(() => {
+        if (!signal.aborted) resetAndNormalizeVisibleSvgs();
+      })
+      .catch(() => {});
   };
 
   const MIN_BOX_WIDTH = 80;
@@ -494,10 +502,31 @@ const scenarios: Scenario[] = [
 
   const roundSvgNumber = (value: number) => Math.round(value * 1000) / 1000;
 
+  let activeScenarioRoots: HTMLElement[] = [];
+  let cleanupScenarioFlows: (() => void) | undefined;
+
   const initAll = () => {
-    document
-      .querySelectorAll<HTMLElement>('[data-scenario-flows]')
-      .forEach(initScenarioFlows);
+    const roots = [...document.querySelectorAll<HTMLElement>('[data-scenario-flows]')];
+    const isSamePage =
+      roots.length === activeScenarioRoots.length &&
+      roots.every((root, index) => root === activeScenarioRoots[index]);
+    if (isSamePage) return;
+
+    cleanupScenarioFlows?.();
+    cleanupScenarioFlows = undefined;
+    activeScenarioRoots = roots;
+    if (roots.length === 0) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const cleanup = () => {
+      controller.abort();
+      if (activeScenarioRoots === roots) activeScenarioRoots = [];
+      if (cleanupScenarioFlows === cleanup) cleanupScenarioFlows = undefined;
+    };
+    cleanupScenarioFlows = cleanup;
+    document.addEventListener('astro:before-swap', cleanup, { once: true, signal });
+    roots.forEach((root) => initScenarioFlows(root, signal));
   };
 
   document.addEventListener('astro:page-load', initAll);

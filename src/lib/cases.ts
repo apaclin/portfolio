@@ -1,7 +1,9 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import type { Locale } from './i18n';
+import { resolveCasePathPlan } from './case-routing';
 
-export type CaseLocale = 'en' | 'ru';
-export type CaseEntry = CollectionEntry<'cases-en'> | CollectionEntry<'cases-ru'>;
+export type CaseLocale = Locale;
+export type CaseEntry = CollectionEntry<'casesEn'> | CollectionEntry<'casesRu'>;
 
 export interface LocalizedCaseProps {
   entry: CaseEntry;
@@ -10,43 +12,34 @@ export interface LocalizedCaseProps {
   isFallback: boolean;
 }
 
-const otherLocale = (locale: CaseLocale): CaseLocale =>
-  locale === 'ru' ? 'en' : 'ru';
-
-const slugFromLocalizedId = (id: string) => id.replace(/-(en|ru)$/, '');
-
 export async function getLocalizedCasePaths(requestedLocale: CaseLocale) {
   const [ru, en] = await Promise.all([
-    getCollection('cases-ru'),
-    getCollection('cases-en'),
+    getCollection('casesRu'),
+    getCollection('casesEn'),
   ]);
 
+  // With separate `cases-en` / `cases-ru` glob collections the entry id is
+  // already the bare slug (e.g. "matchpoint"), so it maps 1:1 across locales.
   const entriesByLocale = {
-    ru: new Map(ru.map((entry) => [slugFromLocalizedId(entry.id), entry])),
-    en: new Map(en.map((entry) => [slugFromLocalizedId(entry.id), entry])),
+    ru: new Map(ru.map((entry) => [entry.id, entry])),
+    en: new Map(en.map((entry) => [entry.id, entry])),
   } satisfies Record<CaseLocale, Map<string, CaseEntry>>;
 
-  const fallbackLocale = otherLocale(requestedLocale);
-  const allIds = new Set([
-    ...entriesByLocale.ru.keys(),
-    ...entriesByLocale.en.keys(),
-  ]);
+  const plan = resolveCasePathPlan(
+    entriesByLocale.en.keys(),
+    entriesByLocale.ru.keys(),
+    requestedLocale,
+  );
 
-  const paths = [...allIds].map((id) => {
-    const preferredEntry = entriesByLocale[requestedLocale].get(id);
-    const entry = preferredEntry ?? entriesByLocale[fallbackLocale].get(id)!;
-    const contentLocale = preferredEntry ? requestedLocale : fallbackLocale;
-
-    return {
-      params: { slug: id },
-      props: {
-        entry,
-        requestedLocale,
-        contentLocale,
-        isFallback: contentLocale !== requestedLocale,
-      } satisfies LocalizedCaseProps,
-    };
-  });
+  const paths = plan.map(({ slug, contentLocale, isFallback }) => ({
+    params: { slug },
+    props: {
+      entry: entriesByLocale[contentLocale].get(slug)!,
+      requestedLocale,
+      contentLocale,
+      isFallback,
+    } satisfies LocalizedCaseProps,
+  }));
 
   paths.sort((a, b) => {
     const byOrder = a.props.entry.data.order - b.props.entry.data.order;
