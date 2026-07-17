@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/mtk9/:match*",
+      "destination": "https://cloud.umami.is/:match*"
+    }
+  ]
+}
