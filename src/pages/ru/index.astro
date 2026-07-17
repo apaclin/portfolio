@@ -1,8 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProjectsPage from '../../components/pages/ProjectsPage.astro';
+import matchpointCover from '../../assets/images/project-covers/matchpoint.webp';
 ---
 
-<BaseLayout title="Портфолио" description="Персональное портфолио">
+<BaseLayout
+  title="Портфолио"
+  description="Персональное портфолио"
+  socialImage={matchpointCover}
+  socialImageAlt="Обложка продуктового кейса Matchpoint"
+>
   <ProjectsPage locale="ru" />
 </BaseLayout>

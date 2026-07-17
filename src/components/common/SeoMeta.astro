@@ -1,0 +1,67 @@
+---
+import { getImage } from 'astro:assets';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: ImageMetadata;
+  imageAlt?: string;
+  type?: 'website' | 'article';
+}
+
+const {
+  title,
+  description,
+  image,
+  imageAlt = title,
+  type = 'website',
+} = Astro.props as Props;
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
+const socialImage = image
+  ? await getImage({
+      src: image,
+      width: 1200,
+      height: 630,
+      fit: 'cover',
+      format: 'jpg',
+      quality: 88,
+    })
+  : undefined;
+const socialImageUrl = socialImage
+  ? new URL(socialImage.src, Astro.site ?? Astro.url.origin)
+  : undefined;
+---
+
+{description && <meta name="description" content={description} />}
+<link rel="canonical" href={canonicalUrl} />
+
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content="Alex Paclin" />
+<meta property="og:title" content={title} />
+{description && <meta property="og:description" content={description} />}
+<meta property="og:url" content={canonicalUrl} />
+{
+  socialImageUrl && (
+    <>
+      <meta property="og:image" content={socialImageUrl} />
+      <meta property="og:image:secure_url" content={socialImageUrl} />
+      <meta property="og:image:type" content="image/jpeg" />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={imageAlt} />
+    </>
+  )
+}
+
+<meta name="twitter:card" content={socialImageUrl ? 'summary_large_image' : 'summary'} />
+<meta name="twitter:title" content={title} />
+{description && <meta name="twitter:description" content={description} />}
+{
+  socialImageUrl && (
+    <>
+      <meta name="twitter:image" content={socialImageUrl} />
+      <meta name="twitter:image:alt" content={imageAlt} />
+    </>
+  )
+}

@@ -1,9 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProjectsPage from '../components/pages/ProjectsPage.astro';
+import matchpointCover from '../assets/images/project-covers/matchpoint.webp';
 import { defaultLocale } from '../lib/i18n';
 ---
 
-<BaseLayout title="Portfolio" description="Personal portfolio">
+<BaseLayout
+  title="Portfolio"
+  description="Personal portfolio"
+  socialImage={matchpointCover}
+  socialImageAlt="Matchpoint product design case study"
+>
   <ProjectsPage locale={defaultLocale} />
 </BaseLayout>

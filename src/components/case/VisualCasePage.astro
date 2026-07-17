@@ -3,6 +3,8 @@ import { getRelativeLocaleUrl } from 'astro:i18n';
 import { ClientRouter } from 'astro:transitions';
 import { stripLocale } from '../../i18n/paths';
 import { defaultLocale, type Locale } from '../../lib/i18n';
+import SeoMeta from '../common/SeoMeta.astro';
+import YandexMetrika from '../common/YandexMetrika.astro';
 import CaseNav from './CaseNav.astro';
 import CaseSliceImage from './CaseSliceImage.astro';
 
@@ -13,6 +15,7 @@ interface Props {
   ariaLabel: string;
   sliceAltPrefix: string;
   slices: ImageMetadata[];
+  cover: ImageMetadata;
   background: string;
   /** CSS width that keeps 2x-exported boards legible on narrow screens. */
   mobileCanvasWidth?: string;
@@ -25,6 +28,7 @@ const {
   ariaLabel,
   sliceAltPrefix,
   slices,
+  cover,
   background,
   mobileCanvasWidth = '960px',
 } = Astro.props as Props;
@@ -32,6 +36,7 @@ const {
 const basePath = stripLocale(Astro.url.pathname);
 const enUrl = getRelativeLocaleUrl(defaultLocale, basePath);
 const ruUrl = getRelativeLocaleUrl('ru', basePath);
+const toAbs = (url: string) => new URL(url, Astro.site ?? Astro.url.origin);
 const homeUrl = getRelativeLocaleUrl(locale, '');
 const homeLabel = locale === 'ru' ? 'Все проекты' : 'All projects';
 const canvasLabel =
@@ -56,15 +61,22 @@ const responsiveSizes = `(max-width: 47.9375rem) ${mobileCanvasWidth}, 100vw`;
         color-scheme: dark;
       }
     </style>
-    <meta name="description" content={description} />
-    <link rel="alternate" hreflang="en" href={enUrl} />
-    <link rel="alternate" hreflang="ru" href={ruUrl} />
-    <link rel="alternate" hreflang="x-default" href={enUrl} />
+    <SeoMeta
+      title={title}
+      description={description}
+      image={cover}
+      imageAlt={ariaLabel}
+      type="article"
+    />
+    <link rel="alternate" hreflang="en" href={toAbs(enUrl)} />
+    <link rel="alternate" hreflang="ru" href={toAbs(ruUrl)} />
+    <link rel="alternate" hreflang="x-default" href={toAbs(enUrl)} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <ClientRouter fallback="swap" />
   </head>
   <body>
+    <YandexMetrika />
     <CaseNav variant="floating" href={homeUrl} label={homeLabel} />
     <main
       class="visual-case__scroller"

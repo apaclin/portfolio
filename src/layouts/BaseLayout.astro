@@ -4,6 +4,8 @@ import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import LangSwitcher from '../components/common/LangSwitcher.astro';
 import Lightbox from '../components/common/Lightbox.astro';
+import SeoMeta from '../components/common/SeoMeta.astro';
+import YandexMetrika from '../components/common/YandexMetrika.astro';
 import { stripLocale } from '../i18n/paths';
 import { defaultLocale, resolveLocale } from '../lib/i18n';
 
@@ -12,9 +14,19 @@ interface Props {
   title: string;
   /** Необязательное meta-описание для <head>. */
   description?: string;
+  /** Исходное изображение для Open Graph / Twitter preview. */
+  socialImage?: ImageMetadata;
+  socialImageAlt?: string;
+  socialType?: 'website' | 'article';
 }
 
-const { title, description } = Astro.props;
+const {
+  title,
+  description,
+  socialImage,
+  socialImageAlt,
+  socialType,
+} = Astro.props;
 
 // Astro.currentLocale вычисляется из URL по конфигу i18n.
 // Если в пути нет языкового сегмента (например, на «/»), он может быть
@@ -60,7 +72,13 @@ const toAbs = (url: string) => (Astro.site ? new URL(url, Astro.site).href : url
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="generator" content={Astro.generator} />
-    {description && <meta name="description" content={description} />}
+    <SeoMeta
+      title={title}
+      description={description}
+      image={socialImage}
+      imageAlt={socialImageAlt}
+      type={socialType}
+    />
     <link rel="alternate" hreflang="en" href={toAbs(enUrl)} />
     <link rel="alternate" hreflang="ru" href={toAbs(ruUrl)} />
     <link rel="alternate" hreflang="x-default" href={toAbs(enUrl)} />
@@ -68,6 +86,7 @@ const toAbs = (url: string) => (Astro.site ? new URL(url, Astro.site).href : url
     <ClientRouter fallback="swap" />
   </head>
   <body class="font-sans">
+    <YandexMetrika />
     <header class="mx-auto flex max-w-[72rem] justify-end px-5 pt-6 sm:px-6 lg:px-8">
       <LangSwitcher />
     </header>

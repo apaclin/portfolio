@@ -21,6 +21,8 @@ import bergstrom05 from '../../assets/images/cases/bergstrom/slice-05.png';
 import bergstrom06 from '../../assets/images/cases/bergstrom/slice-06.png';
 import bergstrom07 from '../../assets/images/cases/bergstrom/slice-07.png';
 import bergstrom08 from '../../assets/images/cases/bergstrom/slice-08.png';
+import architectureStudioCover from '../../assets/images/project-covers/architecture-studio.webp';
+import onlineCinemaCover from '../../assets/images/project-covers/online-cinema.webp';
 
 const filmazeSlices = [
   filmaze01,
@@ -60,6 +62,7 @@ interface VisualCaseCopy {
 /** Locale-invariant layout config plus per-locale copy for one visual case. */
 interface VisualCaseDefinition {
   slices: ImageMetadata[];
+  cover: ImageMetadata;
   background: string;
   mobileCanvasWidth: string;
   copy: Record<Locale, VisualCaseCopy>;
@@ -68,6 +71,7 @@ interface VisualCaseDefinition {
 const visualCases = {
   'architecture-studio': {
     slices: bergstromSlices,
+    cover: architectureStudioCover,
     background: '#1c1d1a',
     mobileCanvasWidth: '960px',
     copy: {
@@ -88,6 +92,7 @@ const visualCases = {
   },
   'online-cinema': {
     slices: filmazeSlices,
+    cover: onlineCinemaCover,
     background: '#000',
     mobileCanvasWidth: '960px',
     copy: {
@@ -113,6 +118,6 @@ export type VisualCaseSlug = keyof typeof visualCases;
 
 /** Fully-resolved props for `VisualCasePage.astro` for one slug + locale. */
 export function getVisualCase(slug: VisualCaseSlug, locale: Locale) {
-  const { slices, background, mobileCanvasWidth, copy } = visualCases[slug];
-  return { locale, slices, background, mobileCanvasWidth, ...copy[locale] };
+  const { slices, cover, background, mobileCanvasWidth, copy } = visualCases[slug];
+  return { locale, slices, cover, background, mobileCanvasWidth, ...copy[locale] };
 }

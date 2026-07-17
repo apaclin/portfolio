@@ -14,6 +14,7 @@ const isDev = process.argv.includes('dev');
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://alexpaclin.com',
   prefetch: false,
 
   // Нативный i18n Astro (astro:i18n), без сторонних библиотек.
