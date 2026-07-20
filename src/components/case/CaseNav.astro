@@ -1,9 +1,18 @@
 ---
+import { getRelativeLocaleUrl } from 'astro:i18n';
 import Icon from '../icons/Icon.astro';
+import { useTranslations } from '../../i18n/ui';
+import { resolveLocale, type Locale } from '../../lib/i18n';
 
 interface Props {
   variant?: 'article' | 'floating';
   reveal?: 'on-scroll' | 'after-article';
+  /**
+   * Локаль СТРАНИЦЫ (из URL), а не контента: на /ru/cases/* с англоязычным
+   * фоллбэком кнопка всё равно должна быть русской и вести на /ru/.
+   * По умолчанию берём Astro.currentLocale.
+   */
+  locale?: Locale;
   href?: string;
   label?: string;
   class?: string;
@@ -12,14 +21,22 @@ interface Props {
 const {
   variant = 'article',
   reveal = 'on-scroll',
-  href = '/',
-  label = 'All projects',
+  locale,
+  href,
+  label,
   class: className,
 } = Astro.props as Props;
+
+// Ссылка и подпись выводятся из локали, чтобы кнопка «назад» никогда не
+// уводила на другой язык. Явные href/label остаются как переопределение.
+const navLocale = locale ?? resolveLocale(Astro.currentLocale);
+const t = useTranslations(navLocale);
+const navHref = href ?? getRelativeLocaleUrl(navLocale, '');
+const navLabel = label ?? t('action.allProjects');
 ---
 
 <a
-  href={href}
+  href={navHref}
   class:list={[
     'case-nav',
     'not-prose',
@@ -30,11 +47,11 @@ const {
   data-case-nav={variant}
   data-reveal={variant === 'floating' ? reveal : undefined}
   aria-hidden={variant === 'floating' && reveal === 'after-article' ? 'true' : undefined}
-  aria-label={label}
+  aria-label={navLabel}
   tabindex={variant === 'floating' && reveal === 'after-article' ? '-1' : undefined}
 >
   <Icon name="chevron-left" size={16} class="case-nav__icon" />
-  <span class="case-nav__label">{label}</span>
+  <span class="case-nav__label">{navLabel}</span>
 </a>
 
 <script>

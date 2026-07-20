@@ -37,8 +37,6 @@ const basePath = stripLocale(Astro.url.pathname);
 const enUrl = getRelativeLocaleUrl(defaultLocale, basePath);
 const ruUrl = getRelativeLocaleUrl('ru', basePath);
 const toAbs = (url: string) => new URL(url, Astro.site ?? Astro.url.origin);
-const homeUrl = getRelativeLocaleUrl(locale, '');
-const homeLabel = locale === 'ru' ? 'Все проекты' : 'All projects';
 const canvasLabel =
   locale === 'ru'
     ? 'Прокручиваемые визуальные материалы кейса'
@@ -77,7 +75,7 @@ const responsiveSizes = `(max-width: 47.9375rem) ${mobileCanvasWidth}, 100vw`;
   </head>
   <body>
     <YandexMetrika />
-    <CaseNav variant="floating" href={homeUrl} label={homeLabel} />
+    <CaseNav variant="floating" locale={locale} />
     <main
       class="visual-case__scroller"
       aria-label={ariaLabel}

@@ -8,7 +8,8 @@ import CaseToc from './CaseToc.astro';
 import type { LocalizedCaseProps } from '../../lib/cases';
 import { resolveImageAsset } from '../../lib/assets';
 
-const { entry, contentLocale, isFallback } = Astro.props as LocalizedCaseProps;
+const { entry, requestedLocale, contentLocale, isFallback } =
+  Astro.props as LocalizedCaseProps;
 const { Content } = await render(entry);
 const socialImage = resolveImageAsset(entry.data.cover, 'CasePage.astro');
 const socialImageAlt =
@@ -24,7 +25,7 @@ const socialImageAlt =
   socialImageAlt={socialImageAlt}
   socialType="article"
 >
-  <CaseNav variant="floating" reveal="after-article" />
+  <CaseNav variant="floating" reveal="after-article" locale={requestedLocale} />
   <main class="py-12">
     {
       isFallback && (
@@ -34,7 +35,7 @@ const socialImageAlt =
       )
     }
     <Prose as="article" lang={isFallback ? contentLocale : undefined}>
-      <CaseNav variant="article" />
+      <CaseNav variant="article" locale={requestedLocale} />
       <header class="case-hero !m-0 !pb-10">
         <h1 class="!m-0 !mb-4 !text-[30px] !leading-[1.2] !font-bold !tracking-[-0.02em]">
           {entry.data.title}
