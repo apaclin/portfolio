@@ -3,8 +3,8 @@ import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import BlurImage from '../common/BlurImage.astro';
 import TranslationNotice from '../common/TranslationNotice.astro';
-import onlineCinemaCover from '../../assets/images/project-covers/online-cinema.webp';
-import architectureStudioCover from '../../assets/images/project-covers/architecture-studio.webp';
+import filmazeCover from '../../assets/images/project-covers/filmaze.webp';
+import bergstromCover from '../../assets/images/project-covers/bergstrom.webp';
 import radixCover from '../../assets/images/pet-projects/radix-cover.png';
 import portrait from '../../assets/images/profile/alexander-paklin.jpg';
 import { resolveImageAsset } from '../../lib/assets';
@@ -136,16 +136,16 @@ const visualProjects: Record<Locale, ProjectItem[]> = {
   en: [
     {
       title: 'Filmaze',
-      subtitle: 'Online cinema',
-      href: '/cases/online-cinema',
-      image: onlineCinemaCover,
-      imageAlt: 'Filmaze mobile online cinema interface',
+      subtitle: 'Movie streaming service',
+      href: '/cases/filmaze',
+      image: filmazeCover,
+      imageAlt: 'Filmaze mobile movie streaming service interface',
     },
     {
       title: 'Bergström',
       subtitle: 'Architecture studio website',
-      href: '/cases/architecture-studio',
-      image: architectureStudioCover,
+      href: '/cases/bergstrom',
+      image: bergstromCover,
       imageAlt: 'Bergstrom architecture studio website on a laptop',
     },
   ],
@@ -153,15 +153,15 @@ const visualProjects: Record<Locale, ProjectItem[]> = {
     {
       title: 'Filmaze',
       subtitle: 'Онлайн-кинотеатр',
-      href: '/ru/cases/online-cinema',
-      image: onlineCinemaCover,
+      href: '/ru/cases/filmaze',
+      image: filmazeCover,
       imageAlt: 'Мобильный интерфейс онлайн-кинотеатра Filmaze',
     },
     {
       title: 'Bergström',
       subtitle: 'Сайт архитектурной студии',
-      href: '/ru/cases/architecture-studio',
-      image: architectureStudioCover,
+      href: '/ru/cases/bergstrom',
+      image: bergstromCover,
       imageAlt: 'Сайт архитектурной студии Bergstrom на ноутбуке',
     },
   ],
@@ -170,7 +170,7 @@ const visualProjects: Record<Locale, ProjectItem[]> = {
 const petProjects: Record<Locale, ProjectItem[]> = {
   en: [
     {
-      title: 'Tone Ramp Generator',
+      title: 'Color scale generator',
       href: 'https://www.figma.com/community/plugin/1636766593436362521',
       external: true,
       image: radixCover,
@@ -179,7 +179,7 @@ const petProjects: Record<Locale, ProjectItem[]> = {
   ],
   ru: [
     {
-      title: 'Генератор тоновых растяжек',
+      title: 'Генератор цветовых растяжек',
       href: 'https://www.figma.com/community/plugin/1636766593436362521',
       external: true,
       image: radixCover,

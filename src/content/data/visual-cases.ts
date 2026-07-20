@@ -21,8 +21,8 @@ import bergstrom05 from '../../assets/images/cases/bergstrom/slice-05.png';
 import bergstrom06 from '../../assets/images/cases/bergstrom/slice-06.png';
 import bergstrom07 from '../../assets/images/cases/bergstrom/slice-07.png';
 import bergstrom08 from '../../assets/images/cases/bergstrom/slice-08.png';
-import architectureStudioCover from '../../assets/images/project-covers/architecture-studio.webp';
-import onlineCinemaCover from '../../assets/images/project-covers/online-cinema.webp';
+import bergstromCover from '../../assets/images/project-covers/bergstrom.webp';
+import filmazeCover from '../../assets/images/project-covers/filmaze.webp';
 
 const filmazeSlices = [
   filmaze01,
@@ -69,9 +69,9 @@ interface VisualCaseDefinition {
 }
 
 const visualCases = {
-  'architecture-studio': {
+  bergstrom: {
     slices: bergstromSlices,
-    cover: architectureStudioCover,
+    cover: bergstromCover,
     background: '#1c1d1a',
     mobileCanvasWidth: '960px',
     copy: {
@@ -90,9 +90,9 @@ const visualCases = {
       },
     },
   },
-  'online-cinema': {
+  filmaze: {
     slices: filmazeSlices,
-    cover: onlineCinemaCover,
+    cover: filmazeCover,
     background: '#000',
     mobileCanvasWidth: '960px',
     copy: {

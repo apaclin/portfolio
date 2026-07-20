@@ -4,5 +4,11 @@
       "source": "/mtk9/:match*",
       "destination": "https://cloud.umami.is/:match*"
     }
+  ],
+  "redirects": [
+    { "source": "/cases/online-cinema", "destination": "/cases/filmaze", "permanent": true },
+    { "source": "/cases/architecture-studio", "destination": "/cases/bergstrom", "permanent": true },
+    { "source": "/ru/cases/online-cinema", "destination": "/ru/cases/filmaze", "permanent": true },
+    { "source": "/ru/cases/architecture-studio", "destination": "/ru/cases/bergstrom", "permanent": true }
   ]
 }
