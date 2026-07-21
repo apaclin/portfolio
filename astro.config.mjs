@@ -35,8 +35,8 @@ export default defineConfig({
   // Keystatic + React — только в dev (см. isDev выше).
   integrations: [mdx(), ...(isDev ? [react(), keystatic()] : [])],
 
-  // Обёртка над штатным sharp-сервисом: добавляет шарп после уменьшения
-  // бордов кейсов. Остальные картинки идут по стандартному пути.
+  // Обёртка над штатным sharp-сервисом: уменьшает борды кейсов в линейном
+  // свете. Остальные картинки идут по стандартному пути.
   image: {
     service: { entrypoint: './src/lib/caseImageService.ts' },
   },

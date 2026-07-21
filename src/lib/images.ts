@@ -1,15 +1,13 @@
 export const defaultResponsiveWidths = [480, 800, 1200, 1600] as const;
 
 /**
- * Case boards run full-bleed, so the slot is the whole viewport and the browser
- * rescales whatever candidate it picks — cheaply, which softens fine type. The
- * ladder therefore tracks real monitor widths rather than round numbers: a 1920
- * screen (slot ~1905 after the scrollbar) lands on the 1920 file and nothing
- * gets rescaled. The top end covers the same widths at 2x.
+ * Case boards are very tall 3840px exports. Generating every common monitor
+ * width in both AVIF and WebP made a cold production build create 700 files and
+ * exceed Vercel's 45-minute limit. This compact ladder covers mobile, common
+ * desktop widths and the useful 2x steps without near-duplicate candidates.
  */
 export const caseSliceWidths = [
-  480, 800, 1024, 1280, 1366, 1440, 1536, 1600, 1728, 1920, 2048, 2560, 2880,
-  3840,
+  480, 960, 1440, 1920, 2560, 3840,
 ] as const;
 
 export function cappedImageWidths(
