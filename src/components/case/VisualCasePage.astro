@@ -7,6 +7,9 @@ import SeoMeta from '../common/SeoMeta.astro';
 import YandexMetrika from '../common/YandexMetrika.astro';
 import CaseNav from './CaseNav.astro';
 import CaseSliceImage from './CaseSliceImage.astro';
+import CaseScrollIndicator from './CaseScrollIndicator.astro';
+import CaseSliceVideo from './CaseSliceVideo.astro';
+import type { VisualCaseBoard } from '../../content/data/visual-cases';
 
 interface Props {
   locale: Locale;
@@ -14,11 +17,10 @@ interface Props {
   description: string;
   ariaLabel: string;
   sliceAltPrefix: string;
-  slices: ImageMetadata[];
+  boards: VisualCaseBoard[];
   cover: ImageMetadata;
   background: string;
-  /** CSS width that keeps 2x-exported boards legible on narrow screens. */
-  mobileCanvasWidth?: string;
+  videoSpinner: 'light' | 'dark';
 }
 
 const {
@@ -27,10 +29,10 @@ const {
   description,
   ariaLabel,
   sliceAltPrefix,
-  slices,
+  boards,
   cover,
   background,
-  mobileCanvasWidth = '960px',
+  videoSpinner,
 } = Astro.props as Props;
 
 const basePath = stripLocale(Astro.url.pathname);
@@ -41,7 +43,7 @@ const canvasLabel =
   locale === 'ru'
     ? 'Прокручиваемые визуальные материалы кейса'
     : 'Scrollable visual case boards';
-const responsiveSizes = `(max-width: 47.9375rem) ${mobileCanvasWidth}, 100vw`;
+const responsiveSizes = '100vw';
 ---
 
 <!doctype html>
@@ -81,24 +83,30 @@ const responsiveSizes = `(max-width: 47.9375rem) ${mobileCanvasWidth}, 100vw`;
       aria-label={ariaLabel}
       tabindex="0"
     >
-      <div
-        class="visual-case__canvas"
-        role="region"
-        aria-label={canvasLabel}
-        style={`--visual-case-mobile-width:${mobileCanvasWidth}`}
-      >
+      <div class="visual-case__canvas" role="region" aria-label={canvasLabel}>
         {
-          slices.map((slice, index) => (
-            <CaseSliceImage
-              src={slice}
-              alt={`${sliceAltPrefix} ${String(index + 1).padStart(2, '0')}`}
-              eager={index === 0}
-              sizes={responsiveSizes}
-            />
-          ))
+          boards.map((board, index) => {
+            const label = `${sliceAltPrefix} ${String(index + 1).padStart(2, '0')}`;
+            return board.kind === 'video' ? (
+              <CaseSliceVideo
+                src={board.src}
+                aspectRatio={board.aspectRatio}
+                label={label}
+                spinner={videoSpinner}
+              />
+            ) : (
+              <CaseSliceImage
+                src={board.src}
+                alt={label}
+                eager={index === 0}
+                sizes={responsiveSizes}
+              />
+            );
+          })
         }
       </div>
     </main>
+    <CaseScrollIndicator />
   </body>
 </html>
 
@@ -110,10 +118,21 @@ const responsiveSizes = `(max-width: 47.9375rem) ${mobileCanvasWidth}, 100vw`;
     background: var(--visual-case-bg, #000);
   }
 
+  /* Скроллбар убран из РАСКЛАДКИ намеренно. Борды идут во всю ширину, поэтому
+     место отрисовки = ширина вьюпорта минус скроллбар. Полоса в 11px делала из
+     1920 → 1909, а дробное уменьшение почти на единицу — самое разрушительное:
+     каждый пиксель становится смесью двух соседних, и текст теряет ~25%
+     резкости (замерено). Без полосы ширина совпадает со ступенью 1920 ровно, и
+     браузер не пересчитывает ничего. Прокрутка колесом, клавишами и тачем
+     работает как обычно. */
   html {
     color-scheme: dark;
-    scrollbar-color: rgba(148, 148, 148, 0.58) transparent;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 
   body {
@@ -131,20 +150,6 @@ const responsiveSizes = `(max-width: 47.9375rem) ${mobileCanvasWidth}, 100vw`;
     outline-offset: -2px;
   }
 
-  @media (max-width: 47.9375rem) {
-    .visual-case__scroller {
-      overflow-x: auto;
-      overscroll-behavior-inline: contain;
-      scrollbar-width: thin;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-x pan-y;
-    }
-
-    .visual-case__canvas {
-      min-width: var(--visual-case-mobile-width, 960px);
-    }
-  }
-
   img {
     display: block;
     width: 100%;
@@ -155,26 +160,4 @@ const responsiveSizes = `(max-width: 47.9375rem) ${mobileCanvasWidth}, 100vw`;
     image-rendering: auto;
   }
 
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    min-height: 48px;
-    border: 3px solid transparent;
-    border-radius: 999px;
-    background: rgba(148, 148, 148, 0.58);
-    background-clip: content-box;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(188, 188, 188, 0.72);
-    background-clip: content-box;
-  }
 </style>

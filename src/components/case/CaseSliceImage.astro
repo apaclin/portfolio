@@ -1,6 +1,6 @@
 ---
 import { Picture } from 'astro:assets';
-import { cappedImageWidths } from '../../lib/images';
+import { cappedImageWidths, caseSliceWidths } from '../../lib/images';
 
 interface Props {
   src: ImageMetadata;
@@ -11,7 +11,7 @@ interface Props {
 
 const { src, alt, eager = false, sizes = '100vw' } = Astro.props as Props;
 
-const widths = cappedImageWidths(src.width);
+const widths = cappedImageWidths(src.width, caseSliceWidths);
 ---
 
 <Picture

@@ -1,0 +1,203 @@
+---
+interface Props {
+  src: string;
+  label: string;
+  /** CSS `aspect-ratio` value, reserved up front so the board never shifts. */
+  aspectRatio: string;
+  /** Тон спиннера: подбирается под содержимое роликов конкретного кейса. */
+  spinner: 'light' | 'dark';
+}
+
+const { src, label, aspectRatio, spinner } = Astro.props as Props;
+
+// Без постера блок пустой до тех пор, пока не начнётся воспроизведение: при
+// preload="metadata" кадр не декодируется, а если автоплей заблокирован — не
+// декодируется никогда, и на месте видео остаётся дыра под цвет фона. Постер —
+// первый кадр ролика, поэтому подмена на старте незаметна.
+const poster = src.replace(/\.mp4$/, '-poster.webp');
+---
+
+<div
+  class="case-video"
+  data-spinner={spinner}
+  style={`aspect-ratio:${aspectRatio}`}
+>
+  <video
+    class="case-slice case-slice--video"
+    src={src}
+    poster={poster}
+    aria-label={label}
+    autoplay
+    loop
+    muted
+    playsinline
+    disablepictureinpicture
+    preload="auto"></video>
+  <span class="case-video__spinner" aria-hidden="true"></span>
+</div>
+
+<style>
+  /* Пропорции держит обёртка: высота зарезервирована до загрузки, борд не
+     дёргается, и спиннеру есть во что центрироваться. */
+  .case-video {
+    position: relative;
+    display: block;
+    width: 100%;
+    background: var(--visual-case-bg, #000);
+  }
+
+  :global(.case-slice--video) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .case-video__spinner {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    opacity: 0;
+    /* Не перехватываем клики: спиннер чисто визуальный. */
+    pointer-events: none;
+    transition: opacity 250ms ease;
+  }
+
+  /* Класс ставит скрипт, когда ролик уже нужен, но кадров ещё нет. */
+  .case-video.is-loading .case-video__spinner {
+    opacity: 1;
+    animation: case-video-spin 900ms linear infinite;
+  }
+
+  .case-video[data-spinner='light'] .case-video__spinner {
+    border-color: rgba(255, 255, 255, 0.28);
+    border-top-color: rgba(255, 255, 255, 0.85);
+  }
+
+  .case-video[data-spinner='dark'] .case-video__spinner {
+    border-color: rgba(0, 0, 0, 0.18);
+    border-top-color: rgba(0, 0, 0, 0.6);
+  }
+
+  @keyframes case-video-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* При отключённой анимации оставляем статичное кольцо — сигнал сохраняется,
+     вращения нет. */
+  @media (prefers-reduced-motion: reduce) {
+    .case-video.is-loading .case-video__spinner {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  // `autoplay` оставляем в разметке как декларативный fallback, но при
+  // ClientRouter одного атрибута недостаточно: видео вставляется во время DOM
+  // swap, а браузер не обязан повторно запускать autoplay для такого элемента.
+  // Поэтому после каждого `astro:page-load` явно синхронизируем playback.
+  const stillMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const videos = () =>
+    document.querySelectorAll<HTMLVideoElement>('.case-slice--video');
+
+  const setLoading = (video: HTMLVideoElement, loading: boolean) =>
+    video
+      .closest<HTMLElement>('.case-video')
+      ?.classList.toggle('is-loading', loading);
+
+  function playVideo(video: HTMLVideoElement) {
+    if (stillMotion.matches) {
+      video.autoplay = false;
+      video.pause();
+      setLoading(video, false);
+      return;
+    }
+
+    // Свойство выставляем вместе с атрибутом: это важно для autoplay policy у
+    // элементов, которые ClientRouter добавил после первоначальной загрузки.
+    video.muted = true;
+    video.defaultMuted = true;
+    video.autoplay = true;
+
+    // После client-side swap WebKit/Chromium иногда оставляет новый media
+    // element в HAVE_NOTHING и не запускает resource selection сам. `load()`
+    // нужен ровно один раз: повторный вызов прервал бы уже начатый play().
+    if (
+      video.readyState === video.HAVE_NOTHING &&
+      !video.dataset.caseVideoLoadStarted
+    ) {
+      video.dataset.caseVideoLoadStarted = 'true';
+      video.load();
+    }
+
+    if (!video.paused) {
+      setLoading(video, false);
+      return;
+    }
+
+    setLoading(video, true);
+    void video.play().then(
+      () => setLoading(video, false),
+      () => {
+        // `canplay` ниже сделает ещё одну попытку, если первая пересеклась с
+        // загрузкой файла. При настоящем запрете autoplay оставляем постер, но
+        // не показываем пользователю бесконечную загрузку.
+        setLoading(video, video.readyState < video.HAVE_CURRENT_DATA);
+      },
+    );
+  }
+
+  function bindVideo(video: HTMLVideoElement) {
+    if (!video.dataset.caseVideoBound) {
+      video.dataset.caseVideoBound = 'true';
+
+      // Спиннер ведут события самого элемента: playing — кадры пошли,
+      // waiting/stalled — буфер опустел. `loadeddata` и `error` гарантируют,
+      // что индикатор не зависнет, даже если событие playing не наступило.
+      video.addEventListener('playing', () => setLoading(video, false));
+      video.addEventListener('loadeddata', () => setLoading(video, false));
+      video.addEventListener('error', () => setLoading(video, false));
+      video.addEventListener('pause', () => setLoading(video, false));
+      for (const event of ['waiting', 'stalled'] as const) {
+        video.addEventListener(event, () => {
+          if (!video.paused) setLoading(video, true);
+        });
+      }
+
+      // Если первая play() пришлась на ещё не готовый источник, повторяем её в
+      // момент, когда у браузера уже есть данные для старта.
+      video.addEventListener('canplay', () => {
+        if (video.paused) playVideo(video);
+      });
+    }
+
+    playVideo(video);
+  }
+
+  function bindAll() {
+    for (const video of videos()) bindVideo(video);
+  }
+
+  stillMotion.addEventListener('change', () => {
+    for (const video of videos()) {
+      if (stillMotion.matches) {
+        video.autoplay = false;
+        video.pause();
+        setLoading(video, false);
+      } else {
+        playVideo(video);
+      }
+    }
+  });
+
+  bindAll();
+  document.addEventListener('astro:page-load', bindAll);
+</script>

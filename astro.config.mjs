@@ -35,6 +35,12 @@ export default defineConfig({
   // Keystatic + React — только в dev (см. isDev выше).
   integrations: [mdx(), ...(isDev ? [react(), keystatic()] : [])],
 
+  // Обёртка над штатным sharp-сервисом: добавляет шарп после уменьшения
+  // бордов кейсов. Остальные картинки идут по стандартному пути.
+  image: {
+    service: { entrypoint: './src/lib/caseImageService.ts' },
+  },
+
   // Tailwind v4 подключается как Vite-плагин (официальный путь),
   // а НЕ через устаревший @astrojs/tailwind.
   vite: {
