@@ -237,7 +237,7 @@ Hypothesis: if attribution appears directly at the line, time-to-understand caus
 On the right is vendor context: average invoice size, frequency of past mismatches, contract terms and related documents. Vendor context must live on the diagnosis screen itself, otherwise the decision moves back into side-channel communication.
 
 <Breakout maxWidth="960px">
-  <Image src={exceptionDetail1} alt="Exception detail screen with side-by-side document comparison" class="w-full h-auto object-contain mx-auto" />
+  <Image src={exceptionDetail1} alt="Exception detail screen with side-by-side document comparison" class="w-full h-auto object-contain mx-auto" lightboxFit="width" />
 </Breakout>
 
 By default, I show the diff table: only the fields that differ. The full three-column comparison (invoice ↔ PO ↔ receipt) is available on request, and the scan modal lets the user check the original recognized invoice. The confidence popover explains why the flag is reliable: it shows the trigger, supporting signals and the rule that raised it.
@@ -265,7 +265,7 @@ By default, I show the diff table: only the fields that differ. The full three-c
 The vendor profile covers the scenario where one invoice is not enough. A new vendor has no history yet, and the interface honestly shows the lack of baseline (cold start) instead of pretending to be certain. Here the AP specialist sees the working context: how much the company usually pays this vendor, how often mismatches happen, whether there are open exceptions and whether anything changed recently.
 
 <Breakout maxWidth="960px">
-  <Image src={vendor} alt="Vendor profile with payment and exception context" class="w-full h-auto object-contain mx-auto" />
+  <Image src={vendor} alt="Vendor profile with payment and exception context" class="w-full h-auto object-contain mx-auto" lightboxFit="width" />
 </Breakout>
 
 The profile brings together data that users usually have to search for in different places:

@@ -255,8 +255,8 @@
         img.alt = trigger.getAttribute('data-zoom-alt') ?? '';
         img.decoding = 'async';
         img.draggable = false; // не запускать нативный drag картинки — мешает pan
-        img.className =
-          'max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain';
+        // Размеры целиком на CSS выше: он знает про оба режима (contain/width),
+        // а хардкод утилит здесь ломал бы [data-fit='width'].
         img.addEventListener(
           'load',
           () => {

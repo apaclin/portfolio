@@ -24,6 +24,12 @@ interface Props {
   quality?: number;
   /** Логическая (CSS) ширина макета для лайтбокса: 1440 / 1920. По умолч. 1440. */
   maxWidth?: number;
+  /**
+   * Как лайтбокс вписывает макет. 'contain' (по умолч.) — целиком на экран.
+   * 'width' — во всю логическую ширину с вертикальным скроллом и pan; нужен
+   * высоким экранам, которые в contain ужимаются до половины вьюпорта.
+   */
+  lightboxFit?: 'contain' | 'width';
 }
 const {
   src: source,
@@ -39,6 +45,7 @@ const {
   fetchpriority = 'auto',
   quality = 90,
   maxWidth = 1440,
+  lightboxFit = 'contain',
 } = Astro.props as Props;
 
 const src = resolveImageAsset(source, 'Image.astro');
@@ -70,6 +77,7 @@ const zoom = zoomable
         data-zoom-src={zoom.src}
         data-zoom-alt={alt}
         data-max-width={maxWidth}
+        data-lightbox-fit={lightboxFit}
         aria-label={`Enlarge image: ${alt}`}
       >
         <Picture
