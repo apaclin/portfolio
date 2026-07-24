@@ -2,17 +2,25 @@
 import PublicSvg from '../../common/PublicSvg.astro';
 
 type Lang = 'ru' | 'en';
+type Schema = 'axes' | 'cycles';
 
 interface Props {
   lang?: Lang;
+  schema?: Schema;
 }
 
-const { lang = 'ru' } = Astro.props as Props;
-const src = `/assets/laneo/schemas/statuses.${lang}.svg`;
-const alt =
-  lang === 'en'
-    ? 'Laneo status lifecycles for order, shipment, invoice, payment and package'
-    : 'Жизненные циклы статусов Laneo для заказа, отгрузки, счета, платежа и упаковки';
+const { lang = 'ru', schema = 'cycles' } = Astro.props as Props;
+const src = `/assets/laneo/schemas/${schema}.${lang}.svg`;
+const alt = {
+  axes: {
+    ru: 'Словари трёх осей состояния заказа',
+    en: 'Vocabularies of the three order state axes',
+  },
+  cycles: {
+    ru: 'Жизненные циклы пяти сущностей Laneo CRM',
+    en: 'Lifecycles of the five Laneo CRM entities',
+  },
+}[schema][lang];
 ---
 
 <PublicSvg src={src} alt={alt} fit="container" />

@@ -1,0 +1,154 @@
+<svg width="1440" height="632" viewBox="0 0 1440 632" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.5" y="0.5" width="1439" height="631" rx="7.5" fill="white"/>
+<rect x="0.5" y="0.5" width="1439" height="631" rx="7.5" stroke="#EAE9E5"/>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="109.171" y="52.3636">&#x417;&#x410;&#x41a;&#x410;&#x417;</tspan></text>
+<rect x="40" y="80" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="40" y="80" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="114.328" y="100.727">Draft</tspan></text>
+<path d="M130 114.324L130 147.001" stroke="#37352F" stroke-linecap="round"/>
+<path d="M130.54 150.911L132.886 147.137C133.158 146.698 132.915 146.136 132.457 146.021C132.345 145.993 132.228 146.02 132.12 146.059L130 146.823L127.88 146.059C127.771 146.02 127.655 145.993 127.543 146.021C127.092 146.135 126.847 146.683 127.105 147.122L129.328 150.895C129.602 151.361 130.254 151.37 130.54 150.911Z" fill="#37352F"/>
+<path d="M128 112C128 110.895 128.895 110 130 110C131.105 110 132 110.895 132 112C132 113.105 131.105 114 130 114C128.895 114 128 113.105 128 112Z" fill="white" stroke="#37352F" stroke-width="2"/>
+<rect x="40" y="152" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="40" y="152" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="97.5" y="172.727">Confirmed</tspan></text>
+<path d="M130 186.324L130 219.001" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M130.54 222.911L132.886 219.137C133.158 218.698 132.915 218.136 132.457 218.021C132.345 217.993 132.228 218.02 132.12 218.059L130 218.823L127.88 218.059C127.771 218.02 127.655 217.993 127.543 218.021C127.092 218.135 126.847 218.683 127.105 219.122L129.328 222.895C129.602 223.361 130.254 223.37 130.54 222.911Z" fill="#D8D6CF"/>
+<path d="M128 184C128 182.895 128.895 182 130 182C131.105 182 132 182.895 132 184C132 185.105 131.105 186 130 186C128.895 186 128 185.105 128 184Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="40" y="224" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="40" y="224" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="108.316" y="244.727">Closed</tspan></text>
+<line x1="220" y1="280.5" x2="40" y2="280.5" stroke="#EAE9E5"/>
+<rect x="40" y="304" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="40" y="304" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="99" y="324.727">Cancelled</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="336.904" y="52.3636">&#x41e;&#x422;&#x413;&#x420;&#x423;&#x417;&#x41a;&#x410;</tspan></text>
+<rect x="280" y="80" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="280" y="80" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="344.87" y="100.727">Planned</tspan></text>
+<path d="M370 114.324L370 147.001" stroke="#37352F" stroke-linecap="round"/>
+<path d="M370.54 150.911L372.886 147.137C373.158 146.698 372.915 146.136 372.457 146.021C372.345 145.993 372.228 146.02 372.12 146.059L370 146.823L367.88 146.059C367.771 146.02 367.655 145.993 367.543 146.021C367.092 146.135 366.847 146.683 367.105 147.122L369.328 150.895C369.602 151.361 370.254 151.37 370.54 150.911Z" fill="#37352F"/>
+<path d="M368 112C368 110.895 368.895 110 370 110C371.105 110 372 110.895 372 112C372 113.105 371.105 114 370 114C368.895 114 368 113.105 368 112Z" fill="white" stroke="#37352F" stroke-width="2"/>
+<rect x="280" y="152" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="280" y="152" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="349" y="172.727">Picked</tspan></text>
+<path d="M370 186.324L370 219.001" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M370.54 222.911L372.886 219.137C373.158 218.698 372.915 218.136 372.457 218.021C372.345 217.993 372.228 218.02 372.12 218.059L370 218.823L367.88 218.059C367.771 218.02 367.655 217.993 367.543 218.021C367.092 218.135 366.847 218.683 367.105 219.122L369.328 222.895C369.602 223.361 370.254 223.37 370.54 222.911Z" fill="#D8D6CF"/>
+<path d="M368 184C368 182.895 368.895 182 370 182C371.105 182 372 182.895 372 184C372 185.105 371.105 186 370 186C368.895 186 368 185.105 368 184Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="280" y="224" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="280" y="224" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="347" y="244.727">Packed</tspan></text>
+<path d="M370 258.324L370 291.001" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M370.54 294.911L372.886 291.137C373.158 290.698 372.915 290.136 372.457 290.021C372.345 289.993 372.228 290.02 372.12 290.059L370 290.823L367.88 290.059C367.771 290.02 367.655 289.993 367.543 290.021C367.092 290.135 366.847 290.683 367.105 291.122L369.328 294.895C369.602 295.361 370.254 295.37 370.54 294.911Z" fill="#D8D6CF"/>
+<path d="M368 256C368 254.895 368.895 254 370 254C371.105 254 372 254.895 372 256C372 257.105 371.105 258 370 258C368.895 258 368 257.105 368 256Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="280" y="296" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="280" y="296" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="343" y="316.727">In transit</tspan></text>
+<path d="M370 330.324L370 363.001" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M370.54 366.911L372.886 363.137C373.158 362.698 372.915 362.136 372.457 362.021C372.345 361.993 372.228 362.02 372.12 362.059L370 362.823L367.88 362.059C367.771 362.02 367.655 361.993 367.543 362.021C367.092 362.135 366.847 362.683 367.105 363.122L369.328 366.895C369.602 367.361 370.254 367.37 370.54 366.911Z" fill="#D8D6CF"/>
+<path d="M368 328C368 326.895 368.895 326 370 326C371.105 326 372 326.895 372 328C372 329.105 371.105 330 370 330C368.895 330 368 329.105 368 328Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="280" y="368" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="280" y="368" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="340.629" y="388.727">Delivered</tspan></text>
+<line x1="460" y1="424.5" x2="280" y2="424.5" stroke="#EAE9E5"/>
+<rect x="280" y="448" width="180" height="32" rx="8" fill="#FDF0ED"/>
+<rect x="280" y="448" width="180" height="32" rx="8" stroke="#F2C8BD" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#9F341F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="356.5" y="468.727">Late</tspan></text>
+<rect x="280" y="504" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="280" y="504" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="341.5" y="524.727">Returned</tspan></text>
+<rect x="280" y="560" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="280" y="560" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="339" y="580.727">Cancelled</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="703" y="52.3636">&#x421;&#x427;&#x401;&#x422;</tspan></text>
+<rect x="630" y="80" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="630" y="80" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="704.328" y="100.727">Draft</tspan></text>
+<path d="M720 114.324L720 147.001" stroke="#37352F" stroke-linecap="round"/>
+<path d="M720.54 150.911L722.886 147.137C723.158 146.698 722.915 146.136 722.457 146.021C722.345 145.993 722.228 146.02 722.12 146.059L720 146.823L717.88 146.059C717.771 146.02 717.655 145.993 717.543 146.021C717.092 146.135 716.847 146.683 717.105 147.122L719.328 150.895C719.602 151.361 720.254 151.37 720.54 150.911Z" fill="#37352F"/>
+<path d="M718 112C718 110.895 718.895 110 720 110C721.105 110 722 110.895 722 112C722 113.105 721.105 114 720 114C718.895 114 718 113.105 718 112Z" fill="white" stroke="#37352F" stroke-width="2"/>
+<rect x="630" y="152" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="630" y="152" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="699.5" y="172.727">Issued</tspan></text>
+<path d="M830 235L830 224C830 215.163 822.837 208 814 208L626 208C617.163 208 610 215.163 610 224L610 235" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M720 208L720 185.982" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M830.54 238.911L832.886 235.137C833.158 234.698 832.915 234.136 832.457 234.021C832.345 233.993 832.228 234.02 832.12 234.059L830 234.823L827.88 234.059C827.771 234.02 827.655 233.993 827.543 234.021C827.092 234.135 826.847 234.683 827.105 235.122L829.328 238.895C829.602 239.361 830.254 239.37 830.54 238.911Z" fill="#D8D6CF"/>
+<path d="M610.54 238.911L612.886 235.137C613.158 234.698 612.915 234.136 612.457 234.021C612.345 233.993 612.228 234.02 612.12 234.059L610 234.823L607.88 234.059C607.771 234.02 607.655 233.993 607.543 234.021C607.092 234.135 606.847 234.683 607.105 235.122L609.328 238.895C609.602 239.361 610.254 239.37 610.54 238.911Z" fill="#D8D6CF"/>
+<path d="M718 184C718 182.895 718.895 182 720 182C721.105 182 722 182.895 722 184C722 185.105 721.105 186 720 186C718.895 186 718 185.105 718 184Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="520" y="240" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="520" y="240" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="570" y="260.727">Partially paid</tspan></text>
+<path d="M702.324 256H735.001" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M738.911 255.46L735.137 253.114C734.698 252.842 734.136 253.085 734.021 253.543C733.993 253.655 734.02 253.772 734.059 253.88L734.823 256L734.059 258.12C734.02 258.229 733.993 258.345 734.021 258.457C734.135 258.908 734.683 259.153 735.122 258.895L738.895 256.672C739.361 256.398 739.37 255.746 738.911 255.46Z" fill="#D8D6CF"/>
+<path d="M700 258C698.895 258 698 257.105 698 256C698 254.895 698.895 254 700 254C701.105 254 702 254.895 702 256C702 257.105 701.105 258 700 258Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="740" y="240" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="740" y="240" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="816.486" y="260.727">Paid</tspan></text>
+<line x1="920" y1="296.5" x2="520" y2="296.5" stroke="#EAE9E5"/>
+<rect x="630" y="320" width="180" height="32" rx="8" fill="#FDF0ED"/>
+<rect x="630" y="320" width="180" height="32" rx="8" stroke="#F2C8BD" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#9F341F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="693.5" y="340.727">Overdue</tspan></text>
+<rect x="630" y="376" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="630" y="376" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="690" y="396.727">Refunded</tspan></text>
+<rect x="630" y="432" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="630" y="432" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="689" y="452.727">Cancelled</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="1043" y="52.3636">&#x41f;&#x41b;&#x410;&#x422;&#x401;&#x416;</tspan></text>
+<rect x="980" y="80" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="980" y="80" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="1044.6" y="100.727">Pending</tspan></text>
+<path d="M1070 114.324L1070 147.001" stroke="#37352F" stroke-linecap="round"/>
+<path d="M1070.54 150.911L1072.89 147.137C1073.16 146.698 1072.92 146.136 1072.46 146.021C1072.35 145.993 1072.23 146.02 1072.12 146.059L1070 146.823L1067.88 146.059C1067.77 146.02 1067.65 145.993 1067.54 146.021C1067.09 146.135 1066.85 146.683 1067.11 147.122L1069.33 150.895C1069.6 151.361 1070.25 151.37 1070.54 150.911Z" fill="#37352F"/>
+<path d="M1068 112C1068 110.895 1068.9 110 1070 110C1071.1 110 1072 110.895 1072 112C1072 113.105 1071.1 114 1070 114C1068.9 114 1068 113.105 1068 112Z" fill="white" stroke="#37352F" stroke-width="2"/>
+<rect x="980" y="152" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="980" y="152" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="1035.85" y="172.727">Completed</tspan></text>
+<line x1="1160" y1="208.5" x2="980" y2="208.5" stroke="#EAE9E5"/>
+<rect x="980" y="232" width="180" height="32" rx="8" fill="#FDF0ED"/>
+<rect x="980" y="232" width="180" height="32" rx="8" stroke="#F2C8BD" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#9F341F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1051.5" y="252.727">Failed</tspan></text>
+<rect x="980" y="288" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="980" y="288" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1040" y="308.727">Refunded</tspan></text>
+<rect x="980" y="344" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="980" y="344" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1039" y="364.727">Cancelled</tspan></text>
+<text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0.05em"><tspan x="1275.5" y="52.3636">&#x423;&#x41f;&#x410;&#x41a;&#x41e;&#x412;&#x41a;&#x410;</tspan></text>
+<rect x="1220" y="80" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="1220" y="80" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="1285.07" y="100.727">Created</tspan></text>
+<path d="M1310 114.324L1310 147.001" stroke="#37352F" stroke-linecap="round"/>
+<path d="M1310.54 150.911L1312.89 147.137C1313.16 146.698 1312.92 146.136 1312.46 146.021C1312.35 145.993 1312.23 146.02 1312.12 146.059L1310 146.823L1307.88 146.059C1307.77 146.02 1307.65 145.993 1307.54 146.021C1307.09 146.135 1306.85 146.683 1307.11 147.122L1309.33 150.895C1309.6 151.361 1310.25 151.37 1310.54 150.911Z" fill="#37352F"/>
+<path d="M1308 112C1308 110.895 1308.9 110 1310 110C1311.1 110 1312 110.895 1312 112C1312 113.105 1311.1 114 1310 114C1308.9 114 1308 113.105 1308 112Z" fill="white" stroke="#37352F" stroke-width="2"/>
+<rect x="1220" y="152" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="1220" y="152" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1287" y="172.727">Packed</tspan></text>
+<path d="M1310 186.324L1310 219.001" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M1310.54 222.911L1312.89 219.137C1313.16 218.698 1312.92 218.136 1312.46 218.021C1312.35 217.993 1312.23 218.02 1312.12 218.059L1310 218.823L1307.88 218.059C1307.77 218.02 1307.65 217.993 1307.54 218.021C1307.09 218.135 1306.85 218.683 1307.11 219.122L1309.33 222.895C1309.6 223.361 1310.25 223.37 1310.54 222.911Z" fill="#D8D6CF"/>
+<path d="M1308 184C1308 182.895 1308.9 182 1310 182C1311.1 182 1312 182.895 1312 184C1312 185.105 1311.1 186 1310 186C1308.9 186 1308 185.105 1308 184Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="1220" y="224" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="1220" y="224" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1243" y="244.727">Assigned to shipment</tspan></text>
+<path d="M1310 258.324L1310 291.001" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M1310.54 294.911L1312.89 291.137C1313.16 290.698 1312.92 290.136 1312.46 290.021C1312.35 289.993 1312.23 290.02 1312.12 290.059L1310 290.823L1307.88 290.059C1307.77 290.02 1307.65 289.993 1307.54 290.021C1307.09 290.135 1306.85 290.683 1307.11 291.122L1309.33 294.895C1309.6 295.361 1310.25 295.37 1310.54 294.911Z" fill="#D8D6CF"/>
+<path d="M1308 256C1308 254.895 1308.9 254 1310 254C1311.1 254 1312 254.895 1312 256C1312 257.105 1311.1 258 1310 258C1308.9 258 1308 257.105 1308 256Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="1220" y="296" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="1220" y="296" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1283" y="316.727">In transit</tspan></text>
+<path d="M1310 330.324L1310 363.001" stroke="#D8D6CF" stroke-linecap="round"/>
+<path d="M1310.54 366.911L1312.89 363.137C1313.16 362.698 1312.92 362.136 1312.46 362.021C1312.35 361.993 1312.23 362.02 1312.12 362.059L1310 362.823L1307.88 362.059C1307.77 362.02 1307.65 361.993 1307.54 362.021C1307.09 362.135 1306.85 362.683 1307.11 363.122L1309.33 366.895C1309.6 367.361 1310.25 367.37 1310.54 366.911Z" fill="#D8D6CF"/>
+<path d="M1308 328C1308 326.895 1308.9 326 1310 326C1311.1 326 1312 326.895 1312 328C1312 329.105 1311.1 330 1310 330C1308.9 330 1308 329.105 1308 328Z" fill="white" stroke="#D8D6CF" stroke-width="2"/>
+<rect x="1220" y="368" width="180" height="32" rx="8" fill="#37352F"/>
+<rect x="1220" y="368" width="180" height="32" rx="8" stroke="#37352F" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="white" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="500" letter-spacing="0em"><tspan x="1280.63" y="388.727">Delivered</tspan></text>
+<line x1="1400" y1="424.5" x2="1220" y2="424.5" stroke="#EAE9E5"/>
+<rect x="1220" y="448" width="180" height="32" rx="8" fill="#FDF0ED"/>
+<rect x="1220" y="448" width="180" height="32" rx="8" stroke="#F2C8BD" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#9F341F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1296.5" y="468.727">Lost</tspan></text>
+<rect x="1220" y="504" width="180" height="32" rx="8" fill="#FDF0ED"/>
+<rect x="1220" y="504" width="180" height="32" rx="8" stroke="#F2C8BD" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#9F341F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1280.5" y="524.727">Damaged</tspan></text>
+<rect x="1220" y="560" width="180" height="32" rx="8" fill="#F7F6F3"/>
+<rect x="1220" y="560" width="180" height="32" rx="8" stroke="#D8D6CF" stroke-linecap="round" stroke-linejoin="round"/>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1281.5" y="580.727">Returned</tspan></text>
+</svg>

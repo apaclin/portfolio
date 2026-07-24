@@ -191,7 +191,7 @@ Below are the related entities: shipments, invoices, payments and problem line i
 
 **Why three bars, not one status.** A single overall status was exactly what hid the details — that was the original pain. Three axes split the order into clear areas: availability shows whether the order can be fulfilled; shipments show the real execution; payment shows the financial state. The manager sees not just “there's a problem” but in which plane exactly.
 
-A bar isn't only an indicator. On click it expands: which shipments have already gone, which items are waiting, where exactly things are stuck.
+**The early signal.** The research kept coming back to failures surfacing only once the client can see them. So an order carries a promised delivery date and a shipment carries a late state. Earlier than either, though, the availability axis fires: no stock against a line item lights amber weeks before the shipment slips, while there's still room to act.
 
 <Breakout maxWidth="960px">
   <Image
@@ -243,24 +243,37 @@ The invoice page is a mirror slice. The same set of links, but the entry point i
   />
 </Breakout>
 
-**Status priority.** An order has many entities, each at its own stage, but the list and the card need a single indicator. The rule is simple: the most critical status inside the order becomes the main one. Priority is by color: red — critical (loss, damage, failed payment, overdue); orange — needs attention (awaiting payment, partially paid, awaiting approval); blue — in progress; green — done; grey — out of process. So the manager sees not just a color but the reason the order rose in priority.
+**Colour only on a problem.** Two states carry saturated colour: red for a broken commitment (payment overdue, a missed delivery date), amber for a commitment at risk while there's still room to act (backorder). Routine, work in progress, completion and cancellation are all set in neutral grey. Blue is out of the status scale entirely — it's reserved for links, selection and actions. The eye catches colour where someone needs to step in, not where things are simply running their course.
 
-I fixed the lifecycles in advance — one per entity.
+**Two levels.** An entity — order, shipment, invoice — carries a word and a colour. A state inside an entity — the axes and the line items — carries a dot and a word: these are compared down the column, and the dot separates what's started from what's untouched.
+
+Where one indicator has to stand for several states, priority applies: first a red state on any axis, then amber, and only in their absence the milestone reached. Cancellation overrides everything.
+
+I fixed the axis vocabularies up front. Each has one linear chain from zero to full and one exception set outside it: the chain describes the normal course, the exception is what's worth stepping in for.
 
 <Breakout maxWidth="1440px" minWidth="960px">
   <figure class="not-prose m-0">
-    <Statuses lang="en" />
-    <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Five entities, five cycles. The order indicator shows the most critical status among them.</figcaption>
+    <Statuses lang="en" schema="axes" />
+    <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Three axes, three vocabularies. Only the exception carries colour.</figcaption>
   </figure>
 </Breakout>
 
-The order list is where the priority rule pays off. People come here not to read but to find. A row carries the lifecycle status plus separate indicators for invoice, payment and shipment: three axes collapsed to dots. A problem order is visible without opening it. The full aggregation stays on the order page — in the list it would be noise.
+The axes are the view from the order's side. The entities themselves have their own cycles: a shipment and an invoice live their own lives, and each side names the same event in its own words. An invoice is issued — from the order's side, it's been invoiced.
+
+<Breakout maxWidth="1440px" minWidth="960px">
+  <figure class="not-prose m-0">
+    <Statuses lang="en" schema="cycles" />
+    <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Five entities, five cycles. Exceptions sit outside the chain the same way everywhere.</figcaption>
+  </figure>
+</Breakout>
+
+The order list is where the priority rule pays off. People come here not to read but to find. In the wide table a row carries the lifecycle status and the three axes separately — availability, payment, shipment. The invoice isn't a fourth axis but the zero state of payment: not invoiced — invoiced — partially paid — paid. In the narrow side list there's no room for three columns, so the axes collapse into a single indicator by the priority rule. A problem order is visible without opening it.
 
 <Breakout maxWidth="912px">
   <Image
     src={orders}
     alt="Laneo CRM order list with statuses for invoice, payment and shipment"
-    caption="The order list. Lifecycle status plus separate dots for invoice, payment and shipment."
+    caption="The order list. Lifecycle status, the three axes separately, and the promised delivery date."
     variant="inline"
     class="w-full h-auto object-contain mx-auto"
     widths={[480, 800, 1200, 1600, 2200]}
@@ -274,13 +287,13 @@ The order list is where the priority rule pays off. People come here not to read
 
 **Where to put the client information.** I spent a long time choosing between three options: a separate fourth column for the client data, a sidebar that collapses into icons (like HubSpot), or merging the client into the order card.
 
-A separate column overloaded the screen — four vertical streams start competing for attention. An icon sidebar saves space but hides meaning: to understand an item you have to hover over a tiny icon and wait for a tooltip — an extra step where the manager wants to see everything at once.
+A separate column overloaded the screen — four vertical streams start competing for attention. A client sidebar that collapses into icons saves space but hides the values: to read a field you have to hover over an icon and wait for a tooltip — an extra step where the manager wants to see everything at once.
 
 I chose to merge order and client into one block. What I lose: the client stops being a standalone zone and is visually subordinate to the order. Why that's okay: in the “where's my order” scenario the client is context, not a separate task, and it makes sense to keep them next to the order rather than in their own column.
 
-**Internal zones vs. density.** Fields are grouped into zones with borders and icons — dates, payment, addresses. In places there's empty space inside, and I considered dropping the borders for a denser layout.
+**Collapsed by default, or open on arrival.** I collapsed the related blocks — shipments, payments, reference details: otherwise the screen opens as a wall of tables and the live state drowns in reference data.
 
-I kept the zones. What I lose: some space is used inefficiently. Why that's okay: without explicit borders it's not obvious what each group of fields belongs to. Structural predictability matters more than density here.
+What I lose: details take a click. Why that's okay: a collapsed heading carries a short summary and surfaces the exception if there is one. The click buys detail, not the signal.
 
 ## 10. How I'd measure success
 
