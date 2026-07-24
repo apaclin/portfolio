@@ -19,13 +19,13 @@ import er from '../../assets/images/cases/laneo/er.png';
 import order from '../../assets/images/cases/laneo/order.png';
 import shipment from '../../assets/images/cases/laneo/shipment.png';
 import invoice from '../../assets/images/cases/laneo/invoice.png';
+import orders from '../../assets/images/cases/laneo/orders.png';
 import finalVisual from '../../assets/images/cases/laneo/final-visual.png';
 
 import Breakout from '../../components/common/Breakout.astro';
 import Image from '../../components/common/Image.astro';
 import ScenarioFlows from '../../components/diagrams/ScenarioFlows.astro';
 import Carousel from '../../components/diagrams/Carousel.astro';
-import CaseImagePlaceholder from '../../components/case/CaseImagePlaceholder.astro';
 import Statuses from '../../components/case/laneo/Statuses.astro';
 
 <Breakout maxWidth="672px" align="content">
@@ -207,13 +207,6 @@ Order Overview я спроектировал как верхний слой на
   />
 </Breakout>
 
-<Breakout maxWidth="960px">
-  <CaseImagePlaceholder
-    label="Раскрытая ось отгрузок на экране обзора заказа"
-    aspect="16 / 10"
-  />
-</Breakout>
-
 **Связь отгрузки, счёта и платежа.** Раз оплата в B2B редко совпадает с фактической отгрузкой, я добавил таблицу, где каждая отгрузка связана с конкретным счётом и платежом. Не нужно переключаться между системами, чтобы понять, что именно оплачено.
 
 Отгрузка и счёт — второй уровень. Обзор закрывает разговор с клиентом, но если тот уходит в детали, менеджер проваливается в сущность и видит ту же связь с другой стороны.
@@ -264,8 +257,16 @@ Order Overview я спроектировал как верхний слой на
 Список заказов — место, где правило приоритета окупается. Сюда приходят не читать, а находить. Строка несёт статус жизненного цикла и отдельные индикаторы по счёту, оплате и отгрузке: три оси, свёрнутые до точек. Проблемный заказ видно, не открывая его. Полная агрегация остаётся на странице заказа — в списке она была бы шумом.
 
 <Breakout maxWidth="912px">
-  <CaseImagePlaceholder
-    label="Список заказов со статусами по счёту, оплате и отгрузке"
+  <Image
+    src={orders}
+    alt="Список заказов Laneo CRM со статусами по счёту, оплате и отгрузке"
+    caption="Список заказов. Статус жизненного цикла и отдельные точки по счёту, оплате и отгрузке."
+    variant="inline"
+    class="w-full h-auto object-contain mx-auto"
+    widths={[480, 800, 1200, 1600, 2200]}
+    sizes="(min-width: 64rem) 912px, 100vw"
+    maxWidth={1440}
+    lightboxFit="width"
   />
 </Breakout>
 

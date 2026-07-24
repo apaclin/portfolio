@@ -19,13 +19,13 @@ import er from '../../assets/images/cases/laneo/er.png';
 import order from '../../assets/images/cases/laneo/order.png';
 import shipment from '../../assets/images/cases/laneo/shipment.png';
 import invoice from '../../assets/images/cases/laneo/invoice.png';
+import orders from '../../assets/images/cases/laneo/orders.png';
 import finalVisual from '../../assets/images/cases/laneo/final-visual.png';
 
 import Breakout from '../../components/common/Breakout.astro';
 import Image from '../../components/common/Image.astro';
 import ScenarioFlows from '../../components/diagrams/ScenarioFlows.astro';
 import Carousel from '../../components/diagrams/Carousel.astro';
-import CaseImagePlaceholder from '../../components/case/CaseImagePlaceholder.astro';
 import Statuses from '../../components/case/laneo/Statuses.astro';
 
 <Breakout maxWidth="672px" align="content">
@@ -207,14 +207,6 @@ A bar isn't only an indicator. On click it expands: which shipments have already
   />
 </Breakout>
 
-<Breakout maxWidth="960px">
-  <CaseImagePlaceholder
-    label="Expanded shipment axis on the order overview screen"
-    note="Image placeholder"
-    aspect="16 / 10"
-  />
-</Breakout>
-
 **Linking shipment, invoice and payment.** Since payment in B2B rarely matches the actual shipment, I added a table where each shipment is linked to a specific invoice and payment. No need to switch between systems to understand what exactly is paid.
 
 Shipment and invoice are the second level. The overview closes the conversation with the client, but if they go into the detail, the manager drills into the entity and sees the same link from the other side.
@@ -265,9 +257,16 @@ I fixed the lifecycles in advance — one per entity.
 The order list is where the priority rule pays off. People come here not to read but to find. A row carries the lifecycle status plus separate indicators for invoice, payment and shipment: three axes collapsed to dots. A problem order is visible without opening it. The full aggregation stays on the order page — in the list it would be noise.
 
 <Breakout maxWidth="912px">
-  <CaseImagePlaceholder
-    label="Order list with statuses for invoice, payment and shipment"
-    note="Image placeholder"
+  <Image
+    src={orders}
+    alt="Laneo CRM order list with statuses for invoice, payment and shipment"
+    caption="The order list. Lifecycle status plus separate dots for invoice, payment and shipment."
+    variant="inline"
+    class="w-full h-auto object-contain mx-auto"
+    widths={[480, 800, 1200, 1600, 2200]}
+    sizes="(min-width: 64rem) 912px, 100vw"
+    maxWidth={1440}
+    lightboxFit="width"
   />
 </Breakout>
 
