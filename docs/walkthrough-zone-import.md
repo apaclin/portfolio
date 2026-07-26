@@ -72,6 +72,17 @@ strokeRect('chips', 259.5, 176.5, 377, 33)
 - Never `Math.round()` the sharp image's `left` or `top`. Rounding introduces a
   relative 0.5px shift between screenshot content and frame.
 
+## Walkthrough controls placement
+
+- Viewport-fixed controls are the default for walkthroughs, including
+  Matchpoint.
+- The T‑Taxi main-screen walkthrough is the only intentional exception. Both
+  locale files must keep `controlsPlacement="stage"` on its `<Walkthrough>`.
+- In that mode the controls use `position: absolute` and sit `18 px` above the
+  bottom edge of the screenshot stage. They scroll with the stage and must not
+  be converted to viewport-fixed or sticky positioning.
+- Do not remove this explicit prop while aligning shared walkthrough styles.
+
 ## T‑Taxi incident-card transform
 
 The incident-zone SVG describes only the `500 × 1201` card. The walkthrough

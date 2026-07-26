@@ -168,6 +168,7 @@ The queue answers "what to work first," the map answers "where," and the right c
 **The map separates "what the vehicle is doing" from "is there an incident."** Split vehicle status and the presence of an incident into different channels and the engineer reads the situation without switching layers. The dot shows what the vehicle is doing — driving, charging, out of service, or connection lost; on connection loss an uncertainty zone appears around it, because the exact position is no longer known. Movement status and the fact of an incident are different questions: the first lives in the dot, the second in the severity ring from the previous point. This split isn't conveyed by color alone, which means it also works for a colorblind engineer.
 <Walkthrough
   src={MainPage}
+  controlsPlacement="stage"
   alt="T-Taxi fleet monitoring main screen"
   title="Fleet monitoring on the map"
   description="The incident queue, a map with vehicle statuses, and shift metrics. Hover over the elements to break the interface down piece by piece."

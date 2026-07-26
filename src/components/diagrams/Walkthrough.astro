@@ -51,6 +51,9 @@ interface Props {
   // В Matchpoint светлая карточка на светлом UI плохо читается в hover-preview,
   // поэтому разбор запускается только явной кнопкой. T-Taxi сохраняет регионы.
   entryMode?: 'regions' | 'button';
+  // По умолчанию guided-контролы закреплены у нижнего края viewport. Главный
+  // экран T-Taxi — намеренное исключение: панель остаётся внутри сцены.
+  controlsPlacement?: 'viewport' | 'stage';
 }
 
 const locale = (Astro.props.locale ?? (Astro.currentLocale === 'ru' ? 'ru' : 'en')) as 'en' | 'ru';
@@ -130,6 +133,7 @@ const {
   theme = 'dark',
   aspectRatio = '1440 / 900',
   lastStepAlign = 'default',
+  controlsPlacement = 'viewport',
 } = Astro.props as Props;
 
 const captionIdle = entryMode === 'button' ? ui.captionIdleButton : ui.captionIdle;
@@ -151,6 +155,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   data-walkthrough
   data-theme={theme}
   data-entry-mode={entryMode}
+  data-controls-placement={controlsPlacement}
   data-alternate-step={alternateStep}
   data-last-step-align={lastStepAlign}
   data-cta={cta}
@@ -470,11 +475,11 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       reveal.style.top = -((r.t / 100) * H) + 'px';
     };
 
-    // Панель всегда sticky в guided-режиме. Раньше короткий T-Taxi оставался
-    // absolute, а высокий Matchpoint становился fixed — поэтому одинаковые
-    // контролы оказывались на разной высоте.
+    // Все разборы используют viewport-fixed контролы, кроме явно помеченного
+    // main page T-Taxi: там панель должна оставаться у нижнего края сцены.
     const updateControlsMode = () => {
-      root.classList.toggle('controls-fixed', guided);
+      const fixedToViewport = root.dataset.controlsPlacement !== 'stage';
+      root.classList.toggle('controls-fixed', guided && fixedToViewport);
     };
 
     // Снимаем фокус с элемента разбора (зона/кнопка), чтобы после клика+клавиш
@@ -1372,8 +1377,8 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     transform: translateX(-50%);
     pointer-events: auto;
   }
-  /* Единое положение панели для всех walkthrough: всегда 16px от viewport,
-     независимо от высоты сцены. */
+  /* Стандартное положение: 16px от viewport. T-Taxi main page сохраняет
+     базовый absolute bottom:18px через controlsPlacement="stage". */
   .walkthrough.controls-fixed .walkthrough__controls {
     position: fixed;
     bottom: max(1rem, env(safe-area-inset-bottom));
@@ -1496,7 +1501,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     .walkthrough__stage-wrap {
       min-width: 760px;
     }
-    .walkthrough__controls {
+    .walkthrough:not([data-controls-placement='stage']) .walkthrough__controls {
       position: fixed;
       left: 50%;
       bottom: max(0.75rem, env(safe-area-inset-bottom));

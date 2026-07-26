@@ -52,6 +52,13 @@
     place-items: safe center; /* центр, если влезает; иначе скролл от края, без обрезки */
     padding: clamp(1rem, 4vw, 3rem);
     box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 140ms ease;
+  }
+  /* Dialog opens immediately, but its image becomes visible only after decode.
+     This prevents a stale/blank frame from flashing on repeated entry. */
+  .lightbox.is-content-ready .lightbox__media {
+    opacity: 1;
   }
   /* В лайтбоксе клик по изображению закрывает просмотр, поэтому над картинкой
      показываем zoom-out. Если пользователь именно тащит переполненный макет,
@@ -221,6 +228,30 @@
         });
     };
 
+    const resolveLightboxFit = (trigger: Element): 'contain' | 'width' => {
+      const requested = trigger.getAttribute('data-lightbox-fit') ?? 'auto';
+      if (requested === 'contain' || requested === 'width') return requested;
+
+      const sourceWidth = Number(trigger.getAttribute('data-zoom-width'));
+      const sourceHeight = Number(trigger.getAttribute('data-zoom-height'));
+      if (!(sourceWidth > 0) || !(sourceHeight > 0)) return 'contain';
+
+      // Match `.lightbox__media` horizontal padding:
+      // clamp(16px, 4vw, 48px) on each side.
+      const sidePadding = Math.min(48, Math.max(16, window.innerWidth * 0.04));
+      const availableWidth = Math.max(0, window.innerWidth - sidePadding * 2);
+      const displayWidth = Math.min(logicalWidth, availableWidth);
+      const displayHeight = displayWidth * (sourceHeight / sourceWidth);
+
+      // Contain would reduce this UI below its readable logical width. Keep the
+      // width instead and let the media viewport scroll vertically.
+      return displayHeight > window.innerHeight * 0.85 ? 'width' : 'contain';
+    };
+
+    const applyLightboxFit = (trigger: Element) => {
+      dialog.dataset.fit = resolveLightboxFit(trigger);
+    };
+
     const syncSourceCarousel = () => {
       const trigger = group[activeIndex];
       const carousel = trigger?.closest('.carousel');
@@ -241,6 +272,7 @@
 
     const render = (trigger: Element) => {
       const currentRender = ++renderId;
+      dialog.classList.remove('is-content-ready');
       media.classList.remove('is-pannable', 'is-grabbing');
       media.scrollTo({ left: 0, top: 0, behavior: 'auto' });
       syncLightboxNav();
@@ -249,9 +281,14 @@
       // Логическая (CSS) ширина макета: из data-max-width, иначе 1440.
       logicalWidth = parseInt(trigger.getAttribute('data-max-width') ?? '', 10) || 1440;
       dialog.style.setProperty('--lightbox-lw', `${logicalWidth}px`);
-      dialog.dataset.fit = trigger.getAttribute('data-lightbox-fit') ?? 'contain';
+      applyLightboxFit(trigger);
 
       let nextNode: HTMLElement | SVGElement | null = null;
+      const markContentReady = () => {
+        if (currentRender !== renderId) return;
+        dialog.classList.add('is-content-ready');
+        prepare();
+      };
       const src = trigger.getAttribute('data-zoom-src');
       if (src) {
         // Растровое изображение: hi-res файл, но показываем в логическом размере.
@@ -265,7 +302,8 @@
         img.addEventListener(
           'load',
           () => {
-            if (currentRender === renderId) prepare();
+            if (currentRender !== renderId) return;
+            void img.decode?.().then(markContentReady).catch(markContentReady);
           },
           { once: true },
         );
@@ -291,7 +329,13 @@
 
       media.replaceChildren(nextNode);
       syncLightboxNav();
-      prepare();
+      if (nextNode instanceof HTMLImageElement) {
+        if (nextNode.complete) {
+          void nextNode.decode?.().then(markContentReady).catch(markContentReady);
+        }
+      } else {
+        markContentReady();
+      }
     };
 
     const open = (trigger: Element) => {
@@ -301,12 +345,13 @@
         : [trigger];
       activeIndex = Math.max(0, group.indexOf(trigger));
 
-      // showModal + scroll lock происходят синхронно в обработчике клика.
-      // Загрузка/декодирование изображения больше не задерживают backdrop.
+      // First replace the previous media while the dialog is still closed.
+      // The backdrop then appears immediately; the new image is revealed only
+      // after decode, so neither stale content nor a blank image can flash.
+      render(group[activeIndex]);
       if (!dialog.open) dialog.showModal();
       dialog.classList.add('is-open');
       lockScroll();
-      render(group[activeIndex]);
     };
 
     // Делегированный клик по любому триггеру на странице.
@@ -422,12 +467,19 @@
         goToImage(1);
       }
     });
+    window.addEventListener('resize', () => {
+      const trigger = group[activeIndex];
+      if (!dialog.open || !trigger) return;
+      applyLightboxFit(trigger);
+      prepare();
+    });
 
     // Снятие блокировки скролла — на ЛЮБОЙ сценарий закрытия (Esc, кнопка Close,
     // клик по фону через .close()). Событие close у <dialog> покрывает все.
     dialog.addEventListener('close', () => {
       renderId++;
-      dialog.classList.remove('is-open');
+      dialog.classList.remove('is-open', 'is-content-ready');
+      media.replaceChildren();
       unlockScroll();
       group = [];
       activeIndex = 0;

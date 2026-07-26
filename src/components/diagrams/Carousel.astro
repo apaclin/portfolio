@@ -89,7 +89,10 @@ const slides = await Promise.all(
               data-zoomable
               data-zoom-src={item.zoom}
               data-zoom-alt={item.alt}
+              data-zoom-width={item.src.width}
+              data-zoom-height={item.src.height}
               data-max-width={maxWidth}
+              data-lightbox-fit="auto"
               aria-label={`Enlarge image: ${item.alt}`}
             >
               <Picture

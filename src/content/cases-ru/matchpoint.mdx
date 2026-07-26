@@ -12,9 +12,11 @@ cover: "/src/assets/images/project-covers/matchpoint.png"
 
 import vendor from "../../assets/images/cases/matchpoint/vendor.png";
 import exceptionDetail1 from "../../assets/images/cases/matchpoint/exception-detail-1.png";
+import exceptionDetailPopover from "../../assets/images/cases/matchpoint/exception-detail-popover.png";
 import exceptionDetail2 from "../../assets/images/cases/matchpoint/Exception detail 2.png";
 import exceptionDetail3 from "../../assets/images/cases/matchpoint/Exception detail 3.png";
 import exceptionQueue1 from "../../assets/images/cases/matchpoint/Exception queue 1.png";
+import exceptionQueueGrouped from "../../assets/images/cases/matchpoint/Exception queue grouped.png";
 import exceptionQueue2 from "../../assets/images/cases/matchpoint/Exception queue 2.png";
 import Cover from "../../assets/images/cases/matchpoint/cover.png";
 import ApproveAsIs from "../../assets/images/cases/matchpoint/modals/approve-as-is.png";
@@ -29,6 +31,8 @@ import Breakout from "../../components/common/Breakout.astro";
 import Image from "../../components/common/Image.astro";
 import CaseHero from "../../components/case/CaseHero.astro";
 import Carousel from "../../components/diagrams/Carousel.astro";
+import Walkthrough from "../../components/diagrams/Walkthrough.astro";
+import { zonesRu as walkthroughZones } from "../data/matchpoint/zones";
 import FlowsAsIs from "../../components/case/matchpoint/flow-as-is.astro";
 import Flows from "../../components/case/matchpoint/flows.astro";
 import Problems from "../../components/case/matchpoint/problems.astro";
@@ -37,7 +41,7 @@ import Statuses4 from "../../components/case/matchpoint/statuses-4.astro";
 
 <CaseHero
   src={Cover}
-  alt="Cover"
+  alt="Обложка кейса Matchpoint"
   maxWidth="720px"
   class="w-full h-auto object-contain mx-auto"
 />
@@ -215,16 +219,30 @@ Matchpoint — сервис для команд, которые обрабаты
 
 Очередь отделяет проблемные счета от обычного потока — расхождение должно находиться до того, как специалист начнёт ручную проверку. Экран держу плотным, но не перегруженным: счетов много, здесь нужен быстрый обзор того, что требует внимания сейчас, с поиском и фильтрами для тех, кто приходит с конкретным вопросом.
 
-<Breakout maxWidth="960px">
-  <Image src={exceptionQueue1} alt="exceptionQueue1" class="w-full h-auto object-contain mx-auto" />
-</Breakout>
+<Carousel
+  label="Варианты очереди исключений"
+  items={[
+    {
+      src: exceptionQueue1,
+      alt: "Очередь исключений с фильтрами и строками счетов",
+    },
+    {
+      src: exceptionQueueGrouped,
+      alt: "Очередь исключений, сгруппированная по уровню уверенности для триажа",
+    },
+  ]}
+/>
 
 Однотипные исключения закрываются пакетом. Группировка строгая — совпадать должны сразу пять признаков: поставщик, тип, направление отклонения (выше или ниже PO), диапазон variance и конкретное поле. Выпадающие значения (outliers) автоматически исключаются из пакета и остаются видимыми поштучно. Пакет выше $50k или больше 20 исключений уходит на approval.
 
 Гипотеза: строгая группировка bulk снижает суммарное time-to-resolve по сценарию 2, не повышая риск закрыть аномалию вместе с рутиной.
 
 <Breakout maxWidth="960px">
-  <Image src={exceptionQueue2} alt="exceptionQueue2" class="w-full h-auto object-contain mx-auto" />
+  <Image
+    src={exceptionQueue2}
+    alt="Очередь со сгруппированными похожими исключениями для пакетной обработки; выбросы исключены"
+    class="w-full h-auto object-contain mx-auto"
+  />
 </Breakout>
 
 ### Экран 2. Диагностика
@@ -235,22 +253,33 @@ Matchpoint — сервис для команд, которые обрабаты
 
 Справа — панель контекста поставщика: средний чек, частота прошлых расхождений, условия договора, связанные документы. Контекст поставщика должен быть на самом экране диагностики, иначе решение снова уходит в переписку.
 
-<Breakout maxWidth="960px">
-  <Image src={exceptionDetail1} alt="exceptionDetail1" class="w-full h-auto object-contain mx-auto" lightboxFit="width" />
-</Breakout>
+<Walkthrough
+  theme="light"
+  entryMode="button"
+  aspectRatio="1440 / 1535"
+  lastStepAlign="bottom"
+  src={exceptionDetail1}
+  alternateSrc={exceptionDetailPopover}
+  alternateStep={2}
+  alt="Экран исключения с сопоставлением документов"
+  title="Анатомия исключения"
+  description="Каждый блок на этом экране отвечает на вопрос, который иначе AP-специалист искал бы по вкладкам, письмам и сторонним каналам."
+  zones={walkthroughZones}
+  maxWidth="1440px"
+/>
 
 По умолчанию показываю diff table — только расходящиеся поля. Полная трёхколоночная сверка (инвойс ↔ заказ ↔ приёмка) доступна по запросу, а для проверки исходника есть scan modal с распознанным счётом. Поповер у статуса уверенности объясняет, почему флаг надёжен: показывает триггер, подтверждающие сигналы и правило, по которому он поднят.
 
 <Carousel
-  label="Exception detail screenshots"
+  label="Экраны диагностики исключения"
   items={[
     {
       src: exceptionDetail3,
-      alt: "Exception detail screen with invoice comparison",
+      alt: "Экран исключения со сравнением данных счёта",
     },
     {
       src: exceptionDetail2,
-      alt: "Exception detail screen with vendor context",
+      alt: "Экран исключения с контекстом поставщика",
     },
   ]}
 />
@@ -260,7 +289,12 @@ Matchpoint — сервис для команд, которые обрабаты
 Профиль закрывает сценарий, где одного инвойса недостаточно. По новому поставщику истории ещё нет, и интерфейс честно показывает нехватку baseline (cold-start), а не имитирует уверенность. Здесь AP-специалист видит рабочий контекст: сколько компания обычно платит этому поставщику, как часто возникают расхождения, есть ли открытые исключения и были ли недавние изменения.
 
 <Breakout maxWidth="960px">
-  <Image src={vendor} alt="vendor" class="w-full h-auto object-contain mx-auto" lightboxFit="width" />
+  <Image
+    src={vendor}
+    alt="Профиль поставщика с платёжным контекстом и историей исключений"
+    class="w-full h-auto object-contain mx-auto"
+    lightboxFit="width"
+  />
 </Breakout>
 
 В профиле собраны данные, которые обычно приходится искать в разных местах:
@@ -285,20 +319,19 @@ Matchpoint — сервис для команд, которые обрабаты
 - Одобрить как есть — если расхождение допустимо и его нужно провести.
 
 <Carousel
-  label="Modals 1 screenshots"
+  label="Модальные окна основных действий"
   items={[
     {
       src: UpdatePoToNewPrice,
-      alt: "UpdatePoToNewPrice",      
-
+      alt: "Модальное окно обновления цены в заказе",
     },
     {
       src: RequestCorrectedInvoice,
-      alt: "RequestCorrectedInvoice",
+      alt: "Модальное окно запроса исправленного счёта",
     },
     {
       src: ApproveAsIs,
-      alt: "ApproveAsIs",
+      alt: "Модальное окно одобрения счёта без изменений",
     },
   ]}
 />
@@ -308,24 +341,23 @@ Matchpoint — сервис для команд, которые обрабаты
 - Назначить владельца — если решать должны закупки, склад или менеджер. Владелец не выбирается вслепую: система подсказывает suggested owner по типу проблемы — расхождение по цене → Procurement Manager, расхождение по количеству в приёмке → Receiving Supervisor.
 
 <Carousel
-  label="Modals 2 screenshots"
+  label="Модальные окна дополнительных действий"
   items={[
     {
       src: PartialApproval,
-      alt: "PartialApproval",      
-
+      alt: "Модальное окно частичного одобрения",
     },
     {
       src: RejectInvoice,
-      alt: "RejectInvoice",
+      alt: "Модальное окно отклонения счёта",
     },
     {
       src: AssignOwner,
-      alt: "AssignOwner",
+      alt: "Модальное окно назначения ответственного",
     },
-        {
+    {
       src: AssignOwner2,
-      alt: "AssignOwner2",
+      alt: "Модальное окно с предложенным ответственным",
     },
   ]}
 />
