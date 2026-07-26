@@ -6,15 +6,39 @@ export interface ZoneGeometry {
   h: number;
 }
 
+const CANVAS_WIDTH = 1440;
+const CANVAS_HEIGHT = 900;
+const STROKE_WIDTH = 1;
+
+// Figma экспортирует 1px Inside stroke как центрированный SVG-stroke на
+// полуцелых координатах. Переводим его ось во внешний CSS-box, поскольку
+// браузер рисует border внутрь элемента.
+const strokeRect = (
+  id: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): ZoneGeometry => {
+  const halfStroke = STROKE_WIDTH / 2;
+  return {
+    id,
+    l: ((x - halfStroke) / CANVAS_WIDTH) * 100,
+    t: ((y - halfStroke) / CANVAS_HEIGHT) * 100,
+    w: ((width + STROKE_WIDTH) / CANVAS_WIDTH) * 100,
+    h: ((height + STROKE_WIDTH) / CANVAS_HEIGHT) * 100,
+  };
+};
+
 export const zoneGeometry: ZoneGeometry[] = [
-  { id: 'incidents', l: 0.31, t: 27.83, w: 24.38, h: 71.67 },
-  { id: 'severity', l: 0.3125, t: 19.8333, w: 24.375, h: 7.0 },
-  { id: 'snoozed', l: 15.1736, t: 14.3889, w: 9.0278, h: 3.2222 },
-  { id: 'global-alert', l: 89.27, t: 0.61, w: 7.43, h: 4.11 },
-  { id: 'vehicle-status', l: 38.23, t: 41.61, w: 2.43, h: 3.89 },
-  { id: 'uncertainty', l: 35.45, t: 67.39, w: 9.51, h: 15.22 },
-  { id: 'map-preview', l: 51.77, t: 43.28, w: 16.39, h: 10.67 },
-  { id: 'search', l: 29.83, t: 0.61, w: 21.46, h: 4.11 },
-  { id: 'summary', l: 80.87, t: 5.83, w: 18.82, h: 93.67 },
-  { id: 'shift-context', l: 81.35, t: 61.39, w: 17.85, h: 24.67 },
+  strokeRect('incidents', 4.5, 250.5, 351, 645),
+  strokeRect('severity', 4.5, 178.5, 351, 63),
+  strokeRect('snoozed', 218.5, 129.5, 130, 29),
+  strokeRect('global-alert', 1285.5, 5.5, 107, 37),
+  strokeRect('vehicle-status', 549.5, 373.5, 37, 37),
+  strokeRect('uncertainty', 510.5, 606.5, 137, 137),
+  strokeRect('map-preview', 745.5, 389.5, 236, 96),
+  strokeRect('search', 429.5, 5.5, 309, 37),
+  strokeRect('summary', 1164.5, 52.5, 271, 843),
+  strokeRect('shift-context', 1171.5, 552.5, 257, 222),
 ];

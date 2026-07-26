@@ -11,29 +11,55 @@
 // primary-кнопка — через токены --color-primary-*.
 import { Picture } from 'astro:assets';
 import Icon from '../icons/Icon.astro';
-import type { Zone } from '../../content/data/t-taxi/zones';
 import { cappedImageWidths } from '../../lib/images';
+
+// Структурный тип зоны — подходит и t-taxi (dark), и matchpoint (light) наборам.
+interface WalkthroughZone {
+  l: number;
+  t: number;
+  w: number;
+  h: number;
+  title: string;
+  body: string;
+}
 
 interface Props {
   src: ImageMetadata;
+  // Альтернативный скрин для шага, на котором UI меняет своё состояние
+  // (например, открывается confidence-popover в Matchpoint).
+  alternateSrc?: ImageMetadata;
+  // Номер шага с alternateSrc, начиная с 1.
+  alternateStep?: number;
   alt: string;
   title: string;
   description: string;
   touchDescription?: string;
-  zones: Zone[];
+  zones: WalkthroughZone[];
   locale?: 'en' | 'ru';
   hint?: string;
   touchHint?: string;
   cta?: string;
   replayCta?: string;
   maxWidth?: string;
+  // Светлая тема (matchpoint): рамка primary-bg, тёплый scrim. По умолчанию dark.
+  theme?: 'dark' | 'light';
+  // Пропорции сцены под конкретный скрин. По умолчанию 1440/900 (t-taxi).
+  aspectRatio?: string;
+  // Отдельное выравнивание последнего шага нужно только высоким экранам,
+  // где финальная зона находится далеко внизу (matchpoint Activity).
+  lastStepAlign?: 'default' | 'bottom';
+  // В Matchpoint светлая карточка на светлом UI плохо читается в hover-preview,
+  // поэтому разбор запускается только явной кнопкой. T-Taxi сохраняет регионы.
+  entryMode?: 'regions' | 'button';
 }
 
 const locale = (Astro.props.locale ?? (Astro.currentLocale === 'ru' ? 'ru' : 'en')) as 'en' | 'ru';
 const ui = {
   ru: {
     hint: 'Наведите на области экрана или запустите пошаговый разбор.',
+    buttonHint: 'Запустите пошаговый разбор экрана.',
     touchHint: 'Коснитесь области экрана или запустите пошаговый разбор.',
+    buttonTouchHint: 'Запустите пошаговый разбор экрана.',
     cta: 'Разобрать экран',
     replayCta: 'Посмотреть разбор снова',
     first: 'В начало',
@@ -42,7 +68,9 @@ const ui = {
     done: 'Готово',
     close: 'Закрыть разбор',
     captionIdle: 'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.',
+    captionIdleButton: 'Запустите разбор, чтобы пройти экран шаг за шагом.',
     captionIdleTouch: 'Коснитесь области, чтобы начать пошаговый разбор.',
+    captionIdleButtonTouch: 'Запустите разбор, чтобы пройти экран шаг за шагом.',
     captionKeys: 'двигают рамку между шагами · клик по экрану /',
     captionExit: '— выход',
     captionStarted:
@@ -50,11 +78,16 @@ const ui = {
     captionStartedTouch:
       'Разбор запущен. Используйте кнопки ниже для перехода между шагами.',
     captionCompleted: 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.',
+    captionCompletedButton: 'Разбор пройден. Нажмите кнопку, чтобы посмотреть его снова.',
     captionCompletedTouch: 'Разбор пройден. Коснитесь области, чтобы открыть её снова.',
+    captionCompletedButtonTouch:
+      'Разбор пройден. Нажмите кнопку, чтобы посмотреть его снова.',
   },
   en: {
     hint: 'Hover over screen areas or start the step-by-step walkthrough.',
+    buttonHint: 'Start the step-by-step walkthrough.',
     touchHint: 'Tap a screen area or start the step-by-step walkthrough.',
+    buttonTouchHint: 'Start the step-by-step walkthrough.',
     cta: 'Break down screen',
     replayCta: 'Watch walkthrough again',
     first: 'Back to start',
@@ -63,7 +96,9 @@ const ui = {
     done: 'Done',
     close: 'Close walkthrough',
     captionIdle: 'Hover — outline first, preview follows. Click — step-by-step walkthrough.',
+    captionIdleButton: 'Start the walkthrough to break the screen down step by step.',
     captionIdleTouch: 'Tap an area to start the step-by-step walkthrough.',
+    captionIdleButtonTouch: 'Start the walkthrough to break the screen down step by step.',
     captionKeys: 'move the frame between steps · click the screen /',
     captionExit: '— exit',
     captionStarted:
@@ -71,41 +106,63 @@ const ui = {
     captionStartedTouch:
       'Walkthrough started. Use the controls below to move between steps.',
     captionCompleted: 'Walkthrough complete. Hover over zones to jump back to any step.',
+    captionCompletedButton: 'Walkthrough complete. Use the button to watch it again.',
     captionCompletedTouch: 'Walkthrough complete. Tap an area to open it again.',
+    captionCompletedButtonTouch: 'Walkthrough complete. Use the button to watch it again.',
   },
 }[locale];
 
 const {
   src,
+  alternateSrc,
+  alternateStep,
   alt,
   title,
   description,
   touchDescription = description,
   zones,
-  hint = ui.hint,
-  touchHint = ui.touchHint,
+  entryMode = 'regions',
+  hint = entryMode === 'button' ? ui.buttonHint : ui.hint,
+  touchHint = entryMode === 'button' ? ui.buttonTouchHint : ui.touchHint,
   cta = ui.cta,
   replayCta = ui.replayCta,
   maxWidth = '1440px',
+  theme = 'dark',
+  aspectRatio = '1440 / 900',
+  lastStepAlign = 'default',
 } = Astro.props as Props;
 
-const widths = cappedImageWidths(src.width, [720, 960, 1200, 1440, 1920]);
+const captionIdle = entryMode === 'button' ? ui.captionIdleButton : ui.captionIdle;
+const captionCompleted =
+  entryMode === 'button' ? ui.captionCompletedButton : ui.captionCompleted;
+const captionIdleTouch =
+  entryMode === 'button' ? ui.captionIdleButtonTouch : ui.captionIdleTouch;
+const captionCompletedTouch =
+  entryMode === 'button' ? ui.captionCompletedButtonTouch : ui.captionCompletedTouch;
+
+// Верхняя ступень доходит до нативной ширины: сцена рисуется вплоть до 1440 CSS,
+// а на 2x-экране это 2880 px — иначе Retina получает 1920 и картинка мылит.
+const widths = cappedImageWidths(src.width, [720, 1080, 1440, 1920, 2560, 2880]);
 const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 ---
 
 <section
   class="walkthrough not-prose full-bleed"
   data-walkthrough
+  data-theme={theme}
+  data-entry-mode={entryMode}
+  data-alternate-step={alternateStep}
+  data-last-step-align={lastStepAlign}
   data-cta={cta}
   data-replay-cta={replayCta}
   data-next-label={ui.next}
   data-done-label={ui.done}
-  data-caption-idle={ui.captionIdle}
-  data-caption-idle-touch={ui.captionIdleTouch}
+  data-caption-idle={captionIdle}
+  data-caption-idle-touch={captionIdleTouch}
   data-caption-started={ui.captionStarted}
   data-caption-started-touch={ui.captionStartedTouch}
-  data-caption-completed={ui.captionCompleted}
-  data-caption-completed-touch={ui.captionCompletedTouch}
+  data-caption-completed={captionCompleted}
+  data-caption-completed-touch={captionCompletedTouch}
 >
   <div class="walkthrough__intro">
     <div>
@@ -125,40 +182,108 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
   <div class="walkthrough__wide">
     <div class="walkthrough__stage-wrap" style={`max-width: ${maxWidth};`}>
-      <div class="walkthrough__stage explore" data-stage>
+      <div class="walkthrough__stage explore" data-stage style={`aspect-ratio: ${aspectRatio};`}>
         <div class="walkthrough__layer walkthrough__layer--base">
-          <Picture
-            src={src}
-            alt={alt}
-            formats={['avif']}
-            fallbackFormat="webp"
-            widths={widths}
-            sizes={sizes}
-            loading="lazy"
-            decoding="async"
-          />
+          {
+            theme === 'light' ? (
+              // Светлые UI-скриншоты содержат много мелкого текста и тонких
+              // линий. Оставляем исходный PNG: AVIF/WebP даже при quality=90
+              // заметно смягчают такую графику.
+              <img
+                src={src.src}
+                alt={alt}
+                width={src.width}
+                height={src.height}
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <Picture
+                src={src}
+                alt={alt}
+                formats={['avif']}
+                fallbackFormat="webp"
+                widths={widths}
+                sizes={sizes}
+                quality={90}
+                loading="lazy"
+                decoding="async"
+              />
+            )
+          }
         </div>
+        {
+          alternateSrc && (
+            <div class="walkthrough__layer walkthrough__layer--alternate" aria-hidden="true">
+              <img
+                src={alternateSrc.src}
+                alt=""
+                width={alternateSrc.width}
+                height={alternateSrc.height}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          )
+        }
         <div class="walkthrough__dim"></div>
-        <div class="walkthrough__layer walkthrough__layer--sharp" data-sharp>
-          <Picture
-            src={src}
-            alt=""
-            formats={['avif']}
-            fallbackFormat="webp"
-            widths={widths}
-            sizes={sizes}
-            loading="lazy"
-            decoding="async"
-            aria-hidden="true"
-          />
+        {/* Рамка-окно: резкая копия скрина живёт ВНУТРИ рамки и сдвинута на
+            -left/-top, поэтому картинка приколота к сцене, а рамка ездит поверх.
+            Резкость и рамка — один элемент и не могут разъехаться (был белый
+            артефакт при быстрой навигации из-за отдельной clip-path маски). */}
+        <div class="walkthrough__frame" data-frame>
+          <div class="walkthrough__frame-viewport">
+            <div class="walkthrough__reveal" data-reveal>
+              {
+                theme === 'light' ? (
+                  <img
+                    src={src.src}
+                    alt=""
+                    width={src.width}
+                    height={src.height}
+                    loading="lazy"
+                    decoding="async"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Picture
+                    src={src}
+                    alt=""
+                    formats={['avif']}
+                    fallbackFormat="webp"
+                    widths={widths}
+                    sizes={sizes}
+                    quality={90}
+                    loading="lazy"
+                    decoding="async"
+                    aria-hidden="true"
+                  />
+                )
+              }
+              {
+                alternateSrc && (
+                  <img
+                    class="walkthrough__reveal-alternate"
+                    src={alternateSrc.src}
+                    alt=""
+                    width={alternateSrc.width}
+                    height={alternateSrc.height}
+                    loading="lazy"
+                    decoding="async"
+                    aria-hidden="true"
+                  />
+                )
+              }
+            </div>
+          </div>
         </div>
-        <div class="walkthrough__frame" data-frame></div>
         <div class="walkthrough__regions">
           {
             zones.map((z, i) => (
               <button
                 class="walkthrough__region"
                 type="button"
+                tabindex="-1"
                 data-region
                 data-index={i}
                 data-l={z.l}
@@ -212,7 +337,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   </div>
 
   <p class="walkthrough__caption">
-    <span data-cap-left>{ui.captionIdle}</span>
+    <span data-cap-left>{captionIdle}</span>
     <span class="walkthrough__caption-keys">
       <kbd>←</kbd> <kbd>→</kbd> {ui.captionKeys} <kbd>Esc</kbd> {ui.captionExit}
     </span>
@@ -225,8 +350,9 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     root.dataset.ready = 'true';
 
     const stage = root.querySelector<HTMLElement>('[data-stage]');
-    const sharp = root.querySelector<HTMLElement>('[data-sharp]');
     const frame = root.querySelector<HTMLElement>('[data-frame]');
+    const reveal = root.querySelector<HTMLElement>('[data-reveal]');
+    const alternateReveal = root.querySelector<HTMLElement>('.walkthrough__reveal-alternate');
     const card = root.querySelector<HTMLElement>('[data-card]');
     const cardStep = root.querySelector<HTMLElement>('[data-card-step]');
     const cardTitle = root.querySelector<HTMLElement>('[data-card-title]');
@@ -239,11 +365,12 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     const closeBtn = root.querySelector<HTMLButtonElement>('[data-close]');
     const startBtn = root.querySelector<HTMLButtonElement>('[data-start]');
     const capLeft = root.querySelector<HTMLElement>('[data-cap-left]');
+    const wide = root.querySelector<HTMLElement>('.walkthrough__wide');
     const regionEls = [...root.querySelectorAll<HTMLButtonElement>('[data-region]')];
 
     if (
       !stage ||
-      !sharp ||
+      !reveal ||
       !frame ||
       !card ||
       !cardStep ||
@@ -262,11 +389,14 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       return;
     }
 
-    interface Zone {
+    interface Rect {
       l: number;
       t: number;
       w: number;
       h: number;
+    }
+
+    interface Zone extends Rect {
       title: string;
       body: string;
     }
@@ -281,6 +411,16 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     }));
 
     const N = zones.length;
+    const lastStepAlign = root.dataset.lastStepAlign || 'default';
+    const regionsEnabled = root.dataset.entryMode !== 'button';
+    const alternateStepIndex =
+      alternateReveal && root.dataset.alternateStep
+        ? Number(root.dataset.alternateStep) - 1
+        : -1;
+    const hasAlternateStep =
+      Number.isInteger(alternateStepIndex) &&
+      alternateStepIndex >= 0 &&
+      alternateStepIndex < N;
     const CARD_EXIT = 250;
     const cta = root.dataset.cta || 'Разобрать экран';
     const replayCta = root.dataset.replayCta || 'Посмотреть разбор снова';
@@ -305,16 +445,45 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     let cardBusy = false;
 
     const reflow = (el: HTMLElement) => void el.offsetWidth;
-
-    const setFramePos = (z: Zone) => {
-      frame.style.left = z.l + '%';
-      frame.style.top = z.t + '%';
-      frame.style.width = z.w + '%';
-      frame.style.height = z.h + '%';
+    const setAlternateVisible = (visible: boolean) => {
+      stage.classList.toggle('alternate-visible', visible);
     };
 
-    const clipFor = (z: Zone) =>
-      `inset(${z.t}% ${(100 - z.l - z.w).toFixed(2)}% ${(100 - z.t - z.h).toFixed(2)}% ${z.l}% round 8px)`;
+    // Рамка-окно + приколотая резкая копия. Рамку ставим в % сцены, а копию
+    // внутри рамки — в px, размером со сцену и со сдвигом на -left/-top, чтобы её
+    // (0,0) совпадал с (0,0) сцены. Обе величины анимируются одним и тем же
+    // left/top-переходом и математически связаны, поэтому не разъезжаются даже
+    // при быстром прерывании навигации.
+    const setFramePos = (r: Rect) => {
+      frame.style.left = r.l + '%';
+      frame.style.top = r.t + '%';
+      frame.style.width = r.w + '%';
+      frame.style.height = r.h + '%';
+      const W = stage.clientWidth;
+      const H = stage.clientHeight;
+      reveal.style.width = W + 'px';
+      reveal.style.height = H + 'px';
+      // Не округляем: SVG-рамки намеренно стоят на полуцелых координатах.
+      // Округление сдвигало sharp-копию относительно border на 0.5px, и
+      // визуальный отступ 4px на части сторон превращался в 3px.
+      reveal.style.left = -((r.l / 100) * W) + 'px';
+      reveal.style.top = -((r.t / 100) * H) + 'px';
+    };
+
+    // Панель всегда sticky в guided-режиме. Раньше короткий T-Taxi оставался
+    // absolute, а высокий Matchpoint становился fixed — поэтому одинаковые
+    // контролы оказывались на разной высоте.
+    const updateControlsMode = () => {
+      root.classList.toggle('controls-fixed', guided);
+    };
+
+    // Снимаем фокус с элемента разбора (зона/кнопка), чтобы после клика+клавиш
+    // и особенно после Esc не оставалось :focus-visible обводки. Клавиатурная
+    // навигация идёт через глобальный keydown и панель, а не через зоны.
+    const clearFocus = () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && root.contains(active)) active.blur();
+    };
 
     const fillCard = (i: number) => {
       const z = zones[i];
@@ -325,22 +494,31 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
     const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-    const placeCard = (z: Zone, fg: boolean) => {
+    const placeCard = (r: Rect, fg: boolean, below = false) => {
       const W = stage.clientWidth;
       const H = stage.clientHeight;
-      const fl = (z.l / 100) * W;
-      const ft = (z.t / 100) * H;
-      const fw = (z.w / 100) * W;
+      const fl = (r.l / 100) * W;
+      const ft = (r.t / 100) * H;
+      const fw = (r.w / 100) * W;
+      const fh = (r.h / 100) * H;
       const cw = card.offsetWidth || 336;
       const ch = card.offsetHeight || 120;
       const gap = 14;
-      const cx = fl + fw / 2;
-      // Сторона по свободному месту, карточка вплотную к зоне (v11).
-      let left = cx < W / 2 ? fl + fw + gap : fl - gap - cw;
-      left = clamp(left, 10, Math.max(10, W - cw - 10));
-      // Выравнивание по верху зоны (v11), а не центрирование.
-      let top = ft;
       const maxTop = H - ch - (fg ? 96 : 12);
+      let left: number;
+      let top: number;
+      if (below) {
+        // Под зоной, по центру — так карточка не перекрывает раскрытый поповер.
+        left = fl + fw / 2 - cw / 2;
+        top = ft + fh + gap;
+      } else {
+        // Сторона по свободному месту, карточка вплотную к зоне (v11).
+        const cx = fl + fw / 2;
+        left = cx < W / 2 ? fl + fw + gap : fl - gap - cw;
+        // Выравнивание по верху зоны (v11), а не центрирование.
+        top = ft;
+      }
+      left = clamp(left, 10, Math.max(10, W - cw - 10));
       top = clamp(top, 10, Math.max(10, maxTop));
       card.style.left = Math.round(left) + 'px';
       card.style.top = Math.round(top) + 'px';
@@ -385,23 +563,108 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
     // Пока идёт наш программный скролл (вход / навигация), автовыход по уходу
     // сцены из вида подавляется — иначе промежуточные кадры плавного скролла
-    // закрыли бы разбор ещё до того, как сцена доедет до центра.
+    // закрыли бы разбор ещё до того, как сцена доедет до целевой позиции.
     let suppressExitUntil = 0;
 
-    // Если сцена не помещается в вьюпорт целиком — плавно скроллим так, чтобы
-    // её центр совпал с центром вьюпорта (вход через кнопку «Разобрать экран»).
-    const scrollStageIntoView = () => {
+    // ── Фокус-скролл ──
+    // Шаги 1–7 показываем с верхом Exception Detail у верхнего края viewport.
+    // Если при таком положении карточка не помещается, карточка приоритетнее и
+    // scrollY дополнительно корректируется. Последний шаг сохраняет отдельное
+    // нижнее выравнивание для Activity.
+    const STAGE_TOP_GAP = 64;
+    const TOOLTIP_GAP = 16;
+    const TOOLTIP_BOTTOM_GAP = 88; // место над фиксированной панелью
+    const ZONE_BOTTOM_GAP = 104; // с запасом под липкую панель управления
+
+    const frameEdgesPage = (i: number) => {
+      const z = zones[i];
       const rect = stage.getBoundingClientRect();
-      const vh = window.innerHeight;
-      if (rect.top >= 0 && rect.bottom <= vh) return;
-      const targetY = window.scrollY + rect.top + rect.height / 2 - vh / 2;
-      suppressExitUntil = performance.now() + 800;
-      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+      const stageTopPage = window.scrollY + rect.top;
+      const stageH = rect.height;
+      return {
+        top: stageTopPage + (z.t / 100) * stageH,
+        bottom: stageTopPage + ((z.t + z.h) / 100) * stageH,
+      };
+    };
+
+    const smoothScrollTo = (rawTargetY: number) => {
+      const targetY = Math.max(0, Math.round(rawTargetY));
+      if (Math.abs(targetY - window.scrollY) < 4) return;
+      suppressExitUntil = performance.now() + 900;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    };
+
+    const ensureCardHorizontallyVisible = () => {
+      if (!wide) return;
+      const wideRect = wide.getBoundingClientRect();
+      const stageRect = stage.getBoundingClientRect();
+      const cardLeft = stageRect.left + (parseFloat(card.style.left) || 0);
+      const cardRight = cardLeft + card.offsetWidth;
+      const visibleLeft = Math.max(0, wideRect.left) + TOOLTIP_GAP;
+      const visibleRight = Math.min(window.innerWidth, wideRect.right) - TOOLTIP_GAP;
+      let nextScrollLeft = wide.scrollLeft;
+
+      if (cardLeft < visibleLeft) nextScrollLeft -= visibleLeft - cardLeft;
+      else if (cardRight > visibleRight) nextScrollLeft += cardRight - visibleRight;
+
+      nextScrollLeft = clamp(
+        nextScrollLeft,
+        0,
+        Math.max(0, wide.scrollWidth - wide.clientWidth),
+      );
+      if (Math.abs(nextScrollLeft - wide.scrollLeft) < 2) return;
+      suppressExitUntil = performance.now() + 900;
+      wide.scrollTo({ left: Math.round(nextScrollLeft), behavior: 'smooth' });
+    };
+
+    const topAlignStageAndCard = () => {
+      const stageRect = stage.getBoundingClientRect();
+      const stageTopPage = window.scrollY + stageRect.top;
+      const cardTopPage = stageTopPage + (parseFloat(card.style.top) || 0);
+      const cardBottomPage = cardTopPage + card.offsetHeight;
+      let targetY = stageTopPage - STAGE_TOP_GAP;
+
+      // Положение сцены — базовое, но тултип никогда не оставляем за краем.
+      if (cardTopPage - targetY < TOOLTIP_GAP) {
+        targetY = cardTopPage - TOOLTIP_GAP;
+      }
+      if (cardBottomPage - targetY > window.innerHeight - TOOLTIP_BOTTOM_GAP) {
+        targetY = cardBottomPage - window.innerHeight + TOOLTIP_BOTTOM_GAP;
+      }
+
+      smoothScrollTo(targetY);
+    };
+
+    // Последний шаг: низ фрейма чуть выше низа экрана.
+    const bottomAlignFrame = (i: number) => {
+      const { bottom } = frameEdgesPage(i);
+      const stageRect = stage.getBoundingClientRect();
+      const stageTopPage = window.scrollY + stageRect.top;
+      const cardTopPage = stageTopPage + (parseFloat(card.style.top) || 0);
+      const cardBottomPage = cardTopPage + card.offsetHeight;
+      let targetY = bottom - window.innerHeight + ZONE_BOTTOM_GAP;
+
+      if (cardTopPage - targetY < TOOLTIP_GAP) {
+        targetY = cardTopPage - TOOLTIP_GAP;
+      }
+      if (cardBottomPage - targetY > window.innerHeight - TOOLTIP_BOTTOM_GAP) {
+        targetY = cardBottomPage - window.innerHeight + TOOLTIP_BOTTOM_GAP;
+      }
+
+      smoothScrollTo(targetY);
+    };
+
+    const focusStepInViewport = (i: number) => {
+      if (i === N - 1 && lastStepAlign === 'bottom') bottomAlignFrame(i);
+      else topAlignStageAndCard();
+      ensureCardHorizontallyVisible();
     };
 
     // ── Вход в guided ──
     const enterGuided = (i: number, fromPeek: boolean) => {
+      setAlternateVisible(false);
       guided = true;
+      clearFocus();
       stage.classList.remove('explore');
       stage.classList.add('guided');
       root.classList.add('is-guided');
@@ -413,11 +676,11 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       cardShownIdx = -1;
       cardBusy = false;
 
+      updateControlsMode();
       frame.classList.remove('moving');
-      sharp.classList.remove('moving');
+      reveal.classList.remove('moving');
       reflow(frame);
       setFramePos(zones[i]);
-      sharp.style.clipPath = clipFor(zones[i]);
       fillCard(i);
       card.classList.remove('moving');
 
@@ -432,7 +695,6 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
         prevBtn.disabled = i === 0;
         firstBtn.disabled = i === 0;
         frame.classList.add('on');
-        sharp.style.opacity = '1';
         card.classList.add('show', 'stepped');
         // .step вырастет на max-height 22px + margin-bottom 12px = 34px.
         const stepDelta = 34;
@@ -456,31 +718,37 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
         firstBtn.disabled = i === 0;
         reflow(card);
         frame.classList.add('on');
-        sharp.style.opacity = '1';
         card.classList.add('show');
       }
 
       idx = i;
-      scrollStageIntoView();
+      if (hasAlternateStep && i === alternateStepIndex) setAlternateVisible(true);
+      focusStepInViewport(i);
       capLeft.textContent = captionStarted;
     };
 
-    // ── Навигация Назад/Далее: единственный «перелёт» рамки/резкости/карточки ──
-    const step = (i: number) => {
-      [frame, card, sharp].forEach((el) => el.classList.add('moving'));
+    // Визуальная часть шага отделена от запроса навигации, чтобы рамка и
+    // alternate-скрин могли стартовать одновременно, но жить в своём темпе:
+    // рамка перелетает за 420ms, обычный UI-crossfade заканчивается раньше.
+    const applyStepVisual = (i: number) => {
+      [frame, card, reveal].forEach((el) => el.classList.add('moving'));
       reflow(frame);
       setFramePos(zones[i]);
-      sharp.style.clipPath = clipFor(zones[i]);
       fillCard(i);
       placeCard(zones[i], true);
       setNextLabel(i);
       prevBtn.disabled = i === 0;
       firstBtn.disabled = i === 0;
       frame.classList.add('on');
-      sharp.style.opacity = '1';
       card.classList.add('show', 'stepped');
+      focusStepInViewport(i);
+    };
+
+    const step = (i: number) => {
+      if (i < 0 || i >= N) return;
       idx = i;
-      scrollStageIntoView(); // если ушли скроллом — вернуть сцену в вид
+      applyStepVisual(i);
+      setAlternateVisible(hasAlternateStep && i === alternateStepIndex);
     };
 
     const next = () => {
@@ -495,13 +763,16 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     };
 
     const closeGuided = () => {
+      setAlternateVisible(false);
       guided = false;
+      // Esc/закрытие: снимаем фокус, иначе на зоне остаётся :focus-visible обводка.
+      clearFocus();
       stage.classList.remove('guided');
       stage.classList.add('explore');
       root.classList.remove('is-guided');
+      updateControlsMode();
       frame.classList.remove('on', 'moving');
-      sharp.classList.remove('moving');
-      sharp.style.opacity = '0';
+      reveal.classList.remove('moving');
       // Выход: только fade-out + отъезд карточки вниз, как при уходе курсора из
       // зоны. Счётчик шага НЕ сворачивается своей анимацией — .step-static
       // замораживает переход .step, 'stepped' остаётся, гаснет вместе с карточкой.
@@ -515,31 +786,38 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       capLeft.textContent = completed ? captionCompleted : captionIdle;
     };
 
-    regionEls.forEach((el, i) => {
-      el.addEventListener('mouseenter', () => {
-        if (guided) return;
-        hoverIdx = i;
-        syncCard();
-      });
-      el.addEventListener('mouseleave', () => {
-        if (guided) return;
-        if (hoverIdx === i) {
-          hoverIdx = -1;
+    if (regionsEnabled) {
+      regionEls.forEach((el, i) => {
+        el.addEventListener('mouseenter', () => {
+          if (guided) return;
+          hoverIdx = i;
           syncCard();
-        }
+        });
+        el.addEventListener('mouseleave', () => {
+          if (guided) return;
+          if (hoverIdx === i) {
+            hoverIdx = -1;
+            syncCard();
+          }
+        });
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (guided) {
+            // Клик по активной зоне — остаёмся в разборе. Клик по любой другой
+            // зоне визуально приходится на затемнение (остальные зоны скрыты),
+            // поэтому ощущается как клик по фону → выходим из разбора.
+            if (i !== idx) closeGuided();
+            return;
+          }
+          enterGuided(i, true);
+        });
       });
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (guided) {
-          // Клик по активной зоне — остаёмся в разборе. Клик по любой другой
-          // зоне визуально приходится на затемнение (остальные зоны скрыты),
-          // поэтому ощущается как клик по фону → выходим из разбора.
-          if (i !== idx) closeGuided();
-          return;
-        }
-        enterGuided(i, true);
-      });
-    });
+    }
+
+    // Прайм окна: сразу задаём резкой копии размер (рамка скрыта, opacity 0),
+    // чтобы её ленивое изображение загрузилось вместе со сценой, а не в момент
+    // первого шага — иначе на первом клике окно мигнёт пустым.
+    setFramePos(zones[0]);
 
     document.addEventListener('t-walkthrough-open', (e) => {
       if ((e as CustomEvent).detail !== root && guided) closeGuided();
@@ -598,8 +876,12 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     window.addEventListener('resize', () => {
       clearTimeout(rt);
       rt = window.setTimeout(() => {
-        if (guided && idx >= 0) placeCard(zones[idx], true);
-        else if (cardShownIdx >= 0) placeCard(zones[cardShownIdx], false);
+        updateControlsMode();
+        // Сцена сменила размер — пересчитать окно резкости и позицию карточки.
+        if (guided && idx >= 0) {
+          setFramePos(zones[idx]);
+          placeCard(zones[idx], true);
+        } else if (cardShownIdx >= 0) placeCard(zones[cardShownIdx], false);
       }, 80);
     }, { signal });
 
@@ -608,7 +890,6 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     // горизонтальном скролле) → выходим из разбора. Порог — ~30% видимой части
     // сцены по каждой оси; min(размер сцены, размер вьюпорта) корректно
     // обрабатывает сцену выше/шире вьюпорта.
-    const wide = root.querySelector<HTMLElement>('.walkthrough__wide');
     const isStageMostlyVisible = () => {
       const r = stage.getBoundingClientRect();
       const vw = window.innerWidth;
@@ -678,9 +959,10 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
        а не холодный нейтрал #F0F0F0/#202020 из прототипа. */
     --walkthrough-card-bg: var(--color-bg-subtle);
     --walkthrough-card-fg: var(--color-text);
-    --walkthrough-card-border: var(--color-text);
     /* Тёплый tint для hover/разделителей (rgb от --color-text #37352f). */
     --walkthrough-ink-rgb: 55 53 47;
+    /* Одинаковая спокойная обводка tooltip в Matchpoint и T-Taxi. */
+    --walkthrough-card-border: rgb(var(--walkthrough-ink-rgb) / 30%);
     margin-block: 2rem 3rem;
   }
 
@@ -762,12 +1044,23 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     aspect-ratio: 1440 / 900;
     border-radius: 0.75rem;
     overflow: hidden;
-    border: 1px solid var(--color-border);
+    border: 0;
     background: #18191b;
     box-shadow:
       0 1px 2px rgb(0 0 0 / 5%),
       0 18px 50px -20px rgb(0 0 0 / 25%);
     user-select: none;
+  }
+  /* Визуальная граница поверх слоёв, но вне box model: контент остаётся ровно
+     1440px при ширине сцены 1440px, а не сжимается до 1438px. */
+  .walkthrough__stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    border: 1px solid var(--color-border);
+    border-radius: inherit;
+    pointer-events: none;
   }
 
   .walkthrough__layer {
@@ -785,17 +1078,6 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   .walkthrough__layer :global(img) {
     object-fit: cover;
   }
-  .walkthrough__layer--sharp {
-    z-index: 3;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-  .walkthrough__layer--sharp.moving {
-    transition:
-      opacity 0.2s ease,
-      clip-path 0.42s var(--ease);
-  }
-
   .walkthrough__dim {
     position: absolute;
     inset: 0;
@@ -811,25 +1093,34 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     opacity: 1;
   }
 
-  /* ── Рамка активной зоны ── */
+  /* ── Рамка-окно активной зоны ── */
+  /* Рамка = окно с overflow:hidden, внутри — резкая копия скрина (reveal). Копия
+     сдвинута на -left/-top, поэтому приколота к сцене: рамка ездит, картинка под
+     ней стоит. Бордер — псевдоэлемент ::after поверх копии (не смещает её на
+     толщину бордера). Один элемент → маска и рамка не разъезжаются. */
   .walkthrough__frame {
     position: absolute;
     z-index: 4;
-    border: 1px solid rgb(255 255 255 / 0%);
+    overflow: hidden;
     border-radius: 8px;
     box-shadow: 0 12px 34px -6px rgb(0 0 0 / 45%);
     opacity: 0;
     pointer-events: none;
-    transition:
-      opacity 0.24s ease,
-      border-width 0.24s ease,
-      border-color 0.24s ease;
+    transition: opacity 0.24s ease;
+  }
+  .walkthrough__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: border-color 0.24s ease;
   }
   .walkthrough__frame.moving {
     transition:
       opacity 0.24s ease,
-      border-width 0.24s ease,
-      border-color 0.24s ease,
       left 0.42s var(--ease),
       top 0.42s var(--ease),
       width 0.42s var(--ease),
@@ -837,8 +1128,66 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   }
   .walkthrough__frame.on {
     opacity: 1;
-    border-width: 2.5px;
+  }
+  .walkthrough__frame.on::after {
     border-color: rgb(255 255 255 / 96%);
+  }
+
+  /* Sharp-копия не должна лежать под сглаживаемым внешним радиусом: на белом
+     UI это даёт светлую кайму снаружи обводки. Отдельный внутренний viewport
+     отступает ровно на ширину бордера и клипует изображение своим радиусом. */
+  .walkthrough__frame-viewport {
+    position: absolute;
+    inset: 1px;
+    overflow: hidden;
+    border-radius: 7px;
+  }
+
+  /* Резкая копия внутри окна: размер и сдвиг задаёт JS (px, со сценой). */
+  .walkthrough__reveal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Компенсируем inset viewport: пиксели sharp-копии остаются совмещены с
+       теми же координатами базового скриншота. */
+    transform: translate(-1px, -1px);
+  }
+  .walkthrough__reveal.moving {
+    transition:
+      left 0.42s var(--ease),
+      top 0.42s var(--ease);
+  }
+  .walkthrough__reveal :global(picture),
+  .walkthrough__reveal :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .walkthrough__reveal :global(img) {
+    object-fit: cover;
+  }
+  /* Прозрачный popover-overlay накладывается поверх базового экрана целиком,
+     а его дубль внутри sharp-окна остаётся резким поверх dim-слоя. Оба слоя
+     совмещены с левым верхним углом сцены и кроссфейдятся одновременно. */
+  .walkthrough__layer--alternate :global(img),
+  .walkthrough__reveal :global(img.walkthrough__reveal-alternate) {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: left top;
+    opacity: 0;
+    /* Типичный короткий UI-fade; движение рамки намеренно дольше (420ms). */
+    transition: opacity 0.18s ease;
+  }
+  .walkthrough__stage.alternate-visible
+    .walkthrough__layer--alternate
+    :global(img),
+  .walkthrough__stage.alternate-visible
+    .walkthrough__reveal
+    :global(img.walkthrough__reveal-alternate) {
+    opacity: 1;
   }
 
   /* ── Зоны ── */
@@ -857,6 +1206,8 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0%);
     transition: box-shadow 0.22s ease;
   }
+  /* В T-Taxi при наведении на экран показываем всю карту зон приглушённо.
+     Matchpoint ниже отключает её через button-only override. */
   .walkthrough__stage.explore:hover .walkthrough__region {
     box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 20%);
   }
@@ -865,6 +1216,61 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   }
   .walkthrough__stage.guided .walkthrough__region {
     cursor: default;
+  }
+  /* Button-only: зоны остаются источником геометрии, но не являются ни hover-,
+     ни click-target и не показывают вспомогательную сетку. */
+  .walkthrough[data-entry-mode='button'] .walkthrough__regions {
+    pointer-events: none;
+  }
+  .walkthrough[data-entry-mode='button']
+    .walkthrough__stage.explore:hover
+    .walkthrough__region,
+  .walkthrough[data-entry-mode='button']
+    .walkthrough__stage.explore
+    .walkthrough__region:hover {
+    box-shadow: none;
+  }
+
+  /* ── Светлая тема (matchpoint) ──────────────────────────────────────────
+     UI на скрине светлый, поэтому белая рамка/обводка невидимы, а холодный
+     scrim мутнеет. Рамка → primary-bg (тёмные чернила #37352f, тот же цвет,
+     что на zones.svg), scrim → тёплый ink-tint с тем же блюром, но щадящим
+     затемнением (белое при 0.62 читается жёстко). Карточка/панель уже на
+     токенах сайта — их не трогаем. */
+  .walkthrough[data-theme='light'] .walkthrough__stage {
+    background: #ffffff;
+    /* Тень t-taxi (0 18px 50px -20px / 25%) рассчитана на невысокую тёмную сцену;
+       на высоком светлом скрине её нижний край делает угол со «Settings» похожим
+       на оторванную карточку. Здесь — мягкая ровная тень без тяжёлого низа. */
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 4%),
+      0 8px 28px -18px rgb(0 0 0 / 12%);
+  }
+  .walkthrough[data-theme='light'] .walkthrough__dim {
+    background: rgb(var(--walkthrough-ink-rgb) / 12%);
+    backdrop-filter: blur(4px) saturate(0.6) brightness(0.7);
+    -webkit-backdrop-filter: blur(4px) saturate(0.6) brightness(0.7);
+  }
+  .walkthrough[data-theme='light'] .walkthrough__frame {
+    /* SVG rx=8 задаёт радиус оси stroke; внешний радиус 1px stroke — 8.5px. */
+    border-radius: 8.5px;
+    box-shadow: 0 10px 30px -8px rgb(0 0 0 / 14%);
+  }
+  /* В Matchpoint активная зона использует ту же спокойную обводку, что tooltip:
+     один цветовой токен и толщина 1px. */
+  .walkthrough[data-theme='light'] .walkthrough__frame.on::after {
+    border-width: 1px;
+    border-color: var(--walkthrough-card-border);
+  }
+  .walkthrough[data-theme='light'] .walkthrough__frame-viewport {
+    inset: 1px;
+    border-radius: 7.5px;
+  }
+  .walkthrough[data-theme='light'] .walkthrough__reveal {
+    transform: translate(-1px, -1px);
+  }
+  .walkthrough[data-theme='light'] .walkthrough__stage.explore .walkthrough__region:hover {
+    box-shadow: inset 0 0 0 1px var(--walkthrough-card-border);
   }
 
   /* ── Карточка ── */
@@ -965,6 +1371,13 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     opacity: 1;
     transform: translateX(-50%);
     pointer-events: auto;
+  }
+  /* Единое положение панели для всех walkthrough: всегда 16px от viewport,
+     независимо от высоты сцены. */
+  .walkthrough.controls-fixed .walkthrough__controls {
+    position: fixed;
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 50;
   }
   .walkthrough__nav {
     display: inline-flex;

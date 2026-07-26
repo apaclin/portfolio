@@ -1,0 +1,41 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="1440"
+  height="900"
+  viewBox="0 0 1440 900"
+>
+  <title>T-Taxi walkthrough zones</title>
+  <desc>
+    Editable zones for the 1440×900 T-Taxi main-page walkthrough. Keep each
+    rectangle id when changing its geometry.
+  </desc>
+
+  <image
+    id="screen"
+    width="1440"
+    height="900"
+    href="../../../../assets/images/cases/t-taxi/main-page.png"
+    xlink:href="../../../../assets/images/cases/t-taxi/main-page.png"
+  />
+
+  <g
+    id="zones"
+    fill="#ffffff"
+    fill-opacity="0.08"
+    stroke="#ffffff"
+    stroke-opacity="0.9"
+    stroke-width="1"
+  >
+    <rect id="incidents" x="4.5" y="250.5" width="351" height="645" rx="7.5" />
+    <rect id="severity" x="4.5" y="178.5" width="351" height="63" rx="7.5" />
+    <rect id="snoozed" x="218.5" y="129.5" width="130" height="29" rx="7.5" />
+    <rect id="global-alert" x="1285.5" y="5.5" width="107" height="37" rx="7.5" />
+    <rect id="vehicle-status" x="549.5" y="373.5" width="37" height="37" rx="7.5" />
+    <rect id="uncertainty" x="510.5" y="606.5" width="137" height="137" rx="7.5" />
+    <rect id="map-preview" x="745.5" y="389.5" width="236" height="96" rx="7.5" />
+    <rect id="search" x="429.5" y="5.5" width="309" height="37" rx="7.5" />
+    <rect id="summary" x="1164.5" y="52.5" width="271" height="843" rx="7.5" />
+    <rect id="shift-context" x="1171.5" y="552.5" width="257" height="222" rx="7.5" />
+  </g>
+</svg>

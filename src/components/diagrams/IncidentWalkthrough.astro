@@ -100,7 +100,7 @@ const widths = [672, 1008, 1344];
                   type="button"
                   data-zone
                   data-i={i}
-                  style={`top:${z.top}%;height:${z.height}%`}
+                  style={`left:${z.left}%;top:${z.top}%;width:${z.width}%;height:${z.height}%`}
                   aria-label={z.title}
                 />
               )
@@ -148,16 +148,14 @@ const widths = [672, 1008, 1344];
     id: string;
     title: string;
     body: string;
+    left: number;
     top: number;
+    width: number;
     height: number;
     whole?: boolean;
   }
   const clamp = (v: number, a: number, b: number) => Math.min(Math.max(v, a), b);
   const CARD_EXIT = 240;
-  // Карточка занимает правые 1000px из 1344 → зоны прижаты к правому краю.
-  const LEFT = 27.16;
-  const WIDTH = 71.28;
-
   const init = (root: HTMLElement, signal: AbortSignal) => {
     if (root.dataset.ready === 'true') return;
     root.dataset.ready = 'true';
@@ -216,15 +214,15 @@ const widths = [672, 1008, 1344];
       const z = zones[i];
       if (z.whole) return 'inset(0 round 10px)';
       const bottom = (100 - z.top - z.height).toFixed(2);
-      return `inset(${z.top}% ${(100 - LEFT - WIDTH).toFixed(2)}% ${bottom}% ${LEFT}% round 8px)`;
+      return `inset(${z.top}% ${(100 - z.left - z.width).toFixed(4)}% ${bottom}% ${z.left}% round 8px)`;
     };
 
     const reflow = (el: HTMLElement) => void el.offsetWidth;
     const setFramePos = (i: number) => {
       const z = zones[i];
-      frame.style.left = (z.whole ? 0 : LEFT) + '%';
+      frame.style.left = (z.whole ? 0 : z.left) + '%';
       frame.style.top = (z.whole ? 0 : z.top) + '%';
-      frame.style.width = (z.whole ? 100 : WIDTH) + '%';
+      frame.style.width = (z.whole ? 100 : z.width) + '%';
       frame.style.height = (z.whole ? 100 : z.height) + '%';
     };
 
@@ -672,6 +670,7 @@ const widths = [672, 1008, 1344];
   .incw__frame {
     position: absolute;
     z-index: 5;
+    box-sizing: border-box;
     border: 1px solid rgb(255 255 255 / 0%);
     border-radius: 8px;
     box-shadow: 0 12px 34px -6px rgb(0 0 0 / 45%);
@@ -679,13 +678,11 @@ const widths = [672, 1008, 1344];
     pointer-events: none;
     transition:
       opacity 0.24s ease,
-      border-width 0.24s ease,
       border-color 0.24s ease;
   }
   .incw__frame.moving {
     transition:
       opacity 0.24s ease,
-      border-width 0.24s ease,
       border-color 0.24s ease,
       left 0.42s var(--ease),
       top 0.42s var(--ease),
@@ -694,7 +691,6 @@ const widths = [672, 1008, 1344];
   }
   .incw__frame.on {
     opacity: 1;
-    border-width: 2.5px;
     border-color: rgb(255 255 255 / 96%);
   }
 
@@ -706,13 +702,11 @@ const widths = [672, 1008, 1344];
   }
   .incw__zone {
     position: absolute;
-    left: 27.16%;
-    width: 71.28%;
     padding: 0;
     border: 0;
     background: transparent;
     border-radius: 8px;
-    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0%);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0%);
     transition: box-shadow 0.22s ease;
   }
   .incw__stage.explore .incw__zone {
@@ -721,10 +715,10 @@ const widths = [672, 1008, 1344];
   /* Навели на карточку — все зоны проступают полупрозрачно; зона под курсором —
      ярче (чистый CSS, как на экране 1). */
   .incw__stage.explore:hover .incw__zone {
-    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 16%);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 16%);
   }
   .incw__stage.explore .incw__zone:hover {
-    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 65%);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 65%);
   }
   .incw__stage.guided .incw__zone {
     pointer-events: none;

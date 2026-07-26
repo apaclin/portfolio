@@ -43,45 +43,35 @@ import Statuses from '../../components/case/laneo/Statuses.astro';
 
 ## 1. Context
 
-Laneo is a concept B2B CRM for a large seller of electronics and appliances that works not only with retail but with corporate clients: offices, developers, service companies.
+Laneo is a concept B2B CRM for enterprise electronics supply, servicing offices, developers, and corporate clients.
 
-A corporate order is almost never simple. It has dozens of line items: some in stock, some in transit from a supplier, some reserved for future dates. One order splits into several shipments, goes to different addresses and is paid in stages — the client pays for what they've already received, while an invoice may be issued for the whole order at once.
+Corporate orders are rarely linear. Dozens of line items split into partial shipments, originate from different warehouses or backorders, and follow staged payments. Typical CRMs collapse this multi-axis lifecycle into a single status like "In progress", leaving managers blind to whether goods are reserved, shipped, or paid. When clients ask "where's my order?", managers must manually cross-reference data across separate tools.
 
-Typical CRMs collapse all of this complexity into a single status. “In progress” can mean anything: part shipped, part in transit, part on backorder, and payment received for half. An order lives in three planes at once — the client and the agreements, the movement of goods through the warehouse, invoices and payments — but on screen it shrinks to a single line. When the client asks “what's happening with my order?”, the manager has no single place where the answer is visible.
+I define success across three tiers:
 
-I hold success on three tiers:
-
-- **For the business** — more accurate delivery promises, higher trust from the corporate client, less friction between logistics and finance.
-- **Operational decomposition** — response time to an order query, the number of systems a manager opens for a single answer, the share of questions closed without leaving the CRM.
-- **For the user** — the manager answers the client themselves and right away, with no manual investigation and no feeling of not owning their own order.
-
-I'll return to these metrics at the end.
+- **Business impact** — higher delivery reliability, increased corporate client trust, and less friction between logistics and finance.
+- **Operational efficiency** — faster response time to order queries, fewer systems opened per inquiry, and a higher rate of questions closed entirely within the CRM.
+- **User experience** — managers answer clients instantly and independently, with full ownership of the order status.
 
 ## 2. Constraints
 
-The project is conceptual, so I set most of the boundaries myself — as the conditions under which the solution makes sense at all.
+As a conceptual project, I set strict boundaries to reflect enterprise realities:
 
-**I take the heaviest setup — CRM + WMS + ERP.** I could have simplified it down to a single CRM, but then the task itself disappears. A complex order truly lives in three systems: relationships and the order in the CRM, availability and movement of goods in the WMS, invoices and payments in the ERP. It's precisely the mismatch between them that creates the problem — part in stock, part at the supplier, payment on receipt. By taking the full setup I work on the task without any handicap, but I accept the cost: the overview has to gather data from three sources, not one.
-
-**The overview is an add-on, not a replacement.** I'm not reinventing the logistician's or the finance team's workspaces. The Order Overview gives the manager exactly enough context to talk to the client. Detailed actions stay on the pages of the entities themselves.
-
-**I don't break the data model.** Order, shipment, invoice, payment — separate related entities with their own lifecycles. I don't invent a new model; I assemble its visible representation.
+- **Full CRM + WMS + ERP architecture:** The solution operates across a complete enterprise stack. Relationships live in the CRM, physical movement in the WMS, and invoices in the ERP. The overview aggregates these three data sources into one layer without simplifying the environment.
+- **Add-on layer, not replacement:** The Order Overview gives managers actionable client-facing context while keeping deep operational actions on dedicated entity pages.
+- **Strict data model preservation:** Orders, shipments, invoices, and payments remain separate related entities with distinct lifecycles.
 
 ## 3. Desk research
 
-I had no access to a real system, so I gathered the pain where practitioners speak in their own words: NetSuite, Odoo and QuickBooks discussions on Reddit, reviews on G2 and Capterra, industry breakdowns. Five things came up again and again.
+Without production access, I analyzed practitioner pain points across NetSuite, Odoo, and QuickBooks discussions on Reddit, G2, Capterra, and industry post-mortems. Five systemic issues emerged:
 
-**One status hides several realities.** Users describe how “Pending fulfillment” can mean both “nothing is picked” and “part shipped and already invoiced” — the label doesn't tell them apart. It gets to the point where an order shows “partially fulfilled” when physically nothing has been picked yet. People set up their own fields and rules because the built-in statuses aren't enough.
+- **One status obscures complex states.** Generic labels like "Pending fulfillment" blur the line between unpicked inventory and partially shipped, invoiced orders.
+- **Manual assembly required.** Shipment and payment records do not automatically link, forcing managers to manually reconstruct order timelines.
+- **Logistics and finance disconnect.** Invoices rarely link to specific physical shipments, complicating partial deliveries and staged billing.
+- **Delayed problem visibility.** Issues surface only after delivery commitments are broken, preventing proactive intervention.
+- **Uncertainty destroys trust.** Clients tolerate operational delays better than vague communication, directly impacting client retention.
 
-**The truth about an order has to be assembled by hand.** Shipment and invoice data aren't linked on their own — the only point where you see both is the order itself. To reconstruct the history you have to click through transfers, line items and warehouse movements.
-
-**Invoice and shipment can't be linked directly.** An invoice isn't tied to a specific shipment, so partial billing is hard to reconcile with partial delivery. Payment and shipment run on different timelines — right down to payment before shipment — and the system happily allows financial states that don't square with logistics.
-
-**The problem surfaces after the fact.** Backorder post-mortems describe the same thing: the business starts reacting when the failure is already visible to the client. There's no early signal — and that's exactly “where's my order” on a complex supply.
-
-**What breaks trust isn't the delay, it's the uncertainty.** Clients are more tolerant of real constraints than of muddled communication around them. Poor transparency drives a stream of inquiries and hits reputation — so the visibility problem turns directly into lost trust.
-
-The conclusion came together on its own: don't pack the order into a single status, but show the axes of its state and the links between entities. Then I looked at how this is arranged in related CRMs and OMSs — and saw the same pattern: order, shipment, invoice and payment live as separate entities, each with its own status and its own cycle. That confirmed the direction.
+The conclusion was clear: instead of compressing an order into a single status, display its core state axes and entity relationships transparently. Industry benchmarks confirmed that orders, shipments, and invoices operate as independent entities with separate lifecycles.
 
 <Carousel
   label="Benchmark of CRM screens for order, invoice and shipment"
@@ -109,6 +99,8 @@ The conclusion came together on its own: don't pack the order into a single stat
   ]}
 />
 
+The same split holds one level down. A single order line carries its shipment state and its billing state separately — the axes aren't something I invented for the overview, they're already in the data. They're just never gathered in one place.
+
 <Breakout maxWidth="672px">
   <Image
     src={benchmarkLineItem}
@@ -121,50 +113,50 @@ The conclusion came together on its own: don't pack the order into a single stat
 
 ## 4. Assumptions
 
-Since I had no access to a real system or its analytics, part of the picture is a set of reasoned assumptions, and I don't present them as facts.
-
-I did run interviews with account managers I know, but on the original scenario they gave me little — their experience lay to the side of truly complex corporate orders. As the work went on I deliberately redefined the problem: I moved it away from what the conversations confirmed toward a more representative and harder class of orders — with many axes of state, partial shipment and partial payment. So I reconstructed the problem from desk research and domain logic, and used the interviews as a starting point, not as proof.
-
-What the solution rests on:
-
-- An order breaks down into several axes of state (availability, shipment, payment), and they're out of sync. Basis: that's how orders are built in the OMS and ERP systems from the benchmarking. I'd verify it on a review of real orders.
-- The “where's my order” scenario is the most frequent and most painful for a manager. Basis: the logic of the role and public job descriptions. I'd verify it with analytics on how often orders are opened.
-- 12–18 minutes to answer is a plausible order of magnitude for manual assembly across three systems. It's an estimate based on the number of sources and switches, not a measurement. I'd capture an honest baseline in a pilot.
-- Partial payment and partial shipment are the norm, not the exception. Basis: the specifics of corporate supply, where you pay on receipt of a batch. I'd verify it on real data.
+- **State separation:** An order splits across three out-of-sync axes: availability, shipment, and payment.
+  - *Rests on:* Standard data models in ERP/OMS benchmark systems.
+  - *Verification:* Reviewing historical enterprise order logs.
+- **Primary scenario friction:** "Where's my order?" is the most frequent and high-friction query for account managers.
+  - *Rests on:* Account manager job requirements and support workflows.
+  - *Verification:* Helpdesk query categorization and frequency analytics.
+- **12–18 minute inquiry baseline:** Manual lookup across CRM, WMS, and ERP takes an estimated 12–18 minutes based on system switches and manual reconciliation.
+  - *Rests on:* Analytical task breakdown across multiple enterprise portals.
+  - *Verification:* Baseline time-motion study during product pilot.
+- **Partial execution as standard:** Partial shipments and staged payments represent the norm in corporate procurement.
+  - *Rests on:* B2B wholesale trade practices and credit terms.
+  - *Verification:* Transactional analysis of active customer accounts.
 
 ## 5. Scenarios
 
-**Client on the line — “where's my order?”** An account manager answers a call: the client is asking about a 200-line order. Part is already shipped, part is at the supplier, only the received batch is paid for. While the client waits on the line, the manager has under a minute. To answer, they manually pull together availability, shipments and payment from three systems. The cost of a mistake is an inaccurate delivery promise and the dented trust of a client who is paying up front anyway.
+**Client on the line — "Where's my order?"** An account manager receives a call regarding a 200-line order: part is shipped, part is backordered, and only received items are paid. Under time pressure, the manager manually reconciles data across three systems. The cost of error is an inaccurate promise and damaged client trust.
 
-**Coordinating shipments with logistics.** The manager needs to understand which batches are ready to ship today and which are delayed. In the CRM the order looks like a single object, and it's unclear whether this dispatch is the last one or there will be more. The mistake here is a slipped shipment, but with no direct line to the client.
+**Coordinating shipments with logistics.** The manager needs to identify which batches are ready for dispatch and which are delayed. Because the CRM treats the order as a single block, it is unclear if a shipment completes the order. The cost of error is a delayed dispatch and missed logistics windows.
 
-**A payment conversation with finance.** On a disputed invoice the manager needs to see what's billed, what's paid and where the overdue is. Partial payment breaks the simple logic: the payment doesn't match the invoice amount. The mistake is more often caught on the finance side, but it costs both sides time.
+**Payment conversation with finance.** Resolving a disputed invoice requires matching billed amounts with received goods. Staged billing breaks basic reconciliation when payments do not equal invoice totals. The cost of error is billing friction and lost administrative time across departments.
 
 ## 6. Prioritization
 
-Three scenarios — but their frequency and cost differ.
-
-| Scenario | Frequency | Cost of one case |
+| Scenario | Frequency | Cost per occurrence |
 | --- | --- | --- |
-| Client asks where the order is | Several times a day | 12–18 minutes of manual assembly + an inaccurate promise to the client |
-| Coordinating shipments | Less often, as batches are ready | A slipped dispatch, no direct contact with the client |
-| Payment conversation | Occasionally, on disputed invoices | An error in a figure, but usually caught by finance |
+| Client status inquiry | High (multiple times daily) | Extended resolution time and inaccurate delivery promises |
+| Logistics shipment coordination | Medium (as batches ready) | Slipped dispatches and schedule misalignment |
+| Financial reconciliation | Low (disputed invoices) | Billing inaccuracies and internal friction |
 
-I optimize the first. It happens most often and hits the client directly — this is exactly where the manager pays those 12–18 minutes and risks trust. The second and third matter, but they're rarer and have no direct line to the client.
-
-And one more argument: an overview built for the first scenario incidentally covers part of the other two. Seeing shipments and payment on one screen, the manager also gains context for logistics and for finance. By optimizing the most frequent case, I lower the cost of the rest at the same time.
+I prioritized the client status inquiry. It occurs most frequently, carries the highest friction, and directly impacts customer trust. Furthermore, an overview engineered for client inquiries naturally resolves the other two scenarios: surfacing shipments, invoices, and payments on one screen provides logistics and finance with immediate operational context.
 
 ## 7. Problem statement
 
-An account manager can't answer “where's my order” faster than 12–18 minutes, because the order's state is smeared across CRM, WMS and ERP and requires manually matching shipments, invoices and payments. The result — inaccurate promises to the client and falling trust.
+> Account managers cannot answer "where's my order" efficiently because order states are fragmented across CRM, WMS, and ERP systems, requiring manual cross-system reconciliation.
 
-Worth underlining: the bottleneck isn't that the manager types slowly or hunts for a button. It's in the manual assembly of entities across systems. This is a representation problem, not a data-entry one.
+The bottleneck is not data entry or interface navigation speed — it is the manual assembly of entity relationships across disconnected systems. This is an information representation problem.
 
 ## 8. Solution
 
-The key idea everything else grew from: an order isn't a single status, it's a container of related entities. Goods, shipments, invoices, payments, problem line items. If you gather them on one screen, the manager answers the client in seconds rather than through an investigation across three systems.
+An order is not a status string; it is a container of related entities. Goods, shipments, invoices, payments, and exceptions belong on a unified screen so managers can answer inquiries instantly.
 
-Before drawing the screen, I broke the order down into entities and links. Order, line items, shipment, package, invoice, payment — each has its own owner and its own lifecycle: the order lives in the CRM, shipment and packing in the WMS, invoice and payment in the ERP. The links between them are exactly what a typical CRM doesn't show: a line item lands in a shipment, a shipment is assembled from packages, an invoice closes a shipment or the whole order, a payment closes an invoice — partly or in full. I needed the diagram to understand what, precisely, the overview has to bring together.
+### The order as a container of entities
+
+Before designing screens, I mapped the entities and their lifecycles. Orders live in the CRM, shipments in the WMS, invoices and payments in the ERP. Relationships tie them together: line items form shipments, shipments assemble into packages, invoices bill shipments or orders, and payments fulfill invoices. The overview highlights these links.
 
 <Breakout maxWidth="672px">
   <Image
@@ -179,19 +171,18 @@ Before drawing the screen, I broke the order down into entities and links. Order
   />
 </Breakout>
 
-Hence the working hypothesis: **if you bring the order's three axes — availability, shipment, payment — into a single overview, the manager will answer the client's question without switching between systems.**
-
-I tested the hypothesis on the three conversations from section five. On the left is how a manager answers today; on the right, how they'd answer in the overview. Each role has its own chain of systems, but it ends the same way: with a manual reconciliation. In the overview the chain converges on a single screen.
+*Hypothesis:* Presenting availability, shipment, and payment in a unified view enables managers to answer client queries without leaving the CRM.
 
 <ScenarioFlows lang="en" />
 
-I designed the Order Overview as a layer on top of CRM, WMS and ERP. The top block answers three questions at once: is there stock for the order, how much is already shipped, how much is paid. Each axis is carried by its own progress bar — with a percentage and absolute values, so the scale is visible, not just the share.
+### Three axes instead of one status
 
-Below are the related entities: shipments, invoices, payments and problem line items. If something needs attention, it's highlighted right in the overview rather than hidden in the details. For long orders there's a problem-lines filter — it appears only when such lines actually exist.
+The Order Overview acts as an aggregation layer across CRM, WMS, and ERP. The top section answers three core questions using three distinct axes: **availability**, **shipment**, and **payment**. Each axis features a progress bar with absolute and percentage values to indicate scale.
 
-**Why three bars, not one status.** A single overall status was exactly what hid the details — that was the original pain. Three axes split the order into clear areas: availability shows whether the order can be fulfilled; shipments show the real execution; payment shows the financial state. The manager sees not just “there's a problem” but in which plane exactly.
+Below, related shipments, invoices, payments, and line item exceptions are exposed directly. For long orders, a problem filter isolates exception lines.
 
-**The early signal.** The research kept coming back to failures surfacing only once the client can see them. So an order carries a promised delivery date and a shipment carries a late state. Earlier than either, though, the availability axis fires: no stock against a line item lights amber weeks before the shipment slips, while there's still room to act.
+- **Three axes instead of one:** Splitting the status prevents details from hiding behind generic labels. Availability shows fulfillment feasibility, shipment tracks physical movement, and payment reflects financial standing.
+- **Early warning signals:** Backorder indicators flag inventory shortages weeks before delivery dates slip, giving managers lead time to act.
 
 <Breakout maxWidth="960px">
   <Image
@@ -207,11 +198,13 @@ Below are the related entities: shipments, invoices, payments and problem line i
   />
 </Breakout>
 
-**Linking shipment, invoice and payment.** Since payment in B2B rarely matches the actual shipment, I added a table where each shipment is linked to a specific invoice and payment. No need to switch between systems to understand what exactly is paid.
+To resolve payment-shipment mismatches, a dedicated matrix links each shipment directly to its corresponding invoice and payment record.
 
-Shipment and invoice are the second level. The overview closes the conversation with the client, but if they go into the detail, the manager drills into the entity and sees the same link from the other side.
+### The same link from the other side
 
-The shipment page is built around the batch: which line items went into it, how many units left, which invoices cover it. This is an answer to the logistician's question, not the client's.
+While the Order Overview answers client inquiries, dedicated entity pages handle operational deep dives.
+
+The shipment screen focuses on physical fulfillment: line items included, units shipped, carrier details, and linked invoices.
 
 <Breakout maxWidth="960px">
   <Image
@@ -227,7 +220,7 @@ The shipment page is built around the batch: which line items went into it, how 
   />
 </Breakout>
 
-The invoice page is a mirror slice. The same set of links, but the entry point is financial: how much is billed, how much is closed by payments, which shipments stand behind it. The link reads both ways.
+The invoice screen provides the financial counterpart: billed amounts, payment progress, and corresponding shipments.
 
 <Breakout maxWidth="912px">
   <Image
@@ -243,31 +236,33 @@ The invoice page is a mirror slice. The same set of links, but the entry point i
   />
 </Breakout>
 
-**Colour only on a problem.** Two states carry saturated colour: red for a broken commitment (payment overdue, a missed delivery date), amber for a commitment at risk while there's still room to act (backorder). Routine, work in progress, completion and cancellation are all set in neutral grey. Blue is out of the status scale entirely — it's reserved for links, selection and actions. The eye catches colour where someone needs to step in, not where things are simply running their course.
+### Status and colour
 
-**Two levels.** An entity — order, shipment, invoice — carries a word and a colour. A state inside an entity — the axes and the line items — carries a dot and a word: these are compared down the column, and the dot separates what's started from what's untouched.
+Color logic follows strict functional priority to minimize cognitive noise:
 
-Where one indicator has to stand for several states, priority applies: first a red state on any axis, then amber, and only in their absence the milestone reached. Cancellation overrides everything.
+- **Red:** A broken commitment (overdue payment, missed delivery date).
+- **Amber:** A commitment at risk with time to act (backorder, inventory shortage).
+- **Grey:** Routine states, work in progress, completion, and cancellation.
 
-I fixed the axis vocabularies up front. Each has one linear chain from zero to full and one exception set outside it: the chain describes the normal course, the exception is what's worth stepping in for.
+Indigo is reserved exclusively outside the status system for interactive elements, links, selection states, and progress bar fills.
+
+Status indicators use word labels for primary entities and dot-and-word combinations for sub-states down table columns.
 
 <Breakout maxWidth="1440px" minWidth="960px">
   <figure class="not-prose m-0">
     <Statuses lang="en" schema="axes" />
-    <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Three axes, three vocabularies. Only the exception carries colour.</figcaption>
+    <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Three axes, three vocabularies. Only exceptions carry functional colour.</figcaption>
   </figure>
 </Breakout>
-
-The axes are the view from the order's side. The entities themselves have their own cycles: a shipment and an invoice live their own lives, and each side names the same event in its own words. An invoice is issued — from the order's side, it's been invoiced.
 
 <Breakout maxWidth="1440px" minWidth="960px">
   <figure class="not-prose m-0">
     <Statuses lang="en" schema="cycles" />
-    <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Five entities, five cycles. Exceptions sit outside the chain the same way everywhere.</figcaption>
+    <figcaption class="case-image__caption mt-2 text-center text-sm leading-[1.4] text-[var(--color-text-muted)]">Five entities, five cycles. Exception logic remains consistent across all entities.</figcaption>
   </figure>
 </Breakout>
 
-The order list is where the priority rule pays off. People come here not to read but to find. In the wide table a row carries the lifecycle status and the three axes separately — availability, payment, shipment. The invoice isn't a fourth axis but the zero state of payment: not invoiced — invoiced — partially paid — paid. In the narrow side list there's no room for three columns, so the axes collapse into a single indicator by the priority rule. A problem order is visible without opening it.
+In the order list view, priority rules dictate visibility. Full tables display lifecycle status alongside availability, shipment, and payment columns (with invoices as the zero state of payment). Compact side lists compress these three axes into a single indicator based on priority: red overrides amber, amber overrides routine progress, and cancellation overrides all.
 
 <Breakout maxWidth="912px">
   <Image
@@ -285,44 +280,39 @@ The order list is where the priority rule pays off. People come here not to read
 
 ## 9. Trade-offs
 
-**Where to put the client information.** I spent a long time choosing between three options: a separate fourth column for the client data, a sidebar that collapses into icons (like HubSpot), or merging the client into the order card.
+**Client information placement**
+- *What I chose between:* A dedicated 4th column, a collapsible icon sidebar (HubSpot style), or integrating client details directly into the order header.
+- *What I lose:* Client data loses standalone visual hierarchy and becomes secondary to order parameters.
+- *Why that's okay:* In order status inquiries, client data serves as contextual verification, not an active task zone. Merging it into the order header saves horizontal space while maintaining visibility.
 
-A separate column overloaded the screen — four vertical streams start competing for attention. A client sidebar that collapses into icons saves space but hides the values: to read a field you have to hover over an icon and wait for a tooltip — an extra step where the manager wants to see everything at once.
-
-I chose to merge order and client into one block. What I lose: the client stops being a standalone zone and is visually subordinate to the order. Why that's okay: in the “where's my order” scenario the client is context, not a separate task, and it makes sense to keep them next to the order rather than in their own column.
-
-**Collapsed by default, or open on arrival.** I collapsed the related blocks — shipments, payments, reference details: otherwise the screen opens as a wall of tables and the live state drowns in reference data.
-
-What I lose: details take a click. Why that's okay: a collapsed heading carries a short summary and surfaces the exception if there is one. The click buys detail, not the signal.
+**Information density vs. visual clutter**
+- *What I chose between:* Expanding all entity sections by default versus collapsing detailed tables (shipments, payments) on load.
+- *What I lose:* Deep itemized details require an additional click.
+- *Why that's okay:* Collapsed section headers present high-level summaries and highlight exceptions automatically. Clicking yields deeper details without cluttering primary status scanning.
 
 ## 10. How I'd measure success
 
-What “it worked” means to me: the manager answers the client without switching between systems. Below is how I'd catch that in numbers.
-
-**Outcome hypothesis:** if the overview removes the manual assembly across three systems, response time drops from 12–18 minutes (an estimated baseline) to tens of seconds, and the number of systems opened — from four or five to zero.
-
-**Lead success metric** — response time to “where's my order”: baseline 12–18 minutes (estimated; I'd capture an honest median in a pilot), target — tens of seconds as an order of magnitude, not a final figure.
-
-**Leading indicators** — how many systems the manager opens per request (currently four or five: CRM, WMS, ERP, spreadsheets, correspondence — target zero, all in the overview) and the share of questions closed without leaving the CRM.
-
-These are leading indicators — together they should convert into an operational effect (fewer manual reconciliations between logistics and finance) and into the business frame from the start: more accurate timelines, higher client trust.
-
-I'd measure it in a pilot with product analytics (order opened → closed, number of systems opened per session) plus observation of real calls — the answer to the client itself happens outside the interface, and without observation you can't capture it.
+- **Lead success metric:** Inquiry response time reduction from an estimated 12–18 minute baseline down to seconds.
+- **Leading operational indicators:**
+  - Number of external applications opened per inquiry (Target: zero; all data accessible in CRM).
+  - Percentage of customer inquiries resolved entirely within the CRM order screen.
+- **Validation method:** A pilot combining product analytics (session tracking from order open to close) and observational user testing on live customer support calls.
 
 ## 11. What's next
 
-The case is taken to detailed mockups, but the work doesn't end there.
+Next iteration steps for production readiness:
 
-I didn't get to check the states in high fidelity — hover, empty and error screens — or to run the solution on real data instead of an agreed demo set. The next step is a pilot: it's needed first of all to capture an honest baseline instead of the estimated 12–18 minutes.
+- **Pilot launch:** Execute a controlled rollout to capture empirical baseline metrics and validate response time improvements.
+- **Edge-case & high-fidelity detail:** Design comprehensive error, empty, loading, and hover interaction states against real production datasets.
+- **Data synchronization stress testing:** Test overview performance under heavy data sync loads across CRM, WMS, and ERP endpoints.
 
-The main remaining risk is data freshness. The overview assembles the picture from three systems, and its value rests on being up to date. This is partly covered by sync states and a “data unavailable” state, but I haven't tested it under load.
-
-And an honest echo of the process: along the way I redefined the problem, moving it away from what the interviews showed toward a more complex class of orders. That made the case more representative, but it added a hypothesis worth testing first — that the redefined scenario really is frequent, not just plausible.
+Additionally, the refined scenario focusing on multi-axis enterprise orders represents a primary hypothesis to validate empirically against user volume during the pilot phase.
 
 <Breakout maxWidth="672px">
   <Image
     src={finalVisual}
     alt="Final Laneo CRM visual with the logo"
+    zoomable={false}
     variant="inline"
     class="w-full h-auto object-contain mx-auto"
     widths={[480, 800, 1200, 1600, 2200]}

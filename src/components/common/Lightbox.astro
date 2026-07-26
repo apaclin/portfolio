@@ -227,11 +227,16 @@
       const track = carousel?.querySelector<HTMLElement>('.carousel__track');
       if (!carousel || !track) return;
 
-      track.scrollTo({
-        left: activeIndex * track.clientWidth,
-        behavior: 'auto',
-      });
+      // Keep the source carousel in sync while the dialog still covers it.
+      // `behavior: auto` would inherit the track's CSS `scroll-behavior: smooth`,
+      // so temporarily override it and jump to the selected slide directly.
+      const previousScrollBehavior = track.style.scrollBehavior;
+      track.style.scrollBehavior = 'auto';
+      track.scrollLeft = activeIndex * track.clientWidth;
       carousel.dispatchEvent(new CustomEvent('carousel:sync'));
+      requestAnimationFrame(() => {
+        track.style.scrollBehavior = previousScrollBehavior;
+      });
     };
 
     const render = (trigger: Element) => {
@@ -317,6 +322,7 @@
       const nextIndex = activeIndex + dir;
       if (nextIndex < 0 || nextIndex >= group.length) return;
       activeIndex = nextIndex;
+      syncSourceCarousel();
       syncLightboxNav();
       preloadGroupAround(activeIndex);
       render(group[activeIndex]);
@@ -420,7 +426,6 @@
     // Снятие блокировки скролла — на ЛЮБОЙ сценарий закрытия (Esc, кнопка Close,
     // клик по фону через .close()). Событие close у <dialog> покрывает все.
     dialog.addEventListener('close', () => {
-      syncSourceCarousel();
       renderId++;
       dialog.classList.remove('is-open');
       unlockScroll();
