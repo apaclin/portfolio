@@ -11,7 +11,11 @@ import Image from '../common/Image.astro';
 interface Props {
   src: ImageMetadata;
   alt: string;
-  /** Ширина Breakout-обёртки. */
+  /**
+   * Ширина кадра — ровно та, что здесь написана, без скрытых вычитаний:
+   * hero рендерится flush, поэтому внутренние отступы картинки не съедают её.
+   * По умолчанию — ширина читаемой колонки (.prose), с ней hero и совпадает.
+   */
   maxWidth?: string;
   variant?: 'case' | 'inline';
   widths?: number[];
@@ -24,7 +28,7 @@ interface Props {
 const {
   src,
   alt,
-  maxWidth = '720px',
+  maxWidth = '42rem',
   variant = 'case',
   widths,
   sizes,
@@ -34,7 +38,7 @@ const {
 } = Astro.props as Props;
 ---
 
-<Breakout maxWidth={maxWidth}>
+<Breakout maxWidth={maxWidth} flush>
   <Image
     src={src}
     alt={alt}

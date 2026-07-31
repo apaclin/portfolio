@@ -42,7 +42,7 @@ import Statuses4 from "../../components/case/matchpoint/statuses-4.astro";
 <CaseHero
   src={Cover}
   alt="Обложка кейса Matchpoint"
-  maxWidth="720px"
+  maxWidth="42rem"
   class="w-full h-auto object-contain mx-auto"
 />
 
@@ -56,7 +56,7 @@ Matchpoint — сервис для команд, которые обрабаты
 
 Конкуренты — Bill.com, Tipalti, Coupa — оптимизируют happy path и трактуют исключения как warnings: система поднимает флаг, а причину, владельца и следующий шаг человек находит сам. Matchpoint я строил от обратного: расхождение здесь не ошибка в таблице, а управляемый объект с жизненным циклом Detect → Diagnose → Route → Resolve → Trace. Скоуп этого кейса — Detect и Diagnose, то самое слабое место, которое конкуренты оставляют пользователю.
 
-<Breakout maxWidth="700px" minWidth="700px" align="content">
+<Breakout maxWidth="700px" align="content">
   <Flows lang="ru" />
 </Breakout>
 
@@ -82,7 +82,7 @@ Matchpoint — сервис для команд, которые обрабаты
 
 В скоупе два типа исключений: расхождение с заказом на закупку и возможный дубль счёта. Вне скоупа: зависшие согласования, SLA, эскалации и качество распознавания документов.
 
-<Breakout maxWidth="544px" minWidth="544px" align="content">
+<Breakout maxWidth="544px" align="content">
   <Problems lang="ru" />
 </Breakout>
 
@@ -104,7 +104,7 @@ Matchpoint — сервис для команд, которые обрабаты
 - **Задержка стоит денег.**  
   Зависшие исключения напрямую влияют на бизнес: платежи просрочены, поставщик ждёт ответа, отношения портятся, а по некоторым контрактам могут появляться штрафы за каждый день задержки.
 
-<Breakout maxWidth="1264px" minWidth="960px">
+<Breakout maxWidth="1264px">
   <FlowsAsIs lang="ru" />
 </Breakout>
 
@@ -211,7 +211,7 @@ Matchpoint — сервис для команд, которые обрабаты
 
 Я оставил только сигналы, которые помогают принять решение и по-разному выглядят в зависимости от того, насколько предупреждение серьёзно: confidence (уверенность системы), severity (критичность), статус поставщика, тип исключения, стадия обработки, причина и метод обнаружения.
 
-<Breakout maxWidth="700px" minWidth="700px" align="content">
+<Breakout maxWidth="700px" align="content">
   <Statuses4 lang="ru" />
 </Breakout>
 
@@ -308,7 +308,7 @@ Matchpoint — сервис для команд, которые обрабаты
 
 Это помогает быстрее понять, проблема в конкретном инвойсе или в поведении поставщика. Отсюда же можно написать поставщику, скачать историю, обновить банковские данные или отметить поставщика для проверки.
 
-<Breakout maxWidth="704px" minWidth="704px" align="content">
+<Breakout maxWidth="704px" align="content">
   <Actions lang="ru" />
 </Breakout>
 

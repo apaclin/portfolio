@@ -191,6 +191,74 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
       return activeIndex;
     };
 
+    // ── Перекрытие контентом ──
+    // Полоса TOC живёт в правом поле страницы. Колонка текста туда не достаёт
+    // никогда (уже при 860px поле шире полосы), а полноширинные медиа — схемы,
+    // скриншоты, сцены разборов — достают, и полоса ложится поверх них.
+    // Поэтому прячем её кроссфейдом ровно на то время, пока под ней контент.
+    // Порог входа меньше порога выхода: гистерезис не даёт полосе мигать,
+    // когда край медиа идёт впритык к полосе.
+    const COLLIDE_SELECTOR = 'img, svg, .carousel__track, .walkthrough__stage, .incw__stage';
+    const ENTER_PAD = 8;
+    const EXIT_PAD = 28;
+    let obstructed = false;
+
+    // Кандидат может лежать внутри горизонтального скроллера: слайды карусели
+    // выложены в ряд и уезжают на тысячи пикселей вправо, широкие схемы — за
+    // край экрана. Их сырой rect «перекрывал» бы полосу, хотя на экране их нет.
+    // Поэтому режем rect по всем предкам, которые обрезают overflow. Набор
+    // предков статичен, поэтому считаем его один раз, а не каждый кадр.
+    const clippersOf = (el: HTMLElement) => {
+      const out: HTMLElement[] = [];
+      let node = el.parentElement;
+      while (node && node !== document.documentElement) {
+        const style = getComputedStyle(node);
+        if (style.overflowX !== 'visible' || style.overflowY !== 'visible') {
+          out.push(node);
+        }
+        node = node.parentElement;
+      }
+      return out;
+    };
+
+    const collidables = [
+      ...article.querySelectorAll<HTMLElement>('.full-bleed, .breakout'),
+    ]
+      .flatMap((root) => [...root.querySelectorAll<HTMLElement>(COLLIDE_SELECTOR)])
+      .map((el) => ({ el, clippers: clippersOf(el) }));
+
+    const updateObstruction = () => {
+      // Панель раскрыта — пользователь в ней, не выдёргиваем из-под курсора.
+      if (tocRoot.matches(':hover, :focus-within')) return;
+
+      const r = rail.getBoundingClientRect();
+      if (!r.height) return;
+      const pad = obstructed ? EXIT_PAD : ENTER_PAD;
+      const hit = collidables.some(({ el, clippers }) => {
+        const b = el.getBoundingClientRect();
+        let { left, right, top, bottom } = b;
+        for (const clipper of clippers) {
+          const c = clipper.getBoundingClientRect();
+          left = Math.max(left, c.left);
+          right = Math.min(right, c.right);
+          top = Math.max(top, c.top);
+          bottom = Math.min(bottom, c.bottom);
+        }
+        // Иконки внутри разборов и обрезанное в ноль полосе не мешают.
+        if (right - left < 64 || bottom - top < 24) return false;
+        return (
+          right > r.left - pad &&
+          left < r.right + pad &&
+          bottom > r.top - pad &&
+          top < r.bottom + pad
+        );
+      });
+
+      if (hit === obstructed) return;
+      obstructed = hit;
+      tocRoot.classList.toggle('is-obstructed', hit);
+    };
+
     let ticking = false;
     let currentIndex = -1;
     // After a click we lock the highlight to the clicked item and ignore the
@@ -198,22 +266,26 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
     // (wheel / touch / arrow keys) releases the lock and resumes scroll-spy.
     let lockToClicked = false;
 
+    // Один rAF на оба измерения: и подсветка секции, и проверка перекрытия
+    // читают геометрию в одном кадре, а не дёргают layout дважды. Перекрытие
+    // считаем и во время клик-скролла, когда подсветка залочена.
     const requestActiveUpdate = () => {
-      if (lockToClicked || ticking) return;
+      if (ticking) return;
+      ticking = true;
 
       window.requestAnimationFrame(() => {
+        ticking = false;
         if (signal.aborted) return;
-        const nextIndex = getActiveIndex();
 
+        updateObstruction();
+        if (lockToClicked) return;
+
+        const nextIndex = getActiveIndex();
         if (nextIndex !== currentIndex) {
           currentIndex = nextIndex;
           setActive(nextIndex);
         }
-
-        ticking = false;
       });
-
-      ticking = true;
     };
 
     tocRoot.addEventListener('click', (event) => {
@@ -261,10 +333,25 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
     z-index: 40;
     width: 1.5rem;
     transform: translateY(-50%);
+    transition:
+      opacity 200ms ease,
+      visibility 0s linear 0s;
   }
 
   .case-toc[hidden] {
     display: none;
+  }
+
+  /* Под полосой полноширинное медиа — уводим её кроссфейдом (см. скрипт).
+     visibility выключается уже ПОСЛЕ затухания, поэтому уход плавный, но
+     погашенная полоса не ловит ни курсор, ни фокус с клавиатуры. */
+  .case-toc.is-obstructed {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 200ms ease,
+      visibility 0s linear 200ms;
   }
 
   /* Hover bridge so the panel stays reachable. */

@@ -7,6 +7,12 @@ interface Props {
   align?: 'center' | 'content';
   /** Disable only when a child needs viewport-relative sticky positioning. */
   scroll?: boolean;
+  /**
+   * Медиа занимает кадр целиком: свои боковые отступы (.case-image / .carousel)
+   * снимаются, ширина кадра = maxWidth без вычитаний. Нужно там, где кадр обязан
+   * совпадать с колонкой текста на ЛЮБОЙ ширине экрана, — прежде всего hero.
+   */
+  flush?: boolean;
 }
 
 const {
@@ -14,13 +20,18 @@ const {
   minWidth = '0px',
   align = 'center',
   scroll = true,
+  flush = false,
 } = Astro.props as Props;
 ---
 
 <div
   class:list={[
-    'breakout relative left-1/2 w-screen -translate-x-1/2',
+    // full-bleed вместо 100vw-трюка: колонка грида .prose меряется по ширине
+    // страницы, а 100vw включает полосу прокрутки. Из-за этого при узком окне
+    // Breakout и колонка текста расходились на ширину скроллбара.
+    'breakout full-bleed',
     align === 'content' && 'breakout--content',
+    flush && 'breakout--flush',
     scroll && 'overflow-x-auto overscroll-x-contain',
   ]}
 >
@@ -39,11 +50,23 @@ const {
     scrollbar-width: thin;
   }
   .breakout__inner {
-    width: clamp(var(--breakout-min), calc(100% - 2rem), var(--breakout-max));
+    /* Гаттер тот же, что у колонки .prose, и на всех ширинах: тогда прижатый
+       к гаттеру кадр совпадает с текстом, а не почти совпадает.
+       Публичный, потому что контент внутри (скролл-фигура ScenarioFlows)
+       раздвигается до краёв Breakout ровно на него, без 100vw — иначе
+       классический скроллбар уводит выравнивание на 4px. */
+    --breakout-gutter: 1.25rem;
+    width: clamp(
+      var(--breakout-min),
+      calc(100% - var(--breakout-gutter) * 2),
+      var(--breakout-max)
+    );
     margin-inline: auto;
   }
   .breakout--content .breakout__inner {
-    --content-start: max(1.25rem, calc((100vw - 42rem) / 2));
+    /* 100%, а не 100vw: ширина самого Breakout считается по странице, тогда как
+       100vw включает полосу прокрутки и уводит выравнивание на её половину. */
+    --content-start: max(1.25rem, calc((100% - 42rem) / 2));
     width: clamp(
       var(--breakout-min),
       calc(100% - var(--content-start) - 1.25rem),
@@ -55,6 +78,22 @@ const {
   .breakout :global(.carousel) {
     margin-block-start: 0;
     padding-block-end: 0;
+  }
+  /* Кадр совпадает с контейнером 1:1: гаттер даёт Breakout, и ровно один раз.
+     Свои боковые отступы медиа здесь снимает — иначе гаттер удваивается и кадр
+     оказывается уже текста. Без медиазапроса: ширина кадра не должна зависеть
+     от того, упёрся Breakout в maxWidth или в гаттер. */
+  .breakout--flush :global(.case-image),
+  .breakout--flush :global(.carousel) {
+    padding-inline: 0;
+  }
+  /* Остальные медиа держат свой внутренний отступ на десктопе (кадр 912 внутри
+     960), но на мобильном тоже равняются по колонке текста. */
+  @media (max-width: 39.9375rem) {
+    .breakout :global(.case-image),
+    .breakout :global(.carousel) {
+      padding-inline: 0;
+    }
   }
   .breakout :global(svg) {
     display: block;

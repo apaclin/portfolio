@@ -152,6 +152,13 @@ const slides = await Promise.all(
     margin-block-start: 0;
     padding-block-end: 0;
   }
+  /* flush-карусель на вебе совпадает с центральной колонкой; на мобильном без
+     гаттера она уходила в край экрана. Возвращаем гаттер .prose. */
+  @media (max-width: 39.9375rem) {
+    .carousel {
+      padding-inline: 1.25rem;
+    }
+  }
   .carousel__viewport {
     position: relative;
   }

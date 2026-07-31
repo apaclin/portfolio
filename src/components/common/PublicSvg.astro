@@ -8,9 +8,14 @@ interface Props {
   alt: string;
   className?: string;
   fit?: 'intrinsic' | 'container';
+  /**
+   * Сделать сам блок горизонтальным скроллером. Нужно там, где над схемой нет
+   * скролл-контейнера (Breakout), иначе схема в натуральном масштабе обрежется.
+   */
+  scroll?: boolean;
 }
 
-const { src, alt, className, fit = 'intrinsic' } = Astro.props as Props;
+const { src, alt, className, fit = 'intrinsic', scroll = false } = Astro.props as Props;
 
 const publicRoot = normalize(join(process.cwd(), 'public')) + sep;
 const relativeSrc = src.startsWith('/') ? src.slice(1) : src;
@@ -22,10 +27,27 @@ if (!filePath.startsWith(publicRoot)) {
 
 let svg = readFileSync(filePath, 'utf8');
 svg = namespaceSvgIds(svg, svgIdPrefix(relativeSrc));
+
+// Натуральная (макетная) ширина схемы: width, иначе третье число viewBox.
+// Она задаёт единый масштаб чтения — 100% — на узких экранах (примитив
+// .schema в global.css).
+const naturalWidth =
+  Number.parseFloat(svg.match(/\swidth="([\d.]+)"/)?.[1] ?? '') ||
+  Number.parseFloat(svg.match(/\sviewBox="[\d.-]+\s+[\d.-]+\s+([\d.]+)/)?.[1] ?? '');
+
+if (!Number.isFinite(naturalWidth) || naturalWidth <= 0) {
+  throw new Error(`[PublicSvg] cannot read natural width of ${src}`);
+}
 ---
 
 <div
-  class:list={['public-svg', fit === 'container' && 'public-svg--container', className]}
+  class:list={[
+    'public-svg schema',
+    fit === 'container' && 'public-svg--container',
+    scroll && 'public-svg--scroll',
+    className,
+  ]}
+  style={`--schema-natural:${naturalWidth}px`}
   role="img"
   aria-label={alt}
 >
@@ -44,9 +66,18 @@ svg = namespaceSvgIds(svg, svgIdPrefix(relativeSrc));
     height: auto;
   }
 
+  /* Масштаб 100% и концевой отступ на узких экранах — примитив .schema
+     в global.css (--schema-natural выставлен на корне выше). */
+
   .public-svg--container,
   .public-svg--container :global(svg) {
     width: 100%;
+  }
+
+  .public-svg--scroll {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
   }
 
   /* Inlined SVGs share one document, so a bare `text{}` rule inside any of

@@ -20,6 +20,7 @@ const locale = (Astro.props.locale ?? (Astro.currentLocale === 'ru' ? 'ru' : 'en
 const ui = {
   ru: {
     hint: 'Наведите на область карточки или запустите пошаговый разбор.',
+    touchHint: 'Запустите пошаговый разбор карточки.',
     cta: 'Разобрать карточку',
     replayCta: 'Посмотреть разбор снова',
     first: 'В начало',
@@ -29,6 +30,9 @@ const ui = {
     close: 'Закрыть разбор',
     imageAlt: 'Карточка инцидента INC-2843 на карте',
     captionIdle: 'Наведите — превью зоны. Клик по зоне или кнопке — пошаговый разбор.',
+    captionIdleTouch: 'Запустите разбор, чтобы пройти карточку шаг за шагом.',
+    captionStartedTouch: 'Разбор запущен. Используйте кнопки ниже для перехода между шагами.',
+    captionCompletedTouch: 'Разбор пройден. Нажмите кнопку, чтобы посмотреть его снова.',
     captionKeys: 'шаги ·',
     captionExit: '— выход',
     captionStarted: 'Разбор карточки запущен. Стрелки — шаги, Esc — выход.',
@@ -36,6 +40,7 @@ const ui = {
   },
   en: {
     hint: 'Hover over a card area or start the step-by-step walkthrough.',
+    touchHint: 'Start the step-by-step card walkthrough.',
     cta: 'Break down card',
     replayCta: 'Watch walkthrough again',
     first: 'Back to start',
@@ -45,6 +50,9 @@ const ui = {
     close: 'Close walkthrough',
     imageAlt: 'Incident card INC-2843 on the map',
     captionIdle: 'Hover — zone preview. Click a zone or the button for a step-by-step walkthrough.',
+    captionIdleTouch: 'Start the walkthrough to go through the card step by step.',
+    captionStartedTouch: 'Walkthrough started. Use the controls below to move between steps.',
+    captionCompletedTouch: 'Walkthrough complete. Use the button to watch it again.',
     captionKeys: 'steps ·',
     captionExit: '— exit',
     captionStarted: 'Card walkthrough started. Arrow keys move between steps, Esc exits.',
@@ -73,13 +81,17 @@ const widths = [672, 1008, 1344];
   data-next-label={ui.next}
   data-done-label={ui.done}
   data-caption-idle={ui.captionIdle}
+  data-caption-idle-touch={ui.captionIdleTouch}
+  data-caption-started-touch={ui.captionStartedTouch}
+  data-caption-completed-touch={ui.captionCompletedTouch}
   data-caption-started={ui.captionStarted}
   data-caption-completed={ui.captionCompleted}
 >
   <div class="incw__intro">
     <p class="incw__hint">
       <Icon name="zap" size={16} class="incw__hint-ico" />
-      {hint}
+      <span class="incw__pointer-copy">{hint}</span>
+      <span class="incw__touch-copy">{ui.touchHint}</span>
     </p>
     <button class="incw__start" type="button" data-start>{cta}</button>
   </div>
@@ -144,6 +156,8 @@ const widths = [672, 1008, 1344];
 </section>
 
 <script>
+  import { createStepScroller } from '../../lib/walkthrough-motion';
+
   interface Zone {
     id: string;
     title: string;
@@ -193,11 +207,17 @@ const widths = [672, 1008, 1344];
     const replayCta = root.dataset.replayCta || 'Посмотреть разбор снова';
     const nextLabel = root.dataset.nextLabel || 'Далее';
     const doneLabel = root.dataset.doneLabel || 'Готово';
-    const captionIdle = root.dataset.captionIdle || 'Наведите — превью зоны. Клик по зоне или кнопке — пошаговый разбор.';
-    const captionStarted =
-      root.dataset.captionStarted || 'Разбор карточки запущен. Стрелки — шаги, Esc — выход.';
-    const captionCompleted =
-      root.dataset.captionCompleted || 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.';
+    // На touch заход в разбор только кнопкой (см. regionsEnabled ниже), поэтому
+    // и подписи там «кнопочные», без упоминания зон.
+    const touchOnly = window.matchMedia('(hover: none)').matches;
+    const pick = (touch?: string, pointer?: string, fallback = '') =>
+      (touchOnly ? touch || pointer : pointer) || fallback;
+    const captionIdle = pick(root.dataset.captionIdleTouch, root.dataset.captionIdle);
+    const captionStarted = pick(root.dataset.captionStartedTouch, root.dataset.captionStarted);
+    const captionCompleted = pick(
+      root.dataset.captionCompletedTouch,
+      root.dataset.captionCompleted,
+    );
     let idx = -1;
     let guided = false;
     let completed = false;
@@ -216,6 +236,21 @@ const widths = [672, 1008, 1344];
       const bottom = (100 - z.top - z.height).toFixed(2);
       return `inset(${z.top}% ${(100 - z.left - z.width).toFixed(4)}% ${bottom}% ${z.left}% round 8px)`;
     };
+
+    // Компактная раскладка и touch — те же правила, что в Walkthrough.astro.
+    const compactQuery = window.matchMedia('(max-width: 47.9375rem)');
+    const isCompact = () => compactQuery.matches;
+    // Заход через зоны — только там, где есть настоящий hover: на touch
+    // остаётся кнопка. Одна точка входа вместо двух, и никакого залипающего
+    // :hover на зонах после тапа.
+    const regionsEnabled = window.matchMedia('(hover: hover)').matches;
+
+    // Скролл шага — на общем клоке с CSS-переходами рамки и тултипа, иначе их
+    // разность на экране идёт по дуге (см. walkthrough-motion.ts). Горизонтали
+    // у этой сцены нет: она всегда по ширине колонки.
+    const stepScroller = createStepScroller(null, (ms) => {
+      suppressExitUntil = performance.now() + ms + 140;
+    });
 
     const reflow = (el: HTMLElement) => void el.offsetWidth;
     const setFramePos = (i: number) => {
@@ -271,20 +306,48 @@ const widths = [672, 1008, 1344];
     // смене страницы; внутри страницы (1↔2↔3, 4↔5) карточка стоит на месте.
     const TOP_GAP = 16;
     const CTRL_CLEAR = 96; // высота плавающей панели снизу + зазор
+
+    // Компактная раскладка: сцена помещается по высоте целиком, поэтому
+    // постраничная перестановка страницы не нужна — любой лишний скролл сбивает
+    // ориентацию. Двигаем ровно настолько, чтобы шаг (зона + тултип) попал в
+    // видимую полосу, и не двигаем совсем, если он уже там — семантика
+    // scrollIntoView({block:'nearest'}) для составного прямоугольника.
+    const nearestScrollForStep = (i: number) => {
+      const r = stage.getBoundingClientRect();
+      const H = stage.clientHeight;
+      const z = zones[i];
+      const zoneTop = r.top + (z.whole ? 0 : (z.top / 100) * H);
+      const zoneBottom = r.top + (z.whole ? H : ((z.top + z.height) / 100) * H);
+      const tipTop = r.top + (parseFloat(tip.style.top) || 0);
+      const bandTop = Math.min(zoneTop, tipTop);
+      const bandBottom = Math.max(zoneBottom, tipTop + tip.offsetHeight);
+      const safeBottom = window.innerHeight - CTRL_CLEAR;
+
+      let delta = 0;
+      if (bandTop < TOP_GAP && bandBottom > safeBottom) delta = 0;
+      else if (bandTop < TOP_GAP) delta = bandTop - TOP_GAP;
+      else if (bandBottom > safeBottom) {
+        delta = Math.min(bandBottom - safeBottom, bandTop - TOP_GAP);
+      }
+      if (Math.abs(delta) < 4) return;
+      stepScroller.by(delta);
+    };
+
     const scrollForStep = (i: number, force = false) => {
+      if (isCompact()) {
+        currentPage = pageOf(i);
+        nearestScrollForStep(i);
+        return;
+      }
       const page = pageOf(i);
       if (!force && page === currentPage) return;
       currentPage = page;
-      // Пока идёт наш программный скролл — подавляем автовыход по уходу сцены из
-      // вида, иначе промежуточные кадры плавного скролла закрыли бы разбор.
-      suppressExitUntil = performance.now() + 800;
       if (page === 0) {
         const r = (introEl || stage).getBoundingClientRect();
-        window.scrollTo({ top: Math.max(0, window.scrollY + r.top - TOP_GAP), behavior: 'smooth' });
+        stepScroller.by(r.top - TOP_GAP);
       } else {
         const r = stage.getBoundingClientRect();
-        const target = window.scrollY + r.bottom - (window.innerHeight - CTRL_CLEAR);
-        window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+        stepScroller.by(r.bottom - (window.innerHeight - CTRL_CLEAR));
       }
     };
 
@@ -417,7 +480,7 @@ const widths = [672, 1008, 1344];
       if (idx > 0) goStep(idx - 1);
     };
 
-    hotspots.forEach((h) => {
+    if (regionsEnabled) hotspots.forEach((h) => {
       const i = Number(h.dataset.i);
       h.addEventListener('mouseenter', () => {
         if (guided) return;
@@ -516,21 +579,29 @@ const widths = [672, 1008, 1344];
     };
 
     let exitRaf = 0;
-    const checkAutoExit = () => {
+    const onViewportScroll = () => {
       if (exitRaf) return;
       exitRaf = window.requestAnimationFrame(() => {
         exitRaf = 0;
+        const visible = isStageMostlyVisible();
         if (!guided) return;
         if (performance.now() < suppressExitUntil) return;
-        if (!isStageMostlyVisible()) closeGuided();
+        if (!visible) closeGuided();
       });
     };
 
-    window.addEventListener('scroll', checkAutoExit, { passive: true, signal });
+    window.addEventListener('scroll', onViewportScroll, { passive: true, signal });
+
+    // Свой tween, в отличие от behavior:'smooth', сам по себе не прерывается
+    // жестом пользователя — прерываем явно, иначе он перебивал бы прокрутку.
+    (['wheel', 'touchstart'] as const).forEach((type) => {
+      window.addEventListener(type, stepScroller.cancel, { passive: true, signal });
+    });
 
     signal.addEventListener('abort', () => {
       window.clearTimeout(rt);
       window.cancelAnimationFrame(exitRaf);
+      stepScroller.cancel();
     }, { once: true });
   };
 
@@ -700,6 +771,26 @@ const widths = [672, 1008, 1344];
     inset: 0;
     z-index: 4;
   }
+
+  /* На touch заход в разбор только кнопкой: зоны остаются источником геометрии,
+     но не тап-таргет, подсказка и подпись — «кнопочные», клавиши не упоминаем. */
+  .incw__touch-copy {
+    display: none;
+  }
+  @media (hover: none) {
+    .incw__zones {
+      pointer-events: none;
+    }
+    .incw__pointer-copy {
+      display: none;
+    }
+    .incw__touch-copy {
+      display: inline;
+    }
+    .incw__caption-keys {
+      display: none;
+    }
+  }
   .incw__zone {
     position: absolute;
     padding: 0;
@@ -713,12 +804,16 @@ const widths = [672, 1008, 1344];
     cursor: pointer;
   }
   /* Навели на карточку — все зоны проступают полупрозрачно; зона под курсором —
-     ярче (чистый CSS, как на экране 1). */
-  .incw__stage.explore:hover .incw__zone {
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 16%);
-  }
-  .incw__stage.explore .incw__zone:hover {
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 65%);
+     ярче (чистый CSS, как на экране 1). Только для устройств с настоящим hover:
+     на touch :hover после тапа залипает, и полупрозрачные рамки оставались
+     висеть до тапа в другом месте. */
+  @media (hover: hover) {
+    .incw__stage.explore:hover .incw__zone {
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 16%);
+    }
+    .incw__stage.explore .incw__zone:hover {
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 65%);
+    }
   }
   .incw__stage.guided .incw__zone {
     pointer-events: none;

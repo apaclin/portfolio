@@ -61,7 +61,7 @@ const { title, description, items, maxWidth = '960px' } = Astro.props as Props;
 
               <figure class="research-highlights__media">
                 {item.imageSrc.endsWith('.svg') ? (
-                  <PublicSvg src={item.imageSrc} alt={item.imageAlt} fit="container" />
+                  <PublicSvg src={item.imageSrc} alt={item.imageAlt} fit="container" scroll />
                 ) : (
                   <img
                     src={item.imageSrc}
@@ -90,7 +90,8 @@ const { title, description, items, maxWidth = '960px' } = Astro.props as Props;
     width: 100vw;
     margin-block: 3rem 6rem;
     overflow-x: clip;
-    padding-inline: 1rem;
+    /* Тот же гаттер, что у колонки .prose, — секция читается заодно с текстом. */
+    padding-inline: 1.25rem;
     transform: translateX(-50%);
   }
 
@@ -187,6 +188,9 @@ const { title, description, items, maxWidth = '960px' } = Astro.props as Props;
   .research-highlights__media {
     grid-area: media;
     width: min(100%, 35rem);
+    /* Схема внутри не сжимается ниже макетной ширины; без min-width:0 её
+       min-content распирал бы колонку, и вместо скролла кадр обрезался бы. */
+    min-width: 0;
     margin: 0;
     justify-self: start;
     overflow: visible;

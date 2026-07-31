@@ -61,7 +61,6 @@ const ui = {
   ru: {
     hint: 'Наведите на области экрана или запустите пошаговый разбор.',
     buttonHint: 'Запустите пошаговый разбор экрана.',
-    touchHint: 'Коснитесь области экрана или запустите пошаговый разбор.',
     buttonTouchHint: 'Запустите пошаговый разбор экрана.',
     cta: 'Разобрать экран',
     replayCta: 'Посмотреть разбор снова',
@@ -72,7 +71,6 @@ const ui = {
     close: 'Закрыть разбор',
     captionIdle: 'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.',
     captionIdleButton: 'Запустите разбор, чтобы пройти экран шаг за шагом.',
-    captionIdleTouch: 'Коснитесь области, чтобы начать пошаговый разбор.',
     captionIdleButtonTouch: 'Запустите разбор, чтобы пройти экран шаг за шагом.',
     captionKeys: 'двигают рамку между шагами · клик по экрану /',
     captionExit: '— выход',
@@ -82,14 +80,12 @@ const ui = {
       'Разбор запущен. Используйте кнопки ниже для перехода между шагами.',
     captionCompleted: 'Разбор пройден. Наведите на зоны, чтобы вернуться к любой.',
     captionCompletedButton: 'Разбор пройден. Нажмите кнопку, чтобы посмотреть его снова.',
-    captionCompletedTouch: 'Разбор пройден. Коснитесь области, чтобы открыть её снова.',
     captionCompletedButtonTouch:
       'Разбор пройден. Нажмите кнопку, чтобы посмотреть его снова.',
   },
   en: {
     hint: 'Hover over screen areas or start the step-by-step walkthrough.',
     buttonHint: 'Start the step-by-step walkthrough.',
-    touchHint: 'Tap a screen area or start the step-by-step walkthrough.',
     buttonTouchHint: 'Start the step-by-step walkthrough.',
     cta: 'Break down screen',
     replayCta: 'Watch walkthrough again',
@@ -100,7 +96,6 @@ const ui = {
     close: 'Close walkthrough',
     captionIdle: 'Hover — outline first, preview follows. Click — step-by-step walkthrough.',
     captionIdleButton: 'Start the walkthrough to break the screen down step by step.',
-    captionIdleTouch: 'Tap an area to start the step-by-step walkthrough.',
     captionIdleButtonTouch: 'Start the walkthrough to break the screen down step by step.',
     captionKeys: 'move the frame between steps · click the screen /',
     captionExit: '— exit',
@@ -110,7 +105,6 @@ const ui = {
       'Walkthrough started. Use the controls below to move between steps.',
     captionCompleted: 'Walkthrough complete. Hover over zones to jump back to any step.',
     captionCompletedButton: 'Walkthrough complete. Use the button to watch it again.',
-    captionCompletedTouch: 'Walkthrough complete. Tap an area to open it again.',
     captionCompletedButtonTouch: 'Walkthrough complete. Use the button to watch it again.',
   },
 }[locale];
@@ -126,7 +120,9 @@ const {
   zones,
   entryMode = 'regions',
   hint = entryMode === 'button' ? ui.buttonHint : ui.hint,
-  touchHint = entryMode === 'button' ? ui.buttonTouchHint : ui.touchHint,
+  // На touch заход в разбор всегда через кнопку (см. regionsEnabled ниже),
+  // поэтому touch-копия — всегда «кнопочная», независимо от entryMode.
+  touchHint = ui.buttonTouchHint,
   cta = ui.cta,
   replayCta = ui.replayCta,
   maxWidth = '1440px',
@@ -139,10 +135,8 @@ const {
 const captionIdle = entryMode === 'button' ? ui.captionIdleButton : ui.captionIdle;
 const captionCompleted =
   entryMode === 'button' ? ui.captionCompletedButton : ui.captionCompleted;
-const captionIdleTouch =
-  entryMode === 'button' ? ui.captionIdleButtonTouch : ui.captionIdleTouch;
-const captionCompletedTouch =
-  entryMode === 'button' ? ui.captionCompletedButtonTouch : ui.captionCompletedTouch;
+const captionIdleTouch = ui.captionIdleButtonTouch;
+const captionCompletedTouch = ui.captionCompletedButtonTouch;
 
 // Верхняя ступень доходит до нативной ширины: сцена рисуется вплоть до 1440 CSS,
 // а на 2x-экране это 2880 px — иначе Retina получает 1920 и картинка мылит.
@@ -350,6 +344,8 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 </section>
 
 <script>
+  import { createStepScroller } from '../../lib/walkthrough-motion';
+
   const initWalkthrough = (root: HTMLElement, signal: AbortSignal) => {
     if (root.dataset.ready === 'true') return;
     root.dataset.ready = 'true';
@@ -417,7 +413,12 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
     const N = zones.length;
     const lastStepAlign = root.dataset.lastStepAlign || 'default';
-    const regionsEnabled = root.dataset.entryMode !== 'button';
+    // Заход в разбор через зоны — только там, где есть настоящий hover.
+    // На touch остаётся кнопка: превью по наведению там всё равно нет, тап по
+    // зоне конфликтует с горизонтальным панорамированием сцены, а :hover после
+    // тапа «залипает». Одна точка входа вместо двух — меньше состояний.
+    const hoverCapable = window.matchMedia('(hover: hover)').matches;
+    const regionsEnabled = root.dataset.entryMode !== 'button' && hoverCapable;
     const alternateStepIndex =
       alternateReveal && root.dataset.alternateStep
         ? Number(root.dataset.alternateStep) - 1
@@ -432,6 +433,11 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     const nextLabel = root.dataset.nextLabel || 'Далее';
     const doneLabel = root.dataset.doneLabel || 'Готово';
     const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    // Компактная раскладка = та, где сцена шире вьюпорта и уезжает в свой
+    // горизонтальный скролл (см. min-width сцены в стилях ниже). Именно она,
+    // а не тип указателя, определяет размещение тултипа, панели и скролла.
+    const compactQuery = window.matchMedia('(max-width: 47.9375rem)');
+    const isCompact = () => compactQuery.matches;
     const captionIdle =
       (coarsePointer ? root.dataset.captionIdleTouch : root.dataset.captionIdle) ||
       'Наведите — обводка сразу, превью следом. Клик — пошаговый разбор.';
@@ -477,9 +483,28 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
     // Все разборы используют viewport-fixed контролы, кроме явно помеченного
     // main page T-Taxi: там панель должна оставаться у нижнего края сцены.
+    // На компактной раскладке исключения нет: сцена там шире вьюпорта, и панель,
+    // отцентрованная по сцене, наполовину уезжает за экран. Фиксируем во
+    // вьюпорте — тогда она всегда строго по центру и всегда достижима.
+    //
+    // Видимость панели и её режим позиционирования — РАЗНЫЕ вещи и живут на
+    // разных элементах (.guided на сцене гасит opacity, .controls-fixed на
+    // корне задаёт fixed). Снимать их одновременно нельзя: fixed→absolute
+    // срабатывает мгновенно, и панель на глазах улетает внутрь сцены прямо
+    // во время затухания. Поэтому режим переключаем только после кроссфейда.
+    const CONTROLS_EXIT_MS = 240;
+    let controlsModeTimer = 0;
     const updateControlsMode = () => {
-      const fixedToViewport = root.dataset.controlsPlacement !== 'stage';
-      root.classList.toggle('controls-fixed', guided && fixedToViewport);
+      window.clearTimeout(controlsModeTimer);
+      const fixedToViewport = isCompact() || root.dataset.controlsPlacement !== 'stage';
+      if (guided) {
+        root.classList.toggle('controls-fixed', fixedToViewport);
+        return;
+      }
+      if (!root.classList.contains('controls-fixed')) return;
+      controlsModeTimer = window.setTimeout(() => {
+        if (!guided) root.classList.remove('controls-fixed');
+      }, CONTROLS_EXIT_MS);
     };
 
     // Снимаем фокус с элемента разбора (зона/кнопка), чтобы после клика+клавиш
@@ -499,6 +524,13 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
     const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
+    // Минимальный отступ карточки от краёв экрана сервиса на компактной
+    // раскладке (совпадает с вертикальным зазором полосы шага).
+    const COMPACT_EDGE_INSET = 16;
+
+    // Карточка всегда живёт внутри сцены и позиционируется относительно UI
+    // сервиса, а не вьюпорта. Различается только сторона привязки:
+    // десктоп — сбоку от зоны, компактная раскладка — над зоной или под ней.
     const placeCard = (r: Rect, fg: boolean, below = false) => {
       const W = stage.clientWidth;
       const H = stage.clientHeight;
@@ -509,10 +541,29 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       const cw = card.offsetWidth || 336;
       const ch = card.offsetHeight || 120;
       const gap = 14;
-      const maxTop = H - ch - (fg ? 96 : 12);
+      const compact = isCompact();
+      // Панель управления на компактной раскладке зафиксирована во вьюпорте,
+      // поэтому место под неё внутри сцены резервировать не нужно.
+      const maxTop = H - ch - (fg && !compact ? 96 : 12);
+      // Отступ от краёв экрана сервиса. На компактной раскладке он заметный:
+      // у зоны, прижатой к краю, карточка иначе залипает вплотную к границе.
+      const edge = compact ? COMPACT_EDGE_INSET : 10;
       let left: number;
       let top: number;
-      if (below) {
+      if (compact) {
+        // Строго над зоной или под ней: сбоку карточка увела бы из вида саму
+        // зону — сцена здесь шире экрана. По горизонтали равняем карточку с
+        // зоной по ближней стороне (левый край к левому / правый к правому),
+        // а не по центру.
+        left = fl + fw / 2 < W / 2 ? fl : fl + fw - cw;
+        const belowTop = ft + fh + gap;
+        const aboveTop = ft - gap - ch;
+        if (belowTop <= maxTop) top = belowTop;
+        else if (aboveTop >= edge) top = aboveTop;
+        // Ни снизу, ни сверху не помещается (зона почти во всю высоту) —
+        // уводим карточку вниз экрана сервиса, а не оставляем по центру зоны.
+        else top = maxTop;
+      } else if (below) {
         // Под зоной, по центру — так карточка не перекрывает раскрытый поповер.
         left = fl + fw / 2 - cw / 2;
         top = ft + fh + gap;
@@ -523,8 +574,8 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
         // Выравнивание по верху зоны (v11), а не центрирование.
         top = ft;
       }
-      left = clamp(left, 10, Math.max(10, W - cw - 10));
-      top = clamp(top, 10, Math.max(10, maxTop));
+      left = clamp(left, edge, Math.max(edge, W - cw - edge));
+      top = clamp(top, edge, Math.max(edge, maxTop));
       card.style.left = Math.round(left) + 'px';
       card.style.top = Math.round(top) + 'px';
     };
@@ -592,37 +643,48 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       };
     };
 
-    const smoothScrollTo = (rawTargetY: number) => {
-      const targetY = Math.max(0, Math.round(rawTargetY));
-      if (Math.abs(targetY - window.scrollY) < 4) return;
-      suppressExitUntil = performance.now() + 900;
-      window.scrollTo({ top: targetY, behavior: 'smooth' });
-    };
+    // Скролл шага едет на общем клоке с CSS-переходами рамки и карточки —
+    // иначе их разность на экране идёт по дуге (см. walkthrough-motion.ts).
+    const stepScroller = createStepScroller(wide, (ms) => {
+      suppressExitUntil = performance.now() + ms + 140;
+    });
+    const tweenScroll = (dy: number, dx: number) => stepScroller.by(dy, dx);
+    const cancelStepTween = () => stepScroller.cancel();
 
-    const ensureCardHorizontallyVisible = () => {
-      if (!wide) return;
-      const wideRect = wide.getBoundingClientRect();
+    // Полоса шага по горизонтали: зона + карточка. Раньше учитывалась только
+    // карточка, и при боковом размещении сцена уезжала так, что сама зона
+    // оказывалась за краем. Двигаем на минимум — как block:'nearest'.
+    const stepBandX = (i: number) => {
       const stageRect = stage.getBoundingClientRect();
+      const W = stage.clientWidth;
+      const z = zones[i];
+      const zoneLeft = stageRect.left + (z.l / 100) * W;
+      const zoneRight = stageRect.left + ((z.l + z.w) / 100) * W;
       const cardLeft = stageRect.left + (parseFloat(card.style.left) || 0);
-      const cardRight = cardLeft + card.offsetWidth;
-      const visibleLeft = Math.max(0, wideRect.left) + TOOLTIP_GAP;
-      const visibleRight = Math.min(window.innerWidth, wideRect.right) - TOOLTIP_GAP;
-      let nextScrollLeft = wide.scrollLeft;
-
-      if (cardLeft < visibleLeft) nextScrollLeft -= visibleLeft - cardLeft;
-      else if (cardRight > visibleRight) nextScrollLeft += cardRight - visibleRight;
-
-      nextScrollLeft = clamp(
-        nextScrollLeft,
-        0,
-        Math.max(0, wide.scrollWidth - wide.clientWidth),
-      );
-      if (Math.abs(nextScrollLeft - wide.scrollLeft) < 2) return;
-      suppressExitUntil = performance.now() + 900;
-      wide.scrollTo({ left: Math.round(nextScrollLeft), behavior: 'smooth' });
+      return {
+        start: Math.min(zoneLeft, cardLeft),
+        end: Math.max(zoneRight, cardLeft + card.offsetWidth),
+      };
     };
 
-    const topAlignStageAndCard = () => {
+    const stepScrollDeltaX = (i: number) => {
+      if (!wide) return 0;
+      if (Math.max(0, wide.scrollWidth - wide.clientWidth) === 0) return 0;
+      const wideRect = wide.getBoundingClientRect();
+      const { start, end } = stepBandX(i);
+      const visibleStart = Math.max(0, wideRect.left) + TOOLTIP_GAP;
+      const visibleEnd = Math.min(window.innerWidth, wideRect.right) - TOOLTIP_GAP;
+
+      if (end - start > visibleEnd - visibleStart) {
+        // Полоса шире окна: показать целиком нельзя — центрируем её.
+        return (start + end) / 2 - (visibleStart + visibleEnd) / 2;
+      }
+      if (start < visibleStart) return start - visibleStart;
+      if (end > visibleEnd) return end - visibleEnd;
+      return 0;
+    };
+
+    const topAlignTargetY = () => {
       const stageRect = stage.getBoundingClientRect();
       const stageTopPage = window.scrollY + stageRect.top;
       const cardTopPage = stageTopPage + (parseFloat(card.style.top) || 0);
@@ -637,11 +699,11 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
         targetY = cardBottomPage - window.innerHeight + TOOLTIP_BOTTOM_GAP;
       }
 
-      smoothScrollTo(targetY);
+      return targetY;
     };
 
     // Последний шаг: низ фрейма чуть выше низа экрана.
-    const bottomAlignFrame = (i: number) => {
+    const bottomAlignTargetY = (i: number) => {
       const { bottom } = frameEdgesPage(i);
       const stageRect = stage.getBoundingClientRect();
       const stageTopPage = window.scrollY + stageRect.top;
@@ -656,13 +718,46 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
         targetY = cardBottomPage - window.innerHeight + TOOLTIP_BOTTOM_GAP;
       }
 
-      smoothScrollTo(targetY);
+      return targetY;
+    };
+
+    // Компактная раскладка: сцена целиком помещается по высоте, поэтому
+    // переставлять страницу на каждом шаге незачем — любой лишний скролл сбивает
+    // ориентацию. Двигаем ровно настолько, чтобы шаг (зона + карточка) попал в
+    // видимую полосу, и не двигаем совсем, если он уже там: это семантика
+    // scrollIntoView({block:'nearest'}), только для составного прямоугольника.
+    // Десктоп сохраняет свои осознанные выравнивания (верх сцены / низ зоны).
+    const COMPACT_TOP_GAP = 16;
+    const COMPACT_BOTTOM_GAP = 96; // фиксированная панель управления + зазор
+
+    const compactScrollDeltaY = (i: number) => {
+      const stageRect = stage.getBoundingClientRect();
+      const H = stage.clientHeight;
+      const z = zones[i];
+      const zoneTop = stageRect.top + (z.t / 100) * H;
+      const zoneBottom = stageRect.top + ((z.t + z.h) / 100) * H;
+      const cardTop = stageRect.top + (parseFloat(card.style.top) || 0);
+      const bandTop = Math.min(zoneTop, cardTop);
+      const bandBottom = Math.max(zoneBottom, cardTop + card.offsetHeight);
+      const safeBottom = window.innerHeight - COMPACT_BOTTOM_GAP;
+
+      // Шаг выше полосы и уже перекрывает её целиком — не дёргаем.
+      if (bandTop < COMPACT_TOP_GAP && bandBottom > safeBottom) return 0;
+      if (bandTop < COMPACT_TOP_GAP) return bandTop - COMPACT_TOP_GAP;
+      if (bandBottom > safeBottom) {
+        // Подтягиваем снизу, но не настолько, чтобы срезать верх шага.
+        return Math.min(bandBottom - safeBottom, bandTop - COMPACT_TOP_GAP);
+      }
+      return 0;
     };
 
     const focusStepInViewport = (i: number) => {
-      if (i === N - 1 && lastStepAlign === 'bottom') bottomAlignFrame(i);
-      else topAlignStageAndCard();
-      ensureCardHorizontallyVisible();
+      const targetY = isCompact()
+        ? window.scrollY + compactScrollDeltaY(i)
+        : i === N - 1 && lastStepAlign === 'bottom'
+          ? bottomAlignTargetY(i)
+          : topAlignTargetY();
+      tweenScroll(targetY - window.scrollY, stepScrollDeltaX(i));
     };
 
     // ── Вход в guided ──
@@ -702,14 +797,18 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
         frame.classList.add('on');
         card.classList.add('show', 'stepped');
         // .step вырастет на max-height 22px + margin-bottom 12px = 34px.
-        const stepDelta = 34;
-        const chFinal = card.offsetHeight + stepDelta;
-        const curTop = parseFloat(card.style.top) || 0;
-        const maxTop = stage.clientHeight - chFinal - 96;
-        if (curTop > maxTop) {
-          card.classList.add('moving');
-          card.style.top = Math.round(Math.max(10, maxTop)) + 'px';
-          window.setTimeout(() => card.classList.remove('moving'), 460);
+        // Резерв под панель имеет смысл только там, где она внутри сцены, то
+        // есть на десктопе; на компактной раскладке над/под зоной уже уложено.
+        if (!isCompact()) {
+          const stepDelta = 34;
+          const chFinal = card.offsetHeight + stepDelta;
+          const curTop = parseFloat(card.style.top) || 0;
+          const maxTop = stage.clientHeight - chFinal - 96;
+          if (curTop > maxTop) {
+            card.classList.add('moving');
+            card.style.top = Math.round(Math.max(10, maxTop)) + 'px';
+            window.setTimeout(() => card.classList.remove('moving'), 460);
+          }
         }
       } else {
         // Вход через кнопку (без предварительного hover): карточка подъезжает
@@ -907,22 +1006,31 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     };
 
     let exitRaf = 0;
-    const checkAutoExit = () => {
+    const onViewportScroll = () => {
       if (exitRaf) return;
       exitRaf = window.requestAnimationFrame(() => {
         exitRaf = 0;
+        const visible = isStageMostlyVisible();
         if (!guided) return;
         if (performance.now() < suppressExitUntil) return;
-        if (!isStageMostlyVisible()) closeGuided();
+        if (!visible) closeGuided();
       });
     };
 
-    window.addEventListener('scroll', checkAutoExit, { passive: true, signal });
-    wide?.addEventListener('scroll', checkAutoExit, { passive: true, signal });
+    window.addEventListener('scroll', onViewportScroll, { passive: true, signal });
+    wide?.addEventListener('scroll', onViewportScroll, { passive: true, signal });
+
+    // Свой tween, в отличие от behavior:'smooth', сам по себе не прерывается
+    // жестом пользователя — прерываем явно, иначе он перебивал бы прокрутку.
+    (['wheel', 'touchstart'] as const).forEach((type) => {
+      window.addEventListener(type, cancelStepTween, { passive: true, signal });
+    });
 
     signal.addEventListener('abort', () => {
       window.clearTimeout(rt);
+      window.clearTimeout(controlsModeTimer);
       window.cancelAnimationFrame(exitRaf);
+      cancelStepTween();
     }, { once: true });
   };
 
@@ -1212,12 +1320,16 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     transition: box-shadow 0.22s ease;
   }
   /* В T-Taxi при наведении на экран показываем всю карту зон приглушённо.
-     Matchpoint ниже отключает её через button-only override. */
-  .walkthrough__stage.explore:hover .walkthrough__region {
-    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 20%);
-  }
-  .walkthrough__stage.explore .walkthrough__region:hover {
-    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 90%);
+     Matchpoint ниже отключает её через button-only override.
+     Только для устройств с настоящим hover: на touch :hover после тапа
+     залипает, и карта зон оставалась висеть до тапа в другом месте. */
+  @media (hover: hover) {
+    .walkthrough__stage.explore:hover .walkthrough__region {
+      box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 20%);
+    }
+    .walkthrough__stage.explore .walkthrough__region:hover {
+      box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 90%);
+    }
   }
   .walkthrough__stage.guided .walkthrough__region {
     cursor: default;
@@ -1226,6 +1338,14 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
      ни click-target и не показывают вспомогательную сетку. */
   .walkthrough[data-entry-mode='button'] .walkthrough__regions {
     pointer-events: none;
+  }
+  /* То же на touch, независимо от entryMode: заход только кнопкой, поэтому зона
+     не тап-таргет — иначе тап конкурирует с горизонтальным панорамированием
+     сцены. Обводок здесь тоже нет: они живут в @media (hover: hover). */
+  @media (hover: none) {
+    .walkthrough__regions {
+      pointer-events: none;
+    }
   }
   .walkthrough[data-entry-mode='button']
     .walkthrough__stage.explore:hover
@@ -1274,8 +1394,10 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   .walkthrough[data-theme='light'] .walkthrough__reveal {
     transform: translate(-1px, -1px);
   }
-  .walkthrough[data-theme='light'] .walkthrough__stage.explore .walkthrough__region:hover {
-    box-shadow: inset 0 0 0 1px var(--walkthrough-card-border);
+  @media (hover: hover) {
+    .walkthrough[data-theme='light'] .walkthrough__stage.explore .walkthrough__region:hover {
+      box-shadow: inset 0 0 0 1px var(--walkthrough-card-border);
+    }
   }
 
   /* ── Карточка ── */
@@ -1368,9 +1490,11 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     box-shadow: 0 10px 30px -6px rgb(0 0 0 / 40%);
     opacity: 0;
     pointer-events: none;
+    /* Тот же 0.24s, что у рамки и карточки: на выходе три элемента гаснут
+       одним кроссфейдом, а не вразнобой. */
     transition:
-      opacity 0.28s ease,
-      transform 0.28s ease;
+      opacity 0.24s ease,
+      transform 0.24s ease;
   }
   .walkthrough__stage.guided .walkthrough__controls {
     opacity: 1;
@@ -1501,13 +1625,13 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
     .walkthrough__stage-wrap {
       min-width: 760px;
     }
-    .walkthrough:not([data-controls-placement='stage']) .walkthrough__controls {
-      position: fixed;
-      left: 50%;
-      bottom: max(0.75rem, env(safe-area-inset-bottom));
+    /* Панель во вьюпорте получают ВСЕ разборы, включая main page T-Taxi
+       (controlsPlacement="stage"): сцена здесь шире экрана, и панель,
+       отцентрованная по сцене, наполовину уезжает за край. Позицию ставит
+       .controls-fixed (класс вешает updateControlsMode), здесь — только
+       ограничение ширины по экрану. */
+    .walkthrough .walkthrough__controls {
       max-width: calc(100vw - 1.5rem);
-      transform: translateX(-50%) translateY(4px);
-      z-index: 50;
     }
     .walkthrough__stage.guided .walkthrough__controls {
       transform: translateX(-50%);

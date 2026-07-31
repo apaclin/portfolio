@@ -2,23 +2,19 @@
 // Интерактивное сравнение user flow по трём сценариям (Финансист / Клиент /
 // Логист). Sticky-табы (segmented control) + панель активного сценария.
 //
-// Каждый сценарий приходит двумя Astro-компонентами с SVG-разметкой — десктоп
-// (обе колонки AS-IS/TO-BE в одном холсте, разной естественной высоты) и
-// мобильный (колонки в стек).
-// Нужную версию показываем медиазапросом; вторая display:none (и уходит из
-// a11y-дерева). Никакого equal-height и вложенных скроллов: SVG масштабируется
-// width:100%/height:auto, скролл только страничный.
+// Каждый сценарий — один Astro-компонент с SVG-разметкой: обе колонки
+// AS-IS/TO-BE в одном холсте 1440px, разной естественной высоты. Отдельной
+// узкой мобильной версии нет: на узком экране схема всё равно не помещается,
+// а раз горизонтальный скролл уже есть, читать один и тот же холст в масштабе
+// 100% лучше, чем перекладывать колонки в стек ради того же скролла.
 //
-// Ширина секции — через Breakout (~1440px, под нативный холст SVG), но с
-// scroll={false}: overflow-x-контейнер ломает position:sticky, а нашему контенту
-// горизонтальный скролл не нужен (SVG жмётся width:100%).
+// Ширина секции — через Breakout (1440px, под нативный холст SVG), но с
+// scroll={false}: overflow-x-контейнер ломает position:sticky у табов. Скроллит
+// сама фигура — sticky-таббар ей не потомок, поэтому не ломается.
 import Breakout from '../common/Breakout.astro';
 import FinanceDesktop from '../case/laneo/flows/finance.astro';
 import ClientDesktop from '../case/laneo/flows/client.astro';
 import LogisticsDesktop from '../case/laneo/flows/logistics.astro';
-import FinanceMobile from '../case/laneo/flows/mobile-finance.astro';
-import ClientMobile from '../case/laneo/flows/mobile-client.astro';
-import LogisticsMobile from '../case/laneo/flows/mobile-logistics.astro';
 
 type Lang = 'ru' | 'en';
 interface Props { lang?: Lang; }
@@ -35,8 +31,7 @@ const ui = {
 interface Scenario {
   id: string;
   tab: Record<Lang, string>;
-  Desktop: any;
-  Mobile: any;
+  Canvas: any;
   label: Record<Lang, string>;
 }
 
@@ -44,8 +39,7 @@ const scenarios: Scenario[] = [
   {
     id: 'client',
     tab: { ru: 'Клиент', en: 'Client' },
-    Desktop: ClientDesktop,
-    Mobile: ClientMobile,
+    Canvas: ClientDesktop,
     label: {
       ru: 'Сценарий «клиент на линии — где мой заказ». Слева — текущий путь (AS-IS): менеджер сверяет наличие, отгрузки и оплату по CRM, WMS, Excel и ERP и отвечает вручную. Справа — целевой путь (TO-BE): статус заказа и прогресс-бары в одном обзоре, ответ по конкретике за секунды.',
       en: 'Scenario “client on the line — where’s my order”. Left — the current path (AS-IS): the manager reconciles availability, shipments and payment across CRM, WMS, Excel and ERP and answers by hand. Right — the target path (TO-BE): order status and progress bars in a single overview, a specific answer in seconds.',
@@ -54,8 +48,7 @@ const scenarios: Scenario[] = [
   {
     id: 'finance',
     tab: { ru: 'Финансист', en: 'Finance' },
-    Desktop: FinanceDesktop,
-    Mobile: FinanceMobile,
+    Canvas: FinanceDesktop,
     label: {
       ru: 'Сценарий «разговор об оплате с финансами». Слева — текущий путь (AS-IS): ответ про оплату и отгрузку собирается вручную из CRM, WMS, ERP и Excel. Справа — целевой путь (TO-BE): статус оплаты и отгрузки виден в одном обзоре, ответ с разбивкой по счетам.',
       en: 'Scenario “a payment conversation with finance”. Left — the current path (AS-IS): the answer about payment and shipping is assembled by hand from CRM, WMS, ERP and Excel. Right — the target path (TO-BE): payment and shipment status visible in a single overview, an answer broken down by invoice.',
@@ -64,8 +57,7 @@ const scenarios: Scenario[] = [
   {
     id: 'logistics',
     tab: { ru: 'Логист', en: 'Logistics' },
-    Desktop: LogisticsDesktop,
-    Mobile: LogisticsMobile,
+    Canvas: LogisticsDesktop,
     label: {
       ru: 'Сценарий «согласование отгрузок с логистикой». Слева — текущий путь (AS-IS): чтобы понять, последняя ли отгрузка, менеджер сверяет Excel, WMS и уточняет у логиста. Справа — целевой путь (TO-BE): статус отгрузки виден в обзоре, ответ с раскладкой остатка.',
       en: 'Scenario “coordinating shipments with logistics”. Left — the current path (AS-IS): to tell whether a shipment is the last one, the manager checks Excel and WMS and asks the logistician. Right — the target path (TO-BE): shipment status visible in the overview, an answer with the remainder laid out.',
@@ -108,8 +100,7 @@ const scenarios: Scenario[] = [
 
     {
       scenarios.map((s, i) => {
-        const Desktop = s.Desktop;
-        const Mobile = s.Mobile;
+        const Canvas = s.Canvas;
         return (
           <div
             id={`sf-panel-${s.id}`}
@@ -121,18 +112,12 @@ const scenarios: Scenario[] = [
             hidden={i !== 0}
           >
             <div
-              class="scenario-flows__figure scenario-flows__figure--desktop"
+              class="scenario-flows__figure schema"
+              style="--schema-natural:1440px"
               role="img"
               aria-label={s.label[lang]}
             >
-              <Desktop lang={lang} />
-            </div>
-            <div
-              class="scenario-flows__figure scenario-flows__figure--mobile"
-              role="img"
-              aria-label={s.label[lang]}
-            >
-              <Mobile lang={lang} />
+              <Canvas lang={lang} />
             </div>
           </div>
         );
@@ -229,9 +214,22 @@ const scenarios: Scenario[] = [
     max-width: 100%;
   }
 
-  /* Переключение десктоп/мобилка. Скрытая версия уходит из a11y-дерева. */
-  .scenario-flows__figure--mobile {
-    display: none;
+  /* До 64rem холст 1440px не помещается и читается в масштабе 100% (примитив
+     .schema в global.css). Скроллит сама фигура, а не Breakout: sticky-таббар
+     ей не потомок и потому не ломается. Фигура при этом раздвинута до краёв
+     Breakout — иначе схема обрезалась бы по краям колонки, а не по краям
+     экрана, как у остальных схем. Отрицательный margin съедает гаттер
+     Breakout, padding-inline-start возвращает его уже внутри скролл-области,
+     чтобы схема стартовала вровень с текстом и табами; концевой отступ даёт
+     --schema-gutter. */
+  @media (max-width: 63.9375rem) {
+    .scenario-flows__figure {
+      margin-inline: calc(-1 * var(--breakout-gutter));
+      padding-inline-start: var(--breakout-gutter);
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scrollbar-width: thin;
+    }
   }
 
   @media (max-width: 47.9375rem) {
@@ -244,12 +242,6 @@ const scenarios: Scenario[] = [
       flex: 1 1 0;
       text-align: center;
       padding-inline: 0.5rem;
-    }
-    .scenario-flows__figure--desktop {
-      display: none;
-    }
-    .scenario-flows__figure--mobile {
-      display: block;
     }
   }
 

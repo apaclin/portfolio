@@ -155,6 +155,13 @@ const zoom = zoomable
   .case-image--inline :global(img) {
     width: auto;
   }
+  /* На мобильном исключение: натуральная ширина там — случайный кандидат
+     srcset (327px вместо 335px колонки). Кадр тянем ровно по колонке текста. */
+  @media (max-width: 39.9375rem) {
+    .case-image--inline :global(img) {
+      width: 100%;
+    }
+  }
   .case-image__caption {
     margin-top: 0.5rem;
     text-align: center;

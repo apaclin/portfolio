@@ -16,7 +16,7 @@ export const ui = {
     'action.allProjects': 'All projects',
     'action.switchLang': 'Русский',
     'meta.siteName': 'Portfolio',
-    'meta.description': 'Personal portfolio',
+    'meta.description': 'Product design',
     'notice.fallbackToEn':
       'This page is only available in English — showing the English version.',
     'notice.fallbackToRu':
@@ -30,7 +30,7 @@ export const ui = {
     'action.allProjects': 'Все проекты',
     'action.switchLang': 'English',
     'meta.siteName': 'Портфолио',
-    'meta.description': 'Персональное портфолио',
+    'meta.description': 'Продуктовый дизайн',
     'notice.fallbackToEn':
       'Эта страница ещё не переведена — показана английская версия.',
     'notice.fallbackToRu':
