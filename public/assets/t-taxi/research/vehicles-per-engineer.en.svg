@@ -9,7 +9,7 @@
 <text fill="#9A988F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="12" letter-spacing="0em"><tspan x="48.25" y="213.364">0</tspan></text>
 <text transform="translate(113 222)" fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="0.246094" y="13.0909">Waymo</tspan></text>
 <text transform="translate(243 222)" fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="0.342773" y="13.0909">Cruise</tspan></text>
-<text transform="translate(356 222)" fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="0.015625" y="13.0909">&#x41a;&#x438;&#x442;&#x430;&#x439;&#x441;&#x43a;&#x438;&#x435;</tspan></text>
+<text transform="translate(366 222)" fill="#6B6A64" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" letter-spacing="0em"><tspan x="0.015625" y="13.0909">Chinese</tspan></text>
 <line x1="75.5" y1="43.5" x2="455.5" y2="43.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
 <line x1="76.5" y1="77.5" x2="453.5" y2="77.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
 <line x1="76.5" y1="111.5" x2="453.5" y2="111.5" stroke="#EAE9E5" stroke-linecap="round" stroke-dasharray="2 2"/>
