@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
+import Icon from '../icons/Icon.astro';
 import BlurImage from '../common/BlurImage.astro';
 import TranslationNotice from '../common/TranslationNotice.astro';
 import filmazeCover from '../../assets/images/project-covers/filmaze.webp';
@@ -29,6 +30,20 @@ interface LinkItem {
   label: string;
   href: string;
   external?: boolean;
+  /**
+   * Значение, которое кладётся в буфер обмена по клику ВМЕСТО перехода.
+   *
+   * Обе схемы здесь ненадёжны, и обычный переход у них не «иногда не работает»,
+   * а ломается заметно. `mailto:` в Arc без назначенного почтового клиента
+   * открывает поверх страницы плавающее окно Little Arc с `about:blank` — пустое
+   * окно во весь экран вместо письма. `t.me` в РФ недоступен и ведёт в никуда.
+   *
+   * Href остаётся на элементе: он даёт семантику ссылки и сохраняет
+   * cmd/ctrl-клик, среднюю кнопку и правый клик → «Открыть» для тех, у кого
+   * переход всё-таки работает (см. обработчик ниже — модификаторы не
+   * перехватываются).
+   */
+  copy?: string;
 }
 
 interface ProjectsContent {
@@ -37,6 +52,8 @@ interface ProjectsContent {
   name: string;
   intro: string;
   openLabel: string;
+  /** Текст уведомления о копировании контакта. */
+  copiedLabel: string;
   contactLinks: LinkItem[];
   casesTitle: string;
   visualTitle: string;
@@ -58,6 +75,7 @@ const localized: Record<Locale, ProjectsContent> = {
     intro:
       'I turn complex B2B workflows and data into clear product interfaces.',
     openLabel: 'Open',
+    copiedLabel: 'Copied',
     contactLinks: [
       {
         label: 'Resume',
@@ -66,12 +84,14 @@ const localized: Record<Locale, ProjectsContent> = {
       },
       {
         label: 'Telegram',
-        href: 'http://t.me/apaclin',
+        href: 'https://t.me/apaclin',
         external: true,
+        copy: '@apaclin',
       },
       {
         label: 'Email',
         href: 'mailto:apaclin@gmail.com',
+        copy: 'apaclin@gmail.com',
       },
     ],
     casesTitle: 'B2B web services',
@@ -85,6 +105,7 @@ const localized: Record<Locale, ProjectsContent> = {
     intro:
       'Превращаю сложные B2B-процессы и данные в понятные интерфейсы продукта.',
     openLabel: 'Открыть',
+    copiedLabel: 'Скопировано',
     contactLinks: [
       {
         label: 'Резюме',
@@ -93,12 +114,14 @@ const localized: Record<Locale, ProjectsContent> = {
       },
       {
         label: 'Telegram',
-        href: 'http://t.me/apaclin',
+        href: 'https://t.me/apaclin',
         external: true,
+        copy: '@apaclin',
       },
       {
         label: 'Email',
         href: 'mailto:apaclin@gmail.com',
+        copy: 'apaclin@gmail.com',
       },
     ],
     casesTitle: 'B2B веб-сервисы',
@@ -188,6 +211,11 @@ const petProjects: Record<Locale, ProjectItem[]> = {
   ],
 };
 
+// Порядок секций определяет загрузку обложек (см. BlurImage ниже). Секции 0 и 1
+// на типовом десктопе попадают выше сгиба — обе идут `eager`, иначе браузер
+// отложит запрос до раскладки. `fetchpriority="high"` остаётся только у секции 0:
+// кандидат в LCP здесь один, и размывать приоритет пятью картинками смысла нет.
+// Секция 2 (pet-проекты) ниже сгиба на любой разумной высоте окна — там `lazy`.
 const sections: ProjectSection[] = [
   { title: content.casesTitle, items: caseItems },
   { title: content.visualTitle, items: visualProjects[locale] },
@@ -228,6 +256,7 @@ const sections: ProjectSection[] = [
                 href={link.href}
                 target={link.external ? '_blank' : undefined}
                 rel={link.external ? 'noreferrer' : undefined}
+                data-copy={link.copy}
                 class="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
               >
                 {link.label}
@@ -292,7 +321,8 @@ const sections: ProjectSection[] = [
                             widths={[480, 720, 960]}
                             sizes="(min-width: 64rem) 350px, (min-width: 40rem) 50vw, calc(100vw - 2.5rem)"
                             class="aspect-video w-full rounded-lg border border-[var(--color-border)]"
-                            eager={sectionIndex === 0}
+                            eager={sectionIndex <= 1}
+                            priority={sectionIndex === 0}
                           />
                         ) : (
                           <div class="aspect-video w-full rounded-lg bg-black"></div>
@@ -342,6 +372,151 @@ const sections: ProjectSection[] = [
     </div>
   </div>
 </main>
+
+{/* Уведомление о копировании — всплывает над нажатой ссылкой (позицию ставит JS).
+    Вне потока намеренно: подмена самого лейбла на «Copied — …» разъезжала бы
+    строку контактов, там flex-wrap и втрое разная ширина текста.
+    role="status" + aria-live делают его слышимым для скринридера: копирование
+    само по себе визуально ничем не отзывается. Имя ссылки при этом не меняется. */}
+<div class="copy-toast" data-copy-toast data-copied-label={content.copiedLabel} role="status" aria-live="polite">
+  <Icon name="check" size={14} class="copy-toast__check" />
+  <span data-copy-toast-text></span>
+</div>
+
+<script>
+  // Клик по контакту копирует значение и НЕ переходит по ссылке. Переход тут
+  // вредит: Arc на mailto открывает поверх страницы пустое окно с about:blank,
+  // а t.me недоступен в РФ — в обоих случаях посетитель получает тупик, да ещё
+  // и перекрывающий уведомление о копировании.
+  //
+  // Слушатель делегированный и висит на document: модуль выполняется один раз
+  // за полную загрузку, а ClientRouter подменяет DOM — на закэшированный узел
+  // тоста полагаться нельзя, ищем его в момент показа.
+  const TOAST_MS = 2200;
+  let toastTimer = 0;
+
+  /** Зазор от края окна, чтобы чип у крайней ссылки не липнул к границе. */
+  const EDGE = 12;
+  /** Просвет между чипом и самой ссылкой. */
+  const GAP = 8;
+
+  const showToast = (value: string, anchor: HTMLElement) => {
+    const toast = document.querySelector<HTMLElement>('[data-copy-toast]');
+    const text = toast?.querySelector<HTMLElement>('[data-copy-toast-text]');
+    if (!toast || !text) return;
+
+    const label = toast.dataset.copiedLabel || 'Copied';
+    text.textContent = `${label} — ${value}`;
+
+    // Меряем ДО показа: чип скрыт прозрачностью, а не display, поэтому размеры у
+    // него уже настоящие — и позицию можно поставить до включения анимации.
+    //
+    // Обе координаты считаем в пикселях и НЕ используем процентные сдвиги по Y:
+    // `translateY(-100%)` резолвится от высоты чипа на момент старта перехода, и
+    // стоит тексту стать выше (перенос на узком экране) — просвет уезжает.
+    const rect = anchor.getBoundingClientRect();
+    const half = toast.offsetWidth / 2;
+    const viewport = document.documentElement.clientWidth;
+    const min = EDGE + half;
+    const max = Math.max(min, viewport - EDGE - half);
+    // Координаты вьюпортные (position: fixed): чип живёт секунды и переживает
+    // их на месте, поэтому привязку к скроллу считать незачем — тем более что
+    // колонка контактов на десктопе sticky и сама по себе не едет.
+    toast.style.left = `${Math.min(Math.max(rect.left + rect.width / 2, min), max)}px`;
+
+    // По умолчанию над ссылкой; если сверху не помещается (короткое окно,
+    // прокрутка) — переносим под неё, чтобы чип не уехал за верхний край.
+    const above = rect.top - toast.offsetHeight - GAP;
+    const below = rect.bottom + GAP;
+    toast.style.top = `${above >= EDGE ? above : below}px`;
+
+    toast.classList.add('is-visible');
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => {
+      toast.classList.remove('is-visible');
+    }, TOAST_MS);
+  };
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const link = target.closest<HTMLAnchorElement>('a[data-copy]');
+    const value = link?.dataset.copy;
+    if (!value) return;
+
+    // Модификаторы и не-левую кнопку не трогаем: cmd/ctrl-клик и средняя кнопка
+    // — это явное «хочу открыть в новой вкладке», перехватывать их нельзя.
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    // Буфера может не быть в незащищённом контексте (http-превью). Тогда клик не
+    // перехватываем вовсе — пусть отработает обычный переход, это лучше, чем
+    // мёртвый клик, который ничего не делает и никуда не ведёт.
+    if (!navigator.clipboard) return;
+
+    event.preventDefault();
+    navigator.clipboard.writeText(value).then(
+      () => showToast(value, link),
+      () => {},
+    );
+  });
+</script>
+
+<style>
+  /* ── Уведомление о копировании ──
+     left/top ставит JS в координатах вьюпорта, уже с учётом высоты чипа.
+     Из transform остались только центрирование по X и короткий заезд по Y. */
+  .copy-toast {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: min(22rem, calc(100vw - 1.5rem));
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-bg-subtle);
+    padding: 0.375rem 0.625rem;
+    color: var(--color-text);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    box-shadow: 0 10px 30px -8px rgb(0 0 0 / 25%);
+    opacity: 0;
+    /* Чип не должен ловить клики: он всплывает прямо над ссылкой, и перехват
+       мешал бы повторному нажатию. Оживает только вместе с классом. */
+    pointer-events: none;
+    transform: translateX(-50%) translateY(0.25rem);
+    transition:
+      opacity 160ms ease,
+      transform 160ms ease;
+  }
+  .copy-toast.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  /* Галочка — единственное цветное пятно в чипе. `--color-accent` тут не
+     годится: он резолвится в цвет обычного текста и ничего не отличает. */
+  .copy-toast :global(.copy-toast__check) {
+    flex: none;
+    color: var(--color-success-4);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .copy-toast {
+      transition-duration: 0.001ms;
+    }
+  }
+</style>
 
 <style>
   /* Мягкий fade-in контента на первой загрузке — страница «проявляется», а не

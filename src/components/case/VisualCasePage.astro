@@ -9,6 +9,7 @@ import CaseNav from './CaseNav.astro';
 import CaseSliceImage from './CaseSliceImage.astro';
 import CaseScrollIndicator from './CaseScrollIndicator.astro';
 import CaseSliceVideo from './CaseSliceVideo.astro';
+import { caseSnapCss, caseSnapSizes } from '../../lib/images';
 import type { VisualCaseBoard } from '../../content/data/visual-cases';
 
 interface Props {
@@ -43,7 +44,8 @@ const canvasLabel =
   locale === 'ru'
     ? 'Прокручиваемые визуальные материалы кейса'
     : 'Scrollable visual case boards';
-const responsiveSizes = '100vw';
+const responsiveSizes = caseSnapSizes();
+const snapCss = caseSnapCss('.visual-case__canvas');
 ---
 
 <!doctype html>
@@ -61,6 +63,9 @@ const responsiveSizes = '100vw';
         color-scheme: dark;
       }
     </style>
+    {/* Снап ширины борда — в <head> и до первой отрисовки: иначе борд успевает
+        мелькнуть во всю ширину окна и «прыгает» на ступень. */}
+    <style is:inline set:html={snapCss}></style>
     <SeoMeta
       title={title}
       description={description}
@@ -118,13 +123,13 @@ const responsiveSizes = '100vw';
     background: var(--visual-case-bg, #000);
   }
 
-  /* Скроллбар убран из РАСКЛАДКИ намеренно. Борды идут во всю ширину, поэтому
-     место отрисовки = ширина вьюпорта минус скроллбар. Полоса в 11px делала из
-     1920 → 1909, а дробное уменьшение почти на единицу — самое разрушительное:
-     каждый пиксель становится смесью двух соседних, и текст теряет ~25%
-     резкости (замерено). Без полосы ширина совпадает со ступенью 1920 ровно, и
-     браузер не пересчитывает ничего. Прокрутка колесом, клавишами и тачем
-     работает как обычно. */
+  /* Скроллбар убран из РАСКЛАДКИ намеренно, и со снапом это стало ещё важнее.
+     Медиа-запросы меряют вьюпорт ВМЕСТЕ с полосой прокрутки, а доступное под
+     контент место — уже без неё. При видимой полосе в 11px окно 1920 всё ещё
+     проходит `min-width:1920px`, борд получает width:1920px на 1909px места и
+     вылезает за край: `overflow-x:hidden` срежет эти 11px справа, то есть
+     несимметрично. Без полосы обе величины совпадают и ступень точная.
+     Прокрутка колесом, клавишами и тачем работает как обычно. */
   html {
     color-scheme: dark;
     scrollbar-width: none;
@@ -139,9 +144,14 @@ const responsiveSizes = '100vw';
     overflow-x: hidden;
   }
 
-  .visual-case__scroller,
-  .visual-case__canvas {
+  .visual-case__scroller {
     width: 100%;
+    background: var(--visual-case-bg, #000);
+  }
+
+  /* Ширину борда задаёт ТОЛЬКО сгенерированный снап в <head> (см. caseSnapCss).
+     Здесь — фон, он же закрывает поля по бокам на промежуточных ширинах. */
+  .visual-case__canvas {
     background: var(--visual-case-bg, #000);
   }
 

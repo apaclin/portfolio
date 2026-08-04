@@ -14,8 +14,18 @@ interface Props {
   class?: string;
   /** Доп. классы для <img>. */
   imgClass?: string;
-  /** Приоритетная загрузка (above-the-fold): eager + fetchpriority=high. */
+  /** Грузить сразу, без ожидания раскладки: `loading="eager"`. */
   eager?: boolean;
+  /**
+   * `fetchpriority="high"` — только для кандидатов в LCP. По умолчанию повторяет
+   * `eager`, чтобы прежние вызовы вели себя как раньше.
+   *
+   * Разведено с `eager` намеренно: «картинка выше сгиба» и «картинка важнее
+   * остальных» — разные вещи. Above-the-fold нельзя вешать `lazy` (браузер
+   * дождётся раскладки и потеряет round trip), но и раздавать всем high нельзя —
+   * приоритет размывается, и настоящий LCP встаёт в очередь наравне с фоновыми.
+   */
+  priority?: boolean;
 }
 
 const {
@@ -26,6 +36,7 @@ const {
   class: frameClass,
   imgClass,
   eager = false,
+  priority = eager,
 } = Astro.props as Props;
 
 const src = resolveImageAsset(source, 'BlurImage.astro');
@@ -41,7 +52,7 @@ const responsiveWidths = cappedImageWidths(src.width, widths);
     format="webp"
     class:list={['frame-img', imgClass]}
     loading={eager ? 'eager' : 'lazy'}
-    fetchpriority={eager ? 'high' : 'auto'}
+    fetchpriority={priority ? 'high' : 'auto'}
     decoding="async"
   />
 </div>

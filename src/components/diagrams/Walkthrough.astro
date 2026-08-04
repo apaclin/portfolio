@@ -48,6 +48,13 @@ interface Props {
   // Отдельное выравнивание последнего шага нужно только высоким экранам,
   // где финальная зона находится далеко внизу (matchpoint Activity).
   lastStepAlign?: 'default' | 'bottom';
+  // Куда ставить сцену при заходе в разбор и на каждом шаге. `top` — верх сцены
+  // у верхнего края окна; так нужно высоким экранам (matchpoint 1440/1535),
+  // которые в окно всё равно не помещаются. `center` — сцена строго по
+  // вертикальному центру; подходит невысоким широким экранам вроде main page
+  // T-Taxi (1440/900), где иначе снизу остаётся пустая полоса и кадр выглядит
+  // сдвинутым вверх.
+  stageAlign?: 'top' | 'center';
   // В Matchpoint светлая карточка на светлом UI плохо читается в hover-preview,
   // поэтому разбор запускается только явной кнопкой. T-Taxi сохраняет регионы.
   entryMode?: 'regions' | 'button';
@@ -129,6 +136,7 @@ const {
   theme = 'dark',
   aspectRatio = '1440 / 900',
   lastStepAlign = 'default',
+  stageAlign = 'top',
   controlsPlacement = 'viewport',
 } = Astro.props as Props;
 
@@ -152,6 +160,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
   data-controls-placement={controlsPlacement}
   data-alternate-step={alternateStep}
   data-last-step-align={lastStepAlign}
+  data-stage-align={stageAlign}
   data-cta={cta}
   data-replay-cta={replayCta}
   data-next-label={ui.next}
@@ -413,6 +422,7 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
 
     const N = zones.length;
     const lastStepAlign = root.dataset.lastStepAlign || 'default';
+    const stageAlign = root.dataset.stageAlign || 'top';
     // Заход в разбор через зоны — только там, где есть настоящий hover.
     // На touch остаётся кнопка: превью по наведению там всё равно нет, тап по
     // зоне конфликтует с горизонтальным панорамированием сцены, а :hover после
@@ -684,12 +694,22 @@ const sizes = '(min-width: 92rem) 1440px, calc(100vw - 2rem)';
       return 0;
     };
 
+    // Базовое положение сцены до поправок на тултип. При `center` сцена встаёт
+    // строго по вертикальному центру окна — но только если она в него влезает:
+    // у высокой сцены (matchpoint) свободного места нет, и центрирование срезало
+    // бы её сверху, поэтому там остаётся выравнивание по верху.
+    const stageBaseTargetY = (stageTopPage: number, stageHeight: number) => {
+      const slack = window.innerHeight - stageHeight;
+      if (stageAlign === 'center' && slack > 0) return stageTopPage - slack / 2;
+      return stageTopPage - STAGE_TOP_GAP;
+    };
+
     const topAlignTargetY = () => {
       const stageRect = stage.getBoundingClientRect();
       const stageTopPage = window.scrollY + stageRect.top;
       const cardTopPage = stageTopPage + (parseFloat(card.style.top) || 0);
       const cardBottomPage = cardTopPage + card.offsetHeight;
-      let targetY = stageTopPage - STAGE_TOP_GAP;
+      let targetY = stageBaseTargetY(stageTopPage, stageRect.height);
 
       // Положение сцены — базовое, но тултип никогда не оставляем за краем.
       if (cardTopPage - targetY < TOOLTIP_GAP) {
