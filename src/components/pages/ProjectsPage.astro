@@ -7,6 +7,9 @@ import TranslationNotice from '../common/TranslationNotice.astro';
 import filmazeCover from '../../assets/images/project-covers/filmaze.webp';
 import bergstromCover from '../../assets/images/project-covers/bergstrom.webp';
 import radixCover from '../../assets/images/pet-projects/radix-cover.png';
+import joeTheZombieCover from '../../assets/images/games/joe-the-zombie.png';
+import pirateTreasuresCover from '../../assets/images/games/pirate-treasures.webp';
+import candyValleyCover from '../../assets/images/games/candy-valley.webp';
 import portrait from '../../assets/images/profile/alexander-paklin.jpg';
 import { resolveImageAsset } from '../../lib/assets';
 import type { Locale } from '../../lib/i18n';
@@ -57,6 +60,7 @@ interface ProjectsContent {
   contactLinks: LinkItem[];
   casesTitle: string;
   visualTitle: string;
+  gamesTitle: string;
   petTitle: string;
 }
 
@@ -101,6 +105,7 @@ const localized: Record<Locale, ProjectsContent> = {
     ],
     casesTitle: 'B2B web services',
     visualTitle: 'Apps and websites',
+    gamesTitle: 'Games',
     petTitle: 'Pet projects',
   },
   ru: {
@@ -136,6 +141,7 @@ const localized: Record<Locale, ProjectsContent> = {
     ],
     casesTitle: 'B2B веб-сервисы',
     visualTitle: 'Приложения и сайты',
+    gamesTitle: 'Игры',
     petTitle: 'Pet-проекты',
   },
 };
@@ -200,10 +206,75 @@ const visualProjects: Record<Locale, ProjectItem[]> = {
   ],
 };
 
+// Названия игр — это витринные названия из сторов, поэтому берутся как есть,
+// с их регистром: у Pirate Treasures и Candy Valley в RU-сторе свои локальные
+// названия, у Joe the Zombie локализации нет. Жанр «Match-3» тоже не переводим.
+//
+// Ссылки в сторе разведены по `hl`: посетитель RU-версии сайта должен попадать
+// на русскую страницу Google Play, а не на английскую. У Joe the Zombie стора
+// нет — там геймплейное видео, одно на обе локали.
+const gameProjects: Record<Locale, ProjectItem[]> = {
+  en: [
+    {
+      title: 'Joe the Zombie',
+      subtitle: 'Mobile platformer',
+      href: 'https://www.youtube.com/watch?v=FSP8YkMDfKQ',
+      external: true,
+      image: joeTheZombieCover,
+      imageAlt: 'Joe the Zombie platformer level select screen',
+    },
+    {
+      title: 'Pirate Treasures',
+      subtitle: 'Match-3',
+      href: 'https://play.google.com/store/apps/details?id=com.orangeapps.piratetreasure&hl=en',
+      external: true,
+      image: pirateTreasuresCover,
+      imageAlt: 'Pirate Treasures tournament screen with a leaderboard',
+    },
+    {
+      title: 'Candy Valley',
+      subtitle: 'Match-3',
+      href: 'https://play.google.com/store/apps/details?id=com.orangeapps.candyvalley&hl=en',
+      external: true,
+      image: candyValleyCover,
+      imageAlt: 'Candy Valley match-3 game key art',
+    },
+  ],
+  ru: [
+    {
+      title: 'Joe the Zombie',
+      subtitle: 'Мобильный платформер',
+      href: 'https://www.youtube.com/watch?v=FSP8YkMDfKQ',
+      external: true,
+      image: joeTheZombieCover,
+      imageAlt: 'Экран выбора уровня в платформере Joe the Zombie',
+    },
+    {
+      title: 'Сокровища Пиратов',
+      subtitle: 'Match-3',
+      href: 'https://play.google.com/store/apps/details?id=com.orangeapps.piratetreasure&hl=ru',
+      external: true,
+      image: pirateTreasuresCover,
+      imageAlt: 'Экран турнира с таблицей лидеров в игре «Сокровища Пиратов»',
+    },
+    {
+      title: 'Долина Сладостей',
+      subtitle: 'Match-3',
+      href: 'https://play.google.com/store/apps/details?id=com.orangeapps.candyvalley&hl=ru',
+      external: true,
+      image: candyValleyCover,
+      imageAlt: 'Ключевой арт игры «Долина Сладостей» в жанре match-3',
+    },
+  ],
+};
+
+// Заголовок — имя плагина в Figma Community, поэтому не переводится; что он
+// делает, объясняет подпись.
 const petProjects: Record<Locale, ProjectItem[]> = {
   en: [
     {
-      title: 'Color scale generator',
+      title: 'Radix Colors to Variables',
+      subtitle: 'Color scale generator',
       href: 'https://www.figma.com/community/plugin/1636766593436362521',
       external: true,
       image: radixCover,
@@ -212,7 +283,8 @@ const petProjects: Record<Locale, ProjectItem[]> = {
   ],
   ru: [
     {
-      title: 'Генератор цветовых растяжек',
+      title: 'Radix Colors to Variables',
+      subtitle: 'Генератор цветовых растяжек',
       href: 'https://www.figma.com/community/plugin/1636766593436362521',
       external: true,
       image: radixCover,
@@ -225,10 +297,12 @@ const petProjects: Record<Locale, ProjectItem[]> = {
 // на типовом десктопе попадают выше сгиба — обе идут `eager`, иначе браузер
 // отложит запрос до раскладки. `fetchpriority="high"` остаётся только у секции 0:
 // кандидат в LCP здесь один, и размывать приоритет пятью картинками смысла нет.
-// Секция 2 (pet-проекты) ниже сгиба на любой разумной высоте окна — там `lazy`.
+// Секции 2+ (игры, pet-проекты) ниже сгиба на любой разумной высоте окна —
+// там `lazy`.
 const sections: ProjectSection[] = [
   { title: content.casesTitle, items: caseItems },
   { title: content.visualTitle, items: visualProjects[locale] },
+  { title: content.gamesTitle, items: gameProjects[locale] },
   { title: content.petTitle, items: petProjects[locale] },
 ];
 ---
