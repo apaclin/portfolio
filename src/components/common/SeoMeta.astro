@@ -7,6 +7,8 @@ interface Props {
   image?: ImageMetadata;
   imageAlt?: string;
   type?: 'website' | 'article';
+  /** Убрать страницу из поиска, оставив ссылки живыми (`noindex, follow`). */
+  noindex?: boolean;
 }
 
 const {
@@ -15,6 +17,7 @@ const {
   image,
   imageAlt = title,
   type = 'website',
+  noindex = false,
 } = Astro.props as Props;
 
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
@@ -34,6 +37,7 @@ const socialImageUrl = socialImage
 ---
 
 {description && <meta name="description" content={description} />}
+{noindex && <meta name="robots" content="noindex, follow" />}
 <link rel="canonical" href={canonicalUrl} />
 
 <meta property="og:type" content={type} />

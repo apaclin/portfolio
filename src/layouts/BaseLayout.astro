@@ -18,6 +18,8 @@ interface Props {
   socialImage?: ImageMetadata;
   socialImageAlt?: string;
   socialType?: 'website' | 'article';
+  /** Скрыть страницу от поиска — для служебных и адресных вариантов страниц. */
+  noindex?: boolean;
 }
 
 const {
@@ -26,6 +28,7 @@ const {
   socialImage,
   socialImageAlt,
   socialType,
+  noindex,
 } = Astro.props;
 
 // Astro.currentLocale вычисляется из URL по конфигу i18n.
@@ -79,6 +82,7 @@ const toAbs = (url: string) => (Astro.site ? new URL(url, Astro.site).href : url
       image={socialImage}
       imageAlt={socialImageAlt}
       type={socialType}
+      noindex={noindex}
     />
     <link rel="alternate" hreflang="en" href={toAbs(enUrl)} />
     <link rel="alternate" hreflang="ru" href={toAbs(ruUrl)} />

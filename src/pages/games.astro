@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectsPage from '../components/pages/ProjectsPage.astro';
+import pirateTreasuresCover from '../assets/images/games/pirate-treasures.webp';
+import { defaultLocale } from '../lib/i18n';
+---
+
+{/* Адресный вариант главной для игровых студий: та же страница, но игры
+    первой секцией и своё резюме. `noindex` — чтобы дубль не конкурировал с
+    настоящей главной в выдаче; ссылку раздаём вручную. */}
+<BaseLayout
+  title="Game UI portfolio"
+  description="Game interface design: HUD, menus, shops, design systems"
+  socialImage={pirateTreasuresCover}
+  socialImageAlt="Pirate Treasures tournament screen with a leaderboard"
+  noindex
+>
+  <ProjectsPage locale={defaultLocale} variant="games" />
+</BaseLayout>

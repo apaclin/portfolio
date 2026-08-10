@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectsPage from '../../components/pages/ProjectsPage.astro';
+import pirateTreasuresCover from '../../assets/images/games/pirate-treasures.webp';
+---
+
+{/* Русская пара к /games — переключатель языка ищет тот же путь в другой
+    локали, поэтому обе версии должны существовать. */}
+<BaseLayout
+  title="Портфолио — игровые интерфейсы"
+  description="Дизайн игровых интерфейсов: HUD, меню, магазины, дизайн-система"
+  socialImage={pirateTreasuresCover}
+  socialImageAlt="Экран турнира с таблицей лидеров в игре «Сокровища Пиратов»"
+  noindex
+>
+  <ProjectsPage locale="ru" variant="games" />
+</BaseLayout>

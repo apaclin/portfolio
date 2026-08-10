@@ -64,26 +64,48 @@ interface ProjectsContent {
   petTitle: string;
 }
 
+/**
+ * Вариант главной. `games` — версия для игровых работодателей: секция игр
+ * поднимается наверх, интро и ссылка на резюме свои. Всё остальное общее с
+ * обычной главной намеренно: два независимых набора проектов пришлось бы
+ * править дважды и они бы разъехались.
+ */
+type PageVariant = 'default' | 'games';
+
 interface Props {
   locale?: Locale;
   fallbackContentLocale?: Locale;
+  variant?: PageVariant;
 }
 
-const { locale = 'en', fallbackContentLocale } = Astro.props as Props;
+const {
+  locale = 'en',
+  fallbackContentLocale,
+  variant = 'default',
+} = Astro.props as Props;
+
+const isGames = variant === 'games';
+
+// Резюме под игровой вариант — отдельный документ, но ссылка одна на обе
+// локали, как и у общего резюме.
+const resumeHref = isGames
+  ? 'https://docs.google.com/document/d/1hxyxdCMhaicSGwf47sa_F8ka9x6TNzEx9MqgoDPccB0/edit?usp=sharing'
+  : 'https://docs.google.com/document/d/1e_xussfmk_DTICCzpA5pLb9ZqeRFfBTKdJ7fnYEnZ8k/edit?tab=t.0#heading=h.5x0d5h95i329';
 
 const localized: Record<Locale, ProjectsContent> = {
   en: {
     portraitAlt: 'Alex Paclin',
     role: 'Product Designer',
     name: 'Alex Paclin',
-    intro:
-      'I turn complex B2B workflows and data into clear product interfaces.',
+    intro: isGames
+      ? 'I design game interfaces — HUD, menus, shops, design systems — and I know how to work with complex product processes.'
+      : 'I turn complex B2B workflows and data into clear product interfaces.',
     openLabel: 'Open',
     copiedLabel: 'Copied',
     contactLinks: [
       {
         label: 'Resume',
-        href: 'https://docs.google.com/document/d/1e_xussfmk_DTICCzpA5pLb9ZqeRFfBTKdJ7fnYEnZ8k/edit?tab=t.0#heading=h.5x0d5h95i329',
+        href: resumeHref,
         external: true,
       },
       {
@@ -112,14 +134,15 @@ const localized: Record<Locale, ProjectsContent> = {
     portraitAlt: 'Александр Паклин',
     role: 'Продуктовый дизайнер',
     name: 'Александр Паклин',
-    intro:
-      'Превращаю сложные B2B-процессы и данные в понятные интерфейсы продукта.',
+    intro: isGames
+      ? 'Проектирую интерфейсы для игр — HUD, меню, магазины, дизайн-система — и умею работать со сложными продуктовыми процессами.'
+      : 'Превращаю сложные B2B-процессы и данные в понятные интерфейсы продукта.',
     openLabel: 'Открыть',
     copiedLabel: 'Скопировано',
     contactLinks: [
       {
         label: 'Резюме',
-        href: 'https://docs.google.com/document/d/1e_xussfmk_DTICCzpA5pLb9ZqeRFfBTKdJ7fnYEnZ8k/edit?tab=t.0#heading=h.5x0d5h95i329',
+        href: resumeHref,
         external: true,
       },
       {
@@ -297,14 +320,28 @@ const petProjects: Record<Locale, ProjectItem[]> = {
 // на типовом десктопе попадают выше сгиба — обе идут `eager`, иначе браузер
 // отложит запрос до раскладки. `fetchpriority="high"` остаётся только у секции 0:
 // кандидат в LCP здесь один, и размывать приоритет пятью картинками смысла нет.
-// Секции 2+ (игры, pet-проекты) ниже сгиба на любой разумной высоте окна —
-// там `lazy`.
-const sections: ProjectSection[] = [
-  { title: content.casesTitle, items: caseItems },
-  { title: content.visualTitle, items: visualProjects[locale] },
-  { title: content.gamesTitle, items: gameProjects[locale] },
-  { title: content.petTitle, items: petProjects[locale] },
-];
+// Секции 2+ ниже сгиба на любой разумной высоте окна — там `lazy`. Приоритеты
+// считаются по индексу, поэтому смена порядка ниже их переносит сама.
+const casesSection: ProjectSection = {
+  title: content.casesTitle,
+  items: caseItems,
+};
+const visualSection: ProjectSection = {
+  title: content.visualTitle,
+  items: visualProjects[locale],
+};
+const gamesSection: ProjectSection = {
+  title: content.gamesTitle,
+  items: gameProjects[locale],
+};
+const petSection: ProjectSection = {
+  title: content.petTitle,
+  items: petProjects[locale],
+};
+
+const sections: ProjectSection[] = isGames
+  ? [gamesSection, casesSection, visualSection, petSection]
+  : [casesSection, visualSection, gamesSection, petSection];
 ---
 
 {/* Ставим html.js ДО отрисовки: с JS контент стартует скрытым и плавно
