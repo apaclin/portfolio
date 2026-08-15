@@ -7,6 +7,7 @@ import TranslationNotice from '../common/TranslationNotice.astro';
 import filmazeCover from '../../assets/images/project-covers/filmaze.webp';
 import bergstromCover from '../../assets/images/project-covers/bergstrom.webp';
 import radixCover from '../../assets/images/pet-projects/radix-cover.png';
+import monoscriptCover from '../../assets/images/project-covers/monoscript.png';
 import joeTheZombieCover from '../../assets/images/games/joe-the-zombie.png';
 import pirateTreasuresCover from '../../assets/images/games/pirate-treasures.webp';
 import candyValleyCover from '../../assets/images/games/candy-valley.webp';
@@ -172,9 +173,15 @@ const localized: Record<Locale, ProjectsContent> = {
 const content = localized[locale];
 const { contactLinks } = content;
 
+// Pet-проекты живут в той же коллекции кейсов (страница у них устроена так же),
+// но на главной относятся к своей секции, а не к B2B-сервисам. Держим список
+// слагов здесь: карточка такого кейса собирается вручную ниже, в `petProjects`.
+const petCaseSlugs = new Set(['monoscript']);
+
 const collectionName = locale === 'ru' ? 'casesRu' : 'casesEn';
 const rawCases = await getCollection(collectionName);
 const caseItems: ProjectItem[] = [...rawCases]
+  .filter((entry) => !petCaseSlugs.has(entry.id))
   .sort((a, b) => a.data.order - b.data.order || a.id.localeCompare(b.id))
   .map((entry) => {
     // With the `cases-en` / `cases-ru` glob collections the id is already the
@@ -296,6 +303,13 @@ const gameProjects: Record<Locale, ProjectItem[]> = {
 const petProjects: Record<Locale, ProjectItem[]> = {
   en: [
     {
+      title: 'MonoScript',
+      subtitle: 'Figma plugin for routine tasks',
+      href: '/cases/monoscript',
+      image: monoscriptCover,
+      imageAlt: 'MonoScript project cover',
+    },
+    {
       title: 'Radix Colors to Variables',
       subtitle: 'Color scale generator',
       href: 'https://www.figma.com/community/plugin/1636766593436362521',
@@ -305,6 +319,13 @@ const petProjects: Record<Locale, ProjectItem[]> = {
     },
   ],
   ru: [
+    {
+      title: 'MonoScript',
+      subtitle: 'Figma-плагин для рутинных задач',
+      href: '/ru/cases/monoscript',
+      image: monoscriptCover,
+      imageAlt: 'Обложка проекта MonoScript',
+    },
     {
       title: 'Radix Colors to Variables',
       subtitle: 'Генератор цветовых растяжек',

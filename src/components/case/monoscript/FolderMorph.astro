@@ -1,0 +1,266 @@
+---
+// Морфинг папки — та же геометрия и та же механика, что в плагине: пути взяты
+// один в один из src/ui/lib/icons.tsx (FOLDER_CLOSED / FOLDER_OPEN /
+// FOLDER_BODY), кривая и длительность морфа — из его styles.css (200 мс,
+// cubic-bezier(.2 .8 .2 1)).
+//
+// Композиция собрана по кадру из файла (319:2846): крупный глиф 128 слева,
+// строка сайдбара 150 справа, между ними 24, всё по центру плашки 8 px радиуса.
+// Вложенных строк в композиции нет — показывается сам глиф, в двух масштабах,
+// и разворачивать под ним нечего. Цвета — токены самого плагина, не сайта:
+// surface/base #f9f9fb, border/subtle #e8e8ec, content/tertiary для иконок и
+// content/secondary для подписи. Это изображение интерфейса, поэтому оно
+// красится его палитрой, а не тёплой палитрой страницы вокруг.
+//
+// Два состояния клапана нарисованы с ОДИНАКОВОЙ последовательностью команд
+// (M, L, C, L, C, L, L, C, Z), поэтому каждое число интерполируется со своим
+// соответствием: анимируются сами точки, а не подменяется одна фигура другой.
+// Обе формы делят вершину 3.5 12.5 — из-за неё клапан раскрывается от нижнего
+// левого угла, а не съезжает вбок.
+//
+// Тело папки не двигается, но там, где на него ложится клапан, оно должно
+// пропадать. Это сделано МАСКОЙ, а не заплаткой поверх: в самом кадре клапан
+// залит цветом плашки, и такая заплатка выдала бы себя на любой другой
+// подложке. Копия клапана внутри маски анимируется тем же ключом, поэтому обе
+// формы едут синхронно.
+//
+// Анимация — CSS-свойство `d`, как в плагине. SMIL (`<animate attributeName="d">`)
+// здесь не годится: Blink его для путей не исполняет, проверено — путь стоит на
+// месте. У CSS `d` обратная картина: Chrome и Safari умеют, Firefox нет, поэтому
+// ниже фолбэк — там глиф просто переключает состояния без промежуточных кадров.
+const CLOSED =
+  'M14.5 11.17L14.5 5.83C14.5 5.09546 13.9045 4.5 13.17 4.5L4.83 4.5C4.09546 4.5 3.5 5.09546 3.5 5.83L3.5 12.5L13.17 12.5C13.9045 12.5 14.5 11.9045 14.5 11.17Z';
+const OPEN =
+  'M14.8874 11.8543L16.5913 9.0145C16.9912 8.34797 16.5111 7.5 15.7338 7.5L7.63238 7.5C6.92986 7.5 6.27884 7.8686 5.9174 8.47101L3.5 12.5L13.747 12.5C14.2141 12.5 14.6471 12.2549 14.8874 11.8543Z';
+const BODY =
+  'M5.5 2.5H2.83C2.09546 2.5 1.5 3.09546 1.5 3.83V11.17C1.5 11.9045 2.09546 12.5 2.83 12.5H12.17C12.9045 12.5 13.5 11.9045 13.5 11.17V5.83C13.5 5.09546 12.9045 4.5 12.17 4.5H7.5L5.5 2.5Z';
+
+// Цикл: закрыта — раскрытие — открыта — закрытие. Сам морф длится 200 мс, как в
+// плагине; остальное — выдержки, чтобы оба состояния успевали прочитаться.
+const CYCLE_MS = 2600;
+const MORPH_MS = 200;
+const morph = (MORPH_MS / CYCLE_MS) * 100;
+const openAt = 30;
+const closeAt = 78;
+const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+// Ключи собираются из тех же констант, что и разметка: путь в CSS нельзя
+// подставить переменной (`d: path(var(--x))` не работает), а держать две копии
+// одной кривой — верный способ их однажды рассинхронить.
+const keyframes = `
+@keyframes fmorph-flap {
+  0% { d: path('${CLOSED}'); animation-timing-function: linear; }
+  ${openAt}% { d: path('${CLOSED}'); animation-timing-function: ${EASE}; }
+  ${openAt + morph}% { d: path('${OPEN}'); animation-timing-function: linear; }
+  ${closeAt}% { d: path('${OPEN}'); animation-timing-function: ${EASE}; }
+  ${closeAt + morph}% { d: path('${CLOSED}'); animation-timing-function: linear; }
+  100% { d: path('${CLOSED}'); }
+}
+.fmorph__flap {
+  animation: fmorph-flap ${CYCLE_MS}ms infinite;
+}
+/* Без движения показываем не «выключённую анимацию», а сам кадр из файла:
+   папка раскрыта. Клапан переставляется свойством d — там, где его не понимают
+   (Firefox), останется закрытая форма из атрибута. */
+@media (prefers-reduced-motion: reduce) {
+  .fmorph__flap { animation: none; d: path('${OPEN}'); }
+}
+`;
+
+interface Props {
+  caption?: string;
+  /** Подпись строки папки — там же, где глиф живёт в плагине. */
+  rowLabel?: string;
+}
+
+const { caption, rowLabel = 'Icon manipulations' } = Astro.props as Props;
+---
+
+<figure
+  class="fmorph not-prose"
+  data-folder-morph
+  data-closed={CLOSED}
+  data-open={OPEN}
+  data-period={CYCLE_MS}
+>
+  <div class="fmorph__frame">
+    {/* Крупно: видно, что едут точки контура, а не сменяются две картинки. */}
+    <svg
+      class="fmorph__glyph"
+      viewBox="0 0 16 16"
+      fill="none"
+      role="img"
+      aria-label="Иконка папки: клапан раскрывается и закрывается"
+    >
+      <mask id="fmorph-cut" maskUnits="userSpaceOnUse" x="-2" y="-2" width="22" height="20">
+        <rect x="-2" y="-2" width="22" height="20" fill="#fff"></rect>
+        <path class="fmorph__flap" d={CLOSED} fill="#000"></path>
+      </mask>
+      <path
+        d={BODY}
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        mask="url(#fmorph-cut)"></path>
+      <path
+        class="fmorph__flap"
+        d={CLOSED}
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+
+    {/* И тот же глиф в рабочем размере — 16 px, в строке сайдбара. */}
+    <div class="fmorph__rows">
+      <div class="fmorph__row">
+        <svg class="fmorph__row-glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <mask id="fmorph-cut-row" maskUnits="userSpaceOnUse" x="-2" y="-2" width="22" height="20">
+            <rect x="-2" y="-2" width="22" height="20" fill="#fff"></rect>
+            <path class="fmorph__flap" d={CLOSED} fill="#000"></path>
+          </mask>
+          <path
+            d={BODY}
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            mask="url(#fmorph-cut-row)"></path>
+          <path
+            class="fmorph__flap"
+            d={CLOSED}
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+        <span>{rowLabel}</span>
+      </div>
+    </div>
+  </div>
+
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+{/* Ключи не в scoped-блоке: путь приходит из фронтматтера, а scoped-стили
+    Astro не собираются из выражений. Имена классов свои, пересечься не с чем. */}
+<style is:inline set:html={keyframes}></style>
+
+<script>
+  // Firefox не поддерживает CSS-свойство `d` и морфа не покажет. Там глиф
+  // переключается между двумя состояниями в том же ритме — то же, что видит
+  // пользователь плагина в этом браузере, только зациклено.
+  const initFolderMorph = () => {
+    if (CSS.supports('d', "path('M0 0')")) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    document.querySelectorAll<HTMLElement>('[data-folder-morph]').forEach((figure) => {
+      const { closed, open, period } = figure.dataset;
+      if (!closed || !open) return;
+      const flaps = figure.querySelectorAll<SVGPathElement>('.fmorph__flap');
+      let isOpen = false;
+      window.setInterval(() => {
+        isOpen = !isOpen;
+        flaps.forEach((flap) => flap.setAttribute('d', isOpen ? open : closed));
+      }, Number(period ?? 2600) / 2);
+    });
+  };
+
+  document.addEventListener('astro:page-load', initFolderMorph);
+  initFolderMorph();
+</script>
+
+<style>
+  /* Breakout центрирует любой svg внутри себя — `.breakout:not(.breakout--content)
+     svg { margin-inline: auto }`. Здесь это разносило композицию: свободное место
+     кадра уходило глифу в поля, и строка улетала к правому краю плашки.
+     Селектор из двух своих классов перебивает то правило по специфичности, и
+     обязательно тем же логическим свойством — физический `margin: 0` его не
+     отменяет. */
+  .fmorph .fmorph__glyph,
+  .fmorph .fmorph__row-glyph {
+    margin-inline: 0;
+  }
+
+  .fmorph {
+    /* Палитра плагина, а не сайта: это его интерфейс, показанный крупно. */
+    --fmorph-surface: #f9f9fb;
+    --fmorph-border: #e8e8ec;
+    --fmorph-icon: #00071b7f;
+    --fmorph-label: #0007149f;
+    /* Крупный глиф — непрозрачным #7D808B, а не полупрозрачным content/tertiary:
+       на увеличении полупрозрачный штрих темнеет в местах, где контур ложится
+       сам на себя, и клапан читается как другой цвет. #7D808B — то же самое
+       значение, уже сведённое с плашкой; в файле крупная папка нарисована им. */
+    --fmorph-glyph: #7d808b;
+
+    margin: 0;
+    width: 100%;
+  }
+
+  /* Плашка кадра: 672×178 с содержимым по центру — то есть 25 сверху и снизу
+     при глифе 128. По ширине она тянется, чтобы на узком экране не появлялось
+     горизонтального скролла ради пустых полей. */
+  .fmorph__frame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Между нарисованным краем папки и иконкой строки выходит ~56: 12 пустых
+       внутри бокса глифа (контур занимает 12…116 из 128), 32 зазора и 12
+       собственного отступа строки. */
+    gap: 32px;
+    min-height: 178px;
+    /* 24 + 128 + 24 + два бордера = 178, высота кадра. */
+    padding: 24px 16px;
+    border: 1px solid var(--fmorph-border);
+    border-radius: 8px;
+    background-color: var(--fmorph-surface);
+    color: var(--fmorph-icon);
+  }
+
+  /* Штрих живёт в координатах вьюбокса (1 px при 16), поэтому на крупном плане
+     растёт вместе с глифом — как если бы иконку просто увеличили. */
+  .fmorph__glyph {
+    flex: none;
+    margin: 0;
+    width: 128px;
+    height: 128px;
+    overflow: visible;
+    color: var(--fmorph-glyph);
+  }
+
+  /* Ширина строки — из кадра; по высоте она ровно по центру глифа, как флекс-
+     элемент кадра. Двигаться теперь нечему: разворачивать под строкой нечего. */
+  .fmorph__rows {
+    flex: none;
+    width: 150px;
+  }
+
+  .fmorph__row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding-inline: 12px;
+    color: var(--fmorph-label);
+    font-family: var(--font-sans, Inter, system-ui, sans-serif);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .fmorph__row span {
+    white-space: nowrap;
+  }
+
+  .fmorph__row-glyph {
+    flex: none;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    overflow: visible;
+    color: var(--fmorph-icon);
+  }
+
+  .fmorph figcaption {
+    margin-block-start: 0.625rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+</style>

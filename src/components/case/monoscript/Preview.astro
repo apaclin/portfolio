@@ -1,0 +1,62 @@
+---
+// Живое превью плагина: dev-harness из репозитория MonoScript (прод-сборка
+// `npm run build:prod` + `node scripts/make-harness.mjs demo`), скопированный в
+// public/embeds/monoscript/index.html. Файл самодостаточный — Monaco, воркеры и
+// шрифты вшиты base64, потому что плагин живёт с `networkAccess: none`.
+//
+// Кадр — 940×640, ровно окно плагина (`figma.showUI` в src/code.ts). Масштаб не
+// меняется никогда: ужать окно значит соврать про реальный размер интерфейса.
+// Поэтому на узких экранах превью уезжает в горизонтальный скролл — тем же
+// правилом, что и схемы (docs/mobile-media-fit.md), включая концевой отступ,
+// чтобы правый край докручивался до края контейнера, а не замирал у экрана.
+//
+// Без `sandbox`: харнесс поднимает воркеры Monaco из blob-URL, а в песочнице без
+// allow-same-origin документ получает opaque-origin и blob-воркеры блокируются.
+// Файл свой и лежит на своём же домене, так что песочница тут ничего не защищает.
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props as Props;
+
+const WIDTH = 940;
+const HEIGHT = 640;
+---
+
+<div class="plugin-preview not-prose">
+  <iframe
+    src="/embeds/monoscript/index.html"
+    title={title}
+    width={WIDTH}
+    height={HEIGHT}
+    loading="lazy"></iframe>
+</div>
+
+<style>
+  .plugin-preview {
+    --preview-width: 940px;
+    /* max-content, чтобы концевой отступ попал в область скролла Breakout:
+       у блока по ширине контейнера он бы просто схлопнулся. */
+    width: max-content;
+    /* Появляется ровно тогда, когда кадр шире контейнера (Breakout отдаёт ему
+       960px, так что на десктопе тут 0 и фантомного скролла нет). */
+    padding-inline-end: clamp(
+      0px,
+      calc(var(--preview-width) + 1.25rem - 100%),
+      1.25rem
+    );
+  }
+
+  .plugin-preview iframe {
+    display: block;
+    width: var(--preview-width);
+    height: 640px;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background-color: #fff;
+    /* UI плагина существует только в светлой теме (одна растяжка токенов, см.
+       styles.css в репозитории плагина) — не даём тёмной теме сайта
+       перекрашивать форм-контролы внутри кадра. */
+    color-scheme: light;
+  }
+</style>

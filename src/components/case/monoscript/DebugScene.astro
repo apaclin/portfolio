@@ -1,0 +1,755 @@
+---
+// Сцена «Debug for AI»: камера ездит по окну плагина, курсор жмёт Run, в консоли
+// падает ошибка, курсор жмёт Debug for AI — и камера уезжает вправо, в окно
+// модели, где репорт сначала вставляется в поле ввода и только потом уходит
+// сообщением в чат. Дальше кроссфейд в начало и луп.
+//
+// Кадры плагина — не перерисовка, а скриншоты живого UI: их снимает
+// scripts/capture-monoscript-frames.mjs, он же вытаскивает геометрию кнопок и
+// текст репорта в src/content/data/monoscript/scene.ts. Поэтому курсор целится
+// в настоящие координаты кнопок, а в окне модели лежит ровно тот markdown,
+// который плагин кладёт в буфер.
+//
+// Почему растр, а не второй живой харнесс: харнесс весит 13 МБ, а сцене нужна
+// детерминированность — те же кадры в том же порядке при каждом проигрывании.
+//
+// Окно модели намеренно обезличено: это не Gemini и не чей-то ещё интерфейс, а
+// абстрактное окно чата. Рисовать чужой продукт с его брендингом в кейсе — врать
+// про то, чей это скриншот.
+import { getImage } from 'astro:assets';
+import idleSource from '../../../assets/images/cases/monoscript/scene-idle.png';
+import errorSource from '../../../assets/images/cases/monoscript/scene-error.png';
+// Ховер — не отдельные полные кадры, а вырезки: кнопка Run и строка консоли.
+// Они ложатся поверх основного кадра ровно на свои координаты, поэтому каждое
+// состояние стоит килобайты, а не ещё один мегабайтный скриншот.
+import hoverRunSource from '../../../assets/images/cases/monoscript/hover-run.png';
+import hoverDebugSource from '../../../assets/images/cases/monoscript/hover-debug.png';
+import hoverCopiedSource from '../../../assets/images/cases/monoscript/hover-copied.png';
+import { frame, geometry, overlays, report } from '../../../content/data/monoscript/scene';
+// Курсоры — системные маковские, вкладываются как есть (32×32, стрелка и палец
+// с белой обводкой). Инлайном, а не <img>: так они попадают в тот же слой, что
+// и сцена, и им достаётся общая тень.
+import arrowCursor from '../../../assets/cursors/macos-arrow.svg?raw';
+import handCursor from '../../../assets/cursors/macos-hand.svg?raw';
+
+interface Props {
+  /** Подпись под сценой. */
+  caption?: string;
+}
+
+const { caption } = Astro.props as Props;
+
+// Кадры отдаём одним webp на удвоенной плотности: окно плагина показывается в
+// сцене почти 1:1, значит для retina нужен ровно 2× и ничего сверх.
+const shot = (src: ImageMetadata) =>
+  getImage({ src, width: frame.width * 2, format: 'webp', quality: 90 });
+
+const crop = (src: ImageMetadata, width: number) =>
+  getImage({ src, width: width * 2, format: 'webp', quality: 92 });
+
+const [idle, failed, hoverRun, hoverDebug, hoverCopied] = await Promise.all([
+  shot(idleSource),
+  shot(errorSource),
+  crop(hoverRunSource, overlays.run.width),
+  crop(hoverDebugSource, overlays.consoleBar.width),
+  crop(hoverCopiedSource, overlays.consoleBar.width),
+]);
+
+const place = (box: { x: number; y: number; width: number; height: number }) =>
+  `left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px`;
+
+// Стейдж 672×458 — ширина читаемой колонки и та же пропорция, что у окна
+// плагина, поэтому в общем плане окно ложится в кадр целиком.
+const STAGE = { width: 672, height: 458 };
+
+// Крупный план — ровно рабочая область: код и консоль, без сайдбара. Границы
+// берём из снятой геометрии, а не на глаз (console.x — левый край области).
+const PANE = { x: geometry.console.x, width: geometry.console.width };
+
+// Окно модели с запасом внутри кадра: раньше оно было ростом со стейдж, и его
+// рамка ложилась на рамку сцены — две линии в пиксель друг от друга плыли на
+// дробном масштабе и читались как брак.
+const CHAT = { x: frame.width + 200, y: 40, width: 600, height: 396 };
+
+const config = { frame, geometry, stage: STAGE, pane: PANE, chat: CHAT };
+---
+
+<figure class="dscene not-prose">
+  <div class="dscene__wrap" data-scene data-config={JSON.stringify(config)}>
+    <div class="dscene__stage" data-stage>
+      <div class="dscene__camera" data-camera>
+        <div
+          class="dscene__plugin"
+          style={`width:${frame.width}px;height:${frame.height}px`}
+        >
+          <img src={idle.src} width={frame.width} height={frame.height} alt="" data-frame="idle" />
+          <img src={failed.src} width={frame.width} height={frame.height} alt="" data-frame="error" />
+
+          <img class="dscene__hover" style={place(overlays.run)} src={hoverRun.src} alt="" data-hover="run" />
+          <img
+            class="dscene__hover"
+            style={place(overlays.consoleBar)}
+            src={hoverDebug.src}
+            alt=""
+            data-hover="debug"
+          />
+          <img
+            class="dscene__hover"
+            style={place(overlays.consoleBar)}
+            src={hoverCopied.src}
+            alt=""
+            data-hover="copied"
+          />
+        </div>
+
+        {/* Окно модели — обычный DOM, поэтому репорт остаётся текстом: его можно
+            выделить, он не мылится на зуме и не тянет за собой ещё один растр. */}
+        <div
+          class="dscene__chat"
+          style={`left:${CHAT.x}px;top:${CHAT.y}px;width:${CHAT.width}px;height:${CHAT.height}px`}
+        >
+          <div class="dscene__chat-bar">
+            <span class="dscene__chat-dot"></span>
+            <span>Чат с моделью</span>
+          </div>
+
+          <div class="dscene__chat-body">
+            <div class="dscene__bubble" data-bubble>
+              <pre>{report}</pre>
+            </div>
+          </div>
+
+          <div class="dscene__chat-input">
+            <div class="dscene__field" data-field>
+              <span class="dscene__placeholder">Вставить репорт</span>
+              <pre class="dscene__typed">{report}</pre>
+            </div>
+            <span class="dscene__send" data-send aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d="M7 11.5V3M7 3 3.2 6.8M7 3l3.8 3.8"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"></path>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Курсор системный, маковский. Палец включается только на кнопке —
+          на перелёте всегда стрелка, как в жизни. Горячая точка у каждой формы
+          своя, поэтому нажатие приходится ровно в кнопку (см. смещения в CSS). */}
+      <div class="dscene__cursor" data-cursor data-shape="arrow" aria-hidden="true">
+        <span class="dscene__arrow" set:html={arrowCursor} />
+        <span class="dscene__hand" set:html={handCursor} />
+      </div>
+    </div>
+  </div>
+
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-scene]');
+    if (!root) return;
+
+    // Геометрия приезжает атрибутом, а не через define:vars: там переменные
+    // становятся необъявленными глобалями, и `astro check` засыпает вывод
+    // хинтами про каждое их упоминание.
+    const { frame, geometry, stage, pane, chat } = JSON.parse(root.dataset.config);
+
+    const stageEl = root.querySelector('[data-stage]');
+    const camera = root.querySelector('[data-camera]');
+    const cursor = root.querySelector('[data-cursor]');
+    const bubble = root.querySelector('[data-bubble]');
+    const field = root.querySelector('[data-field]');
+    const sendBtn = root.querySelector('[data-send]');
+    const frames = {
+      idle: root.querySelector('[data-frame="idle"]'),
+      error: root.querySelector('[data-frame="error"]'),
+    };
+    const hovers = [...root.querySelectorAll('[data-hover]')];
+
+    // Планы камеры. x/y — левый верхний угол видимого прямоугольника в
+    // координатах сцены, s — масштаб. Крупный план подогнан по ширине рабочей
+    // области (код + консоль), поэтому сайдбар остаётся ровно за кадром.
+    const paneScale = stage.width / pane.width;
+    const SHOTS = {
+      wide: { x: 0, y: 0, s: stage.width / frame.width },
+      top: { x: pane.x, y: 0, s: paneScale },
+      low: { x: pane.x, y: frame.height - stage.height / paneScale, s: paneScale },
+      chat: {
+        x: chat.x - (stage.width - chat.width) / 2,
+        y: chat.y - (stage.height - chat.height) / 2,
+        s: 1,
+      },
+    };
+
+    const centerOf = (box) => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    const RUN = centerOf(geometry.run);
+    const DEBUG = centerOf(geometry.debug);
+    // Точки внутри окна модели считаем от самого DOM: разметка чата ещё может
+    // меняться, а курсор обязан попадать в поле и в кнопку отправки.
+    const inChat = (el) => ({
+      x: chat.x + el.offsetLeft + el.offsetWidth / 2,
+      y: chat.y + el.offsetTop + el.offsetHeight / 2,
+    });
+
+    let current = SHOTS.wide;
+    let playing = false;
+    let timer = 0;
+    // Токен прогона. Одного флага «отменено» мало: сцена останавливается, когда
+    // уезжает с экрана, и при быстром возврате старый цикл ещё сидит в паузе, а
+    // новый уже стартовал — флаг снимается общий, и дальше едут два цикла сразу,
+    // перебивая друг другу камеру. Каждый прогон сверяется со своим номером.
+    let runId = 0;
+
+    const setCamera = (shot, ms) => {
+      current = shot;
+      camera.style.transitionDuration = `${ms}ms`;
+      camera.style.transform =
+        `translate(${-shot.x * shot.s}px, ${-shot.y * shot.s}px) scale(${shot.s})`;
+    };
+
+    // Курсор живёт НАД камерой, в координатах стейджа: внутри камеры его
+    // пришлось бы контрмасштабировать, и на перелётах он бы дышал в размере.
+    // Позиция считается из текущего плана, поэтому камера и курсор никогда не
+    // едут одновременно — так пересчёт остаётся точным.
+    const setShape = (shape) => {
+      cursor.dataset.shape = shape;
+    };
+
+    // Где курсор сейчас — в координатах сцены. Нужно, чтобы считать, когда он
+    // долетит до кнопки (см. enterDelay).
+    let cursorAt = { x: frame.width + 40, y: frame.height + 40 };
+
+    const moveCursor = (scenePoint, ms) => {
+      cursorAt = scenePoint;
+      cursor.style.transitionDuration = `${ms}ms`;
+      cursor.style.transform =
+        `translate(${(scenePoint.x - current.x) * current.s}px, ${(scenePoint.y - current.y) * current.s}px)`;
+    };
+
+    // Кривая перелёта — та же, что в CSS у курсора.
+    const ease = (x) => {
+      const [p1x, p1y, p2x, p2y] = [0.4, 0, 0.2, 1];
+      const cx = 3 * p1x;
+      const bx = 3 * (p2x - p1x) - cx;
+      const ax = 1 - cx - bx;
+      const cy = 3 * p1y;
+      const by = 3 * (p2y - p1y) - cy;
+      const ay = 1 - cy - by;
+      let t = x;
+      for (let i = 0; i < 6; i += 1) {
+        const dx = ((ax * t + bx) * t + cx) * t - x;
+        if (Math.abs(dx) < 1e-4) break;
+        const d = (3 * ax * t + 2 * bx) * t + cx;
+        if (Math.abs(d) < 1e-6) break;
+        t -= dx / d;
+      }
+      const c = Math.min(1, Math.max(0, t));
+      return ((ay * c + by) * c + cy) * c;
+    };
+
+    // Через сколько миллисекунд перелёта курсор ВОЙДЁТ в кнопку. Ховер должен
+    // зажигаться именно тогда: по окончании перехода он опаздывал (последние
+    // проценты пути кривая проходит медленно, и курсор уже стоит на кнопке),
+    // а по фиксированной доле времени — забегал вперёд на длинных перелётах.
+    const enterDelay = (from, to, box, ms) => {
+      const distance = Math.hypot(to.x - from.x, to.y - from.y);
+      const reach = Math.min(box.width, box.height) / 2;
+      if (distance <= reach) return 0;
+      const need = 1 - reach / distance;
+      for (let step = 0; step <= 100; step += 1) {
+        if (ease(step / 100) >= need) return (step / 100) * ms;
+      }
+      return ms;
+    };
+
+    const showFrame = (name) => {
+      Object.entries(frames).forEach(([key, el]) => {
+        el.style.opacity = key === name ? '1' : '0';
+      });
+    };
+
+    // Ховер под курсором: вырезка кладётся поверх кадра ровно на своё место.
+    // null — курсор ни на чём, все вырезки гаснут.
+    const showHover = (name) => {
+      hovers.forEach((el) => {
+        el.style.opacity = el.dataset.hover === name ? '1' : '0';
+      });
+    };
+
+    const wait = (ms) =>
+      new Promise((done) => {
+        timer = window.setTimeout(done, ms);
+      });
+
+    const reset = () => {
+      camera.style.transitionDuration = '0ms';
+      cursor.style.transitionDuration = '0ms';
+      setCamera(SHOTS.wide, 0);
+      showFrame('idle');
+      moveCursor({ x: frame.width + 40, y: frame.height + 40 }, 0);
+      setShape('arrow');
+      showHover(null);
+      cursor.style.opacity = '0';
+      cursor.classList.remove('is-pressing');
+      field.classList.remove('is-filled');
+      bubble.classList.remove('is-sent');
+      bubble.querySelector('pre').style.transform = 'translateY(0)';
+    };
+
+    // Пауза с проверкой живости прогона. Любое изменение состояния делает
+    // только живой прогон: иначе умирающий успевает дописать своё (вставку в
+    // поле, кадр, шаг) поверх нового, и на экране получается смесь двух сцен.
+    const hold = async (ms, stale) => {
+      await wait(ms);
+      return !stale();
+    };
+
+    const press = async (stale) => {
+      cursor.classList.add('is-pressing');
+      if (!(await hold(170, stale))) return false;
+      cursor.classList.remove('is-pressing');
+      return true;
+    };
+
+    // Возврат в начало — всегда кроссфейдом: гасим стейдж, снимаем состояние без
+    // перехода, проявляем обратно. Иначе камера ехала бы «назад» через всю сцену
+    // или дёргалась бы скачком.
+    //
+    // Предикат обязателен: фейд длится секунду, и за эту секунду сцена может
+    // снова попасть в кадр и запустить новый прогон. Без проверки старый фейд
+    // дорисовывался бы поверх нового — с reset() посреди чужого сценария.
+    const fadeToStart = async (stale) => {
+      stageEl.classList.add('is-fading');
+      if (!(await hold(520, stale))) return;
+      reset();
+      if (!(await hold(80, stale))) return;
+      stageEl.classList.remove('is-fading');
+      await hold(520, stale);
+    };
+
+    async function play() {
+      const id = (runId += 1);
+      const stale = () => id !== runId;
+      const beat = (ms) => hold(ms, stale);
+
+      // Каждый прогон начинается с чистого состояния: сцена зациклена, и
+      // подтекающее состояние прошлого круга сломало бы второй же проход.
+      reset();
+      if (!(await beat(600))) return;
+
+      // 1. Приближаемся к рабочей области, курсор заходит в кадр.
+      setCamera(SHOTS.top, 900);
+      if (!(await beat(900))) return;
+
+      cursor.style.opacity = '1';
+      const toRun = enterDelay(cursorAt, RUN, geometry.run, 750);
+      moveCursor(RUN, 750);
+      if (!(await beat(toRun))) return;
+      setShape('hand');
+      showHover('run');
+      if (!(await beat(980 - toRun))) return;
+
+      if (!(await press(stale))) return;
+      showFrame('error');
+      if (!(await beat(320))) return;
+
+      // 2. Панорама вниз — туда, где консоль уже показывает ошибку. Кадр уехал
+      // из-под курсора, кнопки Run под ним больше нет — ховер снимаем. Сам
+      // курсор не трогаем: он остаётся там, где его оставила рука, а содержимое
+      // едет под ним — как при обычной прокрутке.
+      setShape('arrow');
+      showHover(null);
+      setCamera(SHOTS.low, 700);
+      if (!(await beat(1050))) return;
+
+      // 3. Debug for AI: кнопка становится «Log copied».
+      const toDebug = enterDelay(cursorAt, DEBUG, geometry.debug, 600);
+      moveCursor(DEBUG, 600);
+      if (!(await beat(toDebug))) return;
+      setShape('hand');
+      showHover('debug');
+      if (!(await beat(820 - toDebug))) return;
+      if (!(await press(stale))) return;
+      // Кнопка становится «Log copied» — и остаётся под курсором, поэтому
+      // подменяется на такую же вырезку, только уже нажатую.
+      showHover('copied');
+      if (!(await beat(650))) return;
+
+      // 4. Отъезд вправо, в окно модели. Плагин уходит из кадра — гасим и
+      // ховер, иначе он остался бы гореть на возврате в начало.
+      cursor.style.opacity = '0';
+      setShape('arrow');
+      showHover(null);
+      setCamera(SHOTS.chat, 950);
+      if (!(await beat(1000))) return;
+
+      // Сначала вставка в поле ввода — то, что руками делает человек, — и
+      // только потом отправка: репорт уходит сообщением в чат.
+      moveCursor(inChat(field), 0);
+      cursor.style.opacity = '1';
+      if (!(await beat(60))) return;
+      moveCursor(inChat(field), 420);
+      if (!(await beat(480))) return;
+      field.classList.add('is-filled');
+      if (!(await beat(950))) return;
+
+      const send = inChat(sendBtn);
+      const toSend = enterDelay(cursorAt, send, {
+        width: sendBtn.offsetWidth,
+        height: sendBtn.offsetHeight,
+      }, 420);
+      moveCursor(send, 420);
+      if (!(await beat(toSend))) return;
+      setShape('hand');
+      if (!(await beat(640 - toSend))) return;
+      if (!(await press(stale))) return;
+      field.classList.remove('is-filled');
+      bubble.classList.add('is-sent');
+      cursor.style.opacity = '0';
+      setShape('arrow');
+      if (!(await beat(950))) return;
+
+      // Репорт длиннее окна, а главное в нём — не исходник (его только что
+      // показали в редакторе), а блок с ошибкой и выводом консоли. Поэтому
+      // сообщение доезжает до конца, как будто его пролистали.
+      const text = bubble.querySelector('pre');
+      const tail = Math.max(0, text.scrollHeight - bubble.clientHeight + 20);
+      text.style.transform = `translateY(${-tail}px)`;
+      if (!(await beat(2200))) return;
+
+      await fadeToStart(stale);
+      if (stale()) return;
+
+      if (playing) play();
+    }
+
+    const start = () => {
+      if (playing) return;
+      playing = true;
+      play();
+    };
+
+    // Далеко за экраном сцена не крутится: это секунды работы CPU в фоне на
+    // каждой открытой вкладке. Возвращается она всегда с начала.
+    const stop = () => {
+      if (!playing) return;
+      playing = false;
+      // Сдвигаем токен: прогон, который сейчас стоит в ожидании, после него
+      // увидит чужой номер и выйдет, не тронув камеру.
+      runId += 1;
+      window.clearTimeout(timer);
+      reset();
+    };
+
+    // Стейдж 672 CSS-пикселя, но колонка бывает уже — вписываем целиком, чтобы
+    // сцена не уезжала в горизонтальный скролл: в отличие от схемы, читать тут
+    // нужно не подписи, а движение, и оно переживает уменьшение.
+    const fit = () => {
+      const width = root.clientWidth;
+      root.style.setProperty('--dscene-fit', String(Math.min(1, width / stage.width)));
+    };
+    new ResizeObserver(fit).observe(root);
+    fit();
+
+    reset();
+
+    // Луп заводится заранее, на подлёте: к моменту, когда сцена доезжает до
+    // глаз, она уже идёт, а не начинается с нуля. Запас в пол-экрана сверху и
+    // снизу — этого хватает и при быстрой прокрутке, и при заходе на страницу
+    // сразу к этому месту.
+    //
+    // Если система просит покоя, автоплей не включаем вовсе: остаётся первый
+    // кадр — окно плагина целиком.
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!calm.matches) {
+      new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => (entry.isIntersecting ? start() : stop()));
+        },
+        { rootMargin: '50% 0px' },
+      ).observe(root);
+    }
+  })();
+</script>
+
+<style>
+  .dscene {
+    margin: 0;
+    width: 100%;
+  }
+
+  .dscene__wrap {
+    --dscene-fit: 1;
+    position: relative;
+    width: 100%;
+    /* Высота едет за масштабом вписывания, поэтому в потоке сцена занимает
+       ровно столько, сколько видно, без пустой полосы под ней. */
+    height: calc(458px * var(--dscene-fit));
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background-color: var(--color-bg-subtle);
+    /* Сцена — светлый интерфейс на светлом полотне в любой теме сайта. */
+    color-scheme: light;
+  }
+
+  .dscene__stage {
+    position: absolute;
+    inset: 0;
+    width: 672px;
+    height: 458px;
+    transform: scale(var(--dscene-fit));
+    transform-origin: top left;
+    /* Полотно за окнами: белое окно модели должно от чего-то отделяться. Кадры
+       плагина закрывают его целиком в обоих планах, так что видно полотно
+       только в правой части сцены. */
+    background-color: #f1f1f0;
+    opacity: 1;
+    transition: opacity 500ms ease;
+  }
+  .dscene__stage.is-fading {
+    opacity: 0;
+  }
+
+  .dscene__camera {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  .dscene__plugin {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .dscene__plugin img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* Без перехода. Кадры лежат стопкой, и кроссфейд давал вспышку: в середине
+       обе картинки полупрозрачные, сквозь них просвечивает полотно, и кадр на
+       мгновение светлеет. Настоящий плагин меняет состояние мгновенно — так же
+       делаем и здесь. */
+  }
+
+  /* ── Окно модели ── */
+  /* Вырезка ховера. Переход не нужен по той же причине, что и у кадров: под
+     живой мышью кнопка отзывается сразу. */
+  .dscene__hover {
+    position: absolute;
+    display: block;
+    opacity: 0;
+  }
+
+  .dscene__chat {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #e0e0dd;
+    border-radius: 12px;
+    background-color: #fff;
+    font-family: var(--font-sans, Inter, system-ui, sans-serif);
+    box-shadow: 0 24px 48px -28px rgb(0 0 0 / 40%);
+  }
+  .dscene__chat-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    padding: 11px 14px;
+    border-bottom: 1px solid #ededeb;
+    color: #6b6b68;
+    font-size: 12px;
+  }
+  .dscene__chat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background-color: #b9b9b5;
+  }
+  .dscene__chat-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    flex: 1;
+    min-height: 0;
+    padding: 14px;
+  }
+  .dscene__bubble {
+    max-height: 100%;
+    overflow: hidden;
+    border-radius: 10px;
+    background-color: #f4f4f3;
+    padding: 10px 12px;
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+    transition:
+      opacity 240ms ease,
+      transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Репорт длиннее окна, и его ещё и пролистывают до конца, поэтому гаснут
+       оба края: иначе обрез читается как конец текста, а после прокрутки —
+       как будто первая строка так и начинается. */
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 7%,
+      #000 88%,
+      transparent 100%
+    );
+  }
+  .dscene__bubble.is-sent {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .dscene__bubble pre {
+    margin: 0;
+    color: #2b2b29;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    transition: transform 1100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dscene__chat-input {
+    display: flex;
+    /* По центру, а не по нижнему краю: пустое поле — одна строка в 16px против
+       кнопки в 26px, и при выравнивании по низу текст сидел ниже кнопки. */
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    margin: 0 14px 14px;
+    border: 1px solid #e0e0dd;
+    border-radius: 10px;
+    padding: 9px 10px 9px 12px;
+    background-color: #fff;
+  }
+  .dscene__field {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    /* Поле растёт под вставку: пустое — одна строка, со вставленным репортом —
+       три, дальше текст уходит под градиент, как в настоящем поле ввода. */
+    height: 16px;
+    transition: height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .dscene__field.is-filled {
+    height: 42px;
+  }
+  .dscene__placeholder {
+    position: absolute;
+    inset: 0;
+    color: #a3a39f;
+    font-size: 12px;
+    line-height: 16px;
+    transition: opacity 140ms ease;
+  }
+  .dscene__field.is-filled .dscene__placeholder {
+    opacity: 0;
+  }
+  .dscene__typed {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    overflow: hidden;
+    color: #2b2b29;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    line-height: 14px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    opacity: 0;
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    transition: opacity 140ms ease;
+  }
+  .dscene__field.is-filled .dscene__typed {
+    opacity: 1;
+  }
+  .dscene__send {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background-color: #1a1a19;
+    color: #fff;
+  }
+
+  /* ── Курсор ── */
+  .dscene__cursor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition-property: transform, opacity;
+    transition-duration: 0ms, 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    /* Тень как у системного курсора: короткая и лёгкая, а не мягкое пятно. */
+    filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 24%));
+    pointer-events: none;
+  }
+  /* Файлы курсоров — 32×32 с рисунком внутри, поэтому каждая форма сдвинута
+     на свою «горячую точку»: у стрелки это остриё, у пальца — кончик
+     указательного. Иначе нажатие приходится мимо кнопки. */
+  .dscene__cursor :global(svg) {
+    display: block;
+    transition: scale 150ms ease;
+  }
+  .dscene__arrow,
+  .dscene__hand {
+    position: absolute;
+    display: block;
+  }
+  /* Значения не на глаз: остриё и кончик пальца найдены обходом контура в
+     самих файлах — (10.0, 7.4) и (13.4, 8.1) в системе координат 32×32. */
+  .dscene__arrow {
+    left: -10px;
+    top: -7.4px;
+  }
+  .dscene__hand {
+    left: -13.4px;
+    top: -8.1px;
+  }
+  .dscene__cursor[data-shape='arrow'] .dscene__hand,
+  .dscene__cursor[data-shape='hand'] .dscene__arrow {
+    display: none;
+  }
+  .dscene__cursor.is-pressing :global(svg) {
+    scale: 0.85;
+  }
+
+  .dscene figcaption {
+    margin-block-start: 0.625rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dscene__camera,
+    .dscene__cursor,
+    .dscene__stage,
+    .dscene__bubble,
+    .dscene__field,
+    .dscene__plugin img {
+      transition-duration: 0.001ms !important;
+    }
+  }
+</style>
