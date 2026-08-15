@@ -1,0 +1,138 @@
+---
+title: "MonoScript | Figma plugin for routine tasks"
+cardTitle: "MonoScript"
+cardSubtitle: "Figma plugin for routine tasks"
+description: "Side project: A Figma plugin that executes custom scripts where native features fall short. Powered by Monaco Editor, Debug for AI, and 100% local execution."
+meta: "My role: Design & Vibecoding · Focus: Figma plugin, DX, Code Editor"
+subtitle: "How I automated repetitive tasks in my day-to-day design workflow"
+date: 2026-08-13
+order: 4
+cover: "/src/assets/images/project-covers/monoscript.png"
+fallbackAllowed: true
+---
+
+import icons16 from "../../assets/images/cases/monoscript/icons-16-grid.png";
+import emptyStateNoScripts from "../../assets/images/cases/monoscript/empty-state-no-scripts.png";
+
+import Breakout from "../../components/common/Breakout.astro";
+import Image from "../../components/common/Image.astro";
+import CaseImagePlaceholder from "../../components/case/CaseImagePlaceholder.astro";
+import DebugScene from "../../components/case/monoscript/DebugScene.astro";
+import FolderMorph from "../../components/case/monoscript/FolderMorph.astro";
+import Preview from "../../components/case/monoscript/Preview.astro";
+
+{/* TODO: replace placeholders — DebugScene and FolderMorph. Plus two text
+    placeholders: Community link and prod verification system. */}
+
+## Try It Out
+
+This is a live interactive prototype: feel free to test it out, create a script, organize it into a folder, test the collapse animation, select objects, move items to trash, and explore the UI.
+
+<Breakout maxWidth="960px">
+  <Preview title="MonoScript plugin preview" />
+</Breakout>
+
+## Why Build This
+
+There’s a whole class of tasks in Figma that usually get solved either manually or using AI via MCP. The AI route requires a paid subscription, while manual labor drains valuable time and cognitive energy that are far better spent on actual system design. Here are a few examples:
+
+### Icons
+- Recolor 9,000 Phosphor icons in one go.
+- Convert stroked icons into filled vectors and union their shapes—otherwise, they won't scale or recolor cleanly within components.
+- Group target icons into component variants and reorder them so the Regular weight always appears first.
+
+All of these are tedious manual chores, but while reordering takes forever, the first two heavy operations cause Figma to freeze completely.
+
+### Components and Variables
+- Standardize all component properties and attributes into a single naming convention (e.g., camelCase or kebab-case).
+- Generate a scaffold for a newly created component: attach all standard properties and attributes in a single click.
+- Transfer variables from one collection to another while preserving layout bindings—a feature Figma doesn't natively support at all (at least as of writing this case study).
+
+### Cleaning Up Legacy Files & External Assets
+- Locate and purge unused text styles.
+- Clean up imported HTML assets: bind variables and styles to matching elements, and round fractional pixel values to integers.
+
+While tools like Scripter exist, they suffer from clunky UX and outdated TypeScript support. So I decided to build my own :)
+
+## A Bridge Between LLMs and Figma
+
+The development pipeline works like this:
+
+1. Prompt an LLM to generate a script (I used Gemini—it excels at rewriting complete code blocks when requesting adjustments).
+2. Paste it into the plugin and hit run.
+3. If it throws an error, click **Debug for AI** and feed the report back into the model.
+4. Paste the revised code back into the plugin.
+
+The editor is powered by Monaco—the same engine behind VS Code. Anyone familiar with VS Code feels right at home immediately.
+
+### Debug for AI
+A single click packages everything the LLM needs to fix the script: script name, source code, TypeScript diagnostic errors, runtime exceptions with line numbers and stack traces, and full console output. It formats everything into Markdown and copies it straight to the clipboard.
+
+<Breakout maxWidth="672px" flush>
+  <DebugScene caption="The complete workflow: execution, error handling, copying the report to clipboard, and pasting it into the model. Frames represent real UI screenshots, and the report text matches what gets copied to the clipboard." />
+</Breakout>
+
+### Non-Blocking Errors
+Semantic validation is intentionally disabled. Figma regularly updates its API with new methods that Monaco's language service might not recognize yet, flagging valid code as an error. In this context, a false positive is far more frustrating than a missed warning, so semantic checks remain silent. Syntax errors stay enabled, as they are actual blockers that prevent script execution.
+
+## Craft & Execution
+
+### Icons
+I used Tabler Icons. Scaling them down from their native 24 px grid to 16 px caused glyph paths to fall off the pixel grid, resulting in blurry renders. Instead of picking a pre-made 16 px icon set, I decided to preserve Tabler's visual aesthetics and manually redrew the icons on a 16 px grid for crisp rendering on 1080p displays.
+
+<Breakout maxWidth="672px" flush>
+  <Image
+    src={icons16}
+    alt="Two tabler:file-code icons under high magnification: on the left, scaled down from 24 px; on the right, redrawn for a 16 px grid"
+    caption="Left: Tabler 24&nbsp;px scaled down to 16—edges fall on subpixels and blur. Right: Redrawn specifically for a 16&nbsp;px grid."
+    variant="inline"
+    class="block h-auto w-full rounded-lg border border-[var(--color-border)]"
+    widths={[480, 672, 1090]}
+    sizes="(min-width: 48rem) 672px, calc(100vw - 2.5rem)"
+    maxWidth={1090}
+  />
+</Breakout>
+
+### Folder Morphing
+The open and closed folder icons share the exact same vector path command sequence. Instead of swapping graphics, the vector points morph smoothly between states.
+
+<Breakout maxWidth="672px" flush>
+  <FolderMorph caption="The same glyph used in the sidebar: enlarged on the left, actual 16&nbsp;px size on the right." />
+</Breakout>
+
+### Empty State
+Designed a custom illustration for the zero state when all scripts are deleted.
+
+<Breakout maxWidth="960px">
+  <Image
+    src={emptyStateNoScripts}
+    alt="Plugin with no scripts: empty sidebar and 'No scripts yet' screen showing a sleeping window illustration, four shortcuts, and a New script button"
+    caption="When the library is completely empty: custom illustration, four core shortcuts, and the primary action button to get started."
+    maxWidth={940}
+  />
+</Breakout>
+
+### Micro-Interactions
+Folder expansion states, modal overlays, and context-aware borders that appear when scrolling the sidebar and automatically disappear once scrolled to the top.
+
+## Quality Assurance & Verification
+
+I used pixel-diff overlays—layering Figma designs directly over production UI screenshots to catch subtle visual discrepancies that are easy to miss. I then stress-tested the plugin across various edge cases, state combinations, and error scenarios.
+
+Next, I plan to set up an automated audit workflow [specify verification steps here] to minimize the risk of visual regressions or bugs slipping through.
+
+## Designing for the Figma Community
+
+Building a personal developer tool vs. releasing a product for thousands of strangers requires a fundamentally different mindset.
+
+- **Onboarding.** I initially designed a welcome screen with an illustration, but eventually scrapped it: Figma plugins lack a persistent install lifecycle, making it impossible to reliably detect a user's first launch. Instead, new users get a default "Hello" script preloaded in their library that doubles as an interactive tutorial right inside the code comments.
+- **Default Scripts.** Built-in scripts can be freely edited or deleted, with a dedicated "Restore Default Scripts" option to revert changes at any time.
+- **Privacy.** Configured with `networkAccess: none`. The plugin operates 100% locally—zero data leaves the device. For a tool designed to bulk-edit proprietary design libraries, strict local execution is a core requirement, not a luxury feature.
+
+## What's Next
+
+**Community Script Catalog.** A shared repository where users can publish, discover, and vote on community scripts—eliminating the need to write from scratch what someone else has already solved.
+
+**Custom Editor Theme.** Fully adapting Monaco's UI to match the MonoScript design system (tooltips, context menus, dropdowns, etc.).
+
+**Enhanced Micro-Animations.** Refining micro-interactions and transition motion to make the UI feel even more responsive and tactically pleasing.

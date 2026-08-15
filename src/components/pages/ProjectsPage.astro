@@ -363,8 +363,8 @@ const petSection: ProjectSection = {
 // Игры показываем только в игровом варианте: на общей главной они уводят
 // внимание от продуктовых кейсов, ради которых её и открывают.
 const sections: ProjectSection[] = isGames
-  ? [gamesSection, casesSection, visualSection, petSection]
-  : [casesSection, visualSection, petSection];
+  ? [gamesSection, casesSection, petSection, visualSection]
+  : [casesSection, petSection, visualSection];
 ---
 
 {/* Ставим html.js ДО отрисовки: с JS контент стартует скрытым и плавно
