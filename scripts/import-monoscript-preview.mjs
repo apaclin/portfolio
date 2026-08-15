@@ -4,7 +4,13 @@
 //
 // Исходник собирается в репозитории плагина:
 //
-//   npm run build:prod && node scripts/make-harness.mjs demo
+//   npm run build:prod && node scripts/make-harness.mjs fresh
+//
+// Именно `fresh`, а не `demo`: в превью должно стоять то, что человек увидит,
+// поставив плагин, — набор поставляемых скриптов и больше ничего. Вариант `demo`
+// набит выдуманной библиотекой (`export-icons`, `audit-spacing`, …), она нужна
+// харнессу плагина, чтобы гонять разделитель, папки и корзину, но на сайте
+// выдаёт за продукт то, чего в нём нет.
 //
 // Копировать файл руками нельзя: харнесс рассчитан на то, что его открывают
 // верхним окном, где `parent === window`. UI шлёт команды в песочницу через
@@ -45,7 +51,7 @@ const html = await readFile(source, 'utf8');
 
 if (!html.includes('__fromStub')) {
   throw new Error(
-    `${source} — это не dev-harness (нет стаб-песочницы). Соберите его: npm run build:prod && node scripts/make-harness.mjs demo`,
+    `${source} — это не dev-harness (нет стаб-песочницы). Соберите его: npm run build:prod && node scripts/make-harness.mjs fresh`,
   );
 }
 
