@@ -39,7 +39,7 @@ import { tmpdir } from 'node:os';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const pluginRoot = resolve(
-  process.argv[2] ?? '/Users/alexpaclin/Documents/Code/my-scripter',
+  process.argv[2] ?? '/Users/alexpaclin/Code/my-scripter',
 );
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';

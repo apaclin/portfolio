@@ -17,6 +17,13 @@ const href = getRelativeLocaleUrl(other, basePath);
 const t = useTranslations(current);
 ---
 
-<a href={href} hreflang={other} class="text-sm underline underline-offset-4">
+<!-- Переключатель — обвязка страницы, а не ссылка в тексте, поэтому живёт по
+     тому же правилу, что контакты в шапке и список проектов: подчёркивание по
+     ховеру, а не постоянное, плюс видимый focus-visible для клавиатуры. -->
+<a
+  href={href}
+  hreflang={other}
+  class="text-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+>
   {t('action.switchLang')}
 </a>

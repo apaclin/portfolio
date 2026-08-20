@@ -317,10 +317,15 @@ main svg text[font-family="Inter"]:not([font-weight]) {
   line-height: 1.7;
   margin-bottom: 1rem;
 }
+/* Отбивка подчёркивания одна на весь сайт — 4px, как у ссылок обвязки
+   (шапка, список проектов, переключатель языка). Разница между текстовой
+   ссылкой и обвязкой только в том, ПОКАЗАНО ли подчёркивание всегда: в
+   сплошном абзаце ссылку иначе не опознать, а в списке, где кликается каждая
+   строка, оно всплывает по ховеру. Сама линия при этом везде одинаковая. */
 .prose :where(a):not(:where(.not-prose, .not-prose *)) {
   color: var(--color-accent);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 4px;
   text-decoration-thickness: 1px;
 }
 .prose :where(strong):not(:where(.not-prose, .not-prose *)) {

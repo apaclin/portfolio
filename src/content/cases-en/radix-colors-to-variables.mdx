@@ -1,0 +1,105 @@
+---
+title: "Radix Colors to Variables | Importing a palette into Figma variables"
+cardTitle: "Radix Colors to Variables"
+cardSubtitle: "Color scale generator"
+description: "Side project: a Figma plugin that turns Radix Colors scales into variables — selectively, with both themes and a canvas preview that doesn't lie."
+meta: "My role: Design & Vibecoding · Focus: Figma plugin, design tokens, color systems"
+subtitle: "How to bring the Radix palette into Figma variables without ending up with 700 tokens you don't need"
+date: 2026-08-20
+order: 5
+cover: "/src/assets/images/pet-projects/radix-cover.png"
+fallbackAllowed: true
+---
+
+import Breakout from "../../components/common/Breakout.astro";
+import FigmaLink from "../../components/common/FigmaLink.astro";
+import Preview from "../../components/case/radix/Preview.astro";
+
+<Breakout maxWidth="672px" flush>
+  <Preview title="Radix Colors to Variables plugin prototype" />
+</Breakout>
+
+## Try It Out
+
+Above is the plugin's actual interface — the same `ui.html` and `code.js` that
+run inside Figma. The parser, the live CSS validation, and the status messages
+are all real. One thing differs: variables are created in the page's memory
+rather than in a file, so nothing survives a reload.
+
+<p><FigmaLink href="https://www.figma.com/community/plugin/1636766593436362521">Open in Figma Community</FigmaLink></p>
+
+## The Context and the Pain
+
+Radix Colors is roughly thirty scales of 12 steps each, in light and dark
+themes, plus the alpha variants. In code, wiring up the palette takes a couple
+of seconds. In Figma it turns into dull busywork: creating hundreds of variables
+by hand, configuring modes, and not fumbling a single name.
+
+Existing plugins make you do extra work: they either create styles instead of
+variables, or generate all 700+ tokens at once. If your product is light-only,
+you're left manually weeding out half the palette — carefully, because the names
+are nearly identical.
+
+## Hard Constraints
+
+- A Figma limitation: variables only live in sRGB. Anything arriving as OKLCH or
+  Display P3 has to be converted, with unavoidable color loss.
+- Window width: thirty-odd scales, theme toggles, and settings all have to fit
+  into a narrow 564&nbsp;px frame and stay readable.
+
+## Interface Decisions
+
+- **Splitting the scenarios.** Instead of one bloated screen, two tabs. Just
+  need Gray and Blue? Pick them from the built-in library. Brought CSS straight
+  from the Radix site? Paste it into the second tab.
+- **The swatch *is* the checkbox.** Neo-brutalism runs on dense blocks, thick
+  outlines, and hard shadows. A colored dot next to a checkbox breaks that
+  rhythm and turns a list of thirty rows into mush, so the checkbox itself fills
+  with the color when selected. The cost: you can't pick a scale "by color,"
+  only by name — the color shows up after the click.
+- **Live CSS validation.** The plugin immediately shows which scales and modes
+  it recognized in the pasted text. That's the guard against a dark theme lost
+  by accident or a truncated snippet.
+
+{/* The presets live in code.js (RECOMMENDED_COMBOS), but the current ui.html
+    doesn't render them — the Radix Library tab is built from scales only.
+    Restore this bullet once the presets are back in the UI:
+
+- **Ready-made presets.** Sets like Balanced Core or Cool Product suggest solid
+  pairings of neutrals and accents, so you don't have to keep checking the Radix
+  guides.
+*/}
+
+## How It Works Inside
+
+- **The parser:** understands HEX, RGB, HSL, OKLCH, OKLAB, and Display P3,
+  normalizing everything to sRGB.
+- **An honest preview:** the frames drawn on canvas are swatches bound to the
+  variables, and the dark frame gets its collection mode set explicitly through
+  `setExplicitVariableModeForCollection` (`code.ts:538`). Without it, Figma would
+  render both themes in the parent page's mode — identically, that is — and the
+  preview would lie in exactly the place it exists for.
+- **Appending without duplicates:** on a re-run, new scales are added to the
+  existing collection.
+
+## Limitations and Focus
+
+The plugin is built for import only. It deliberately has no token editing and no
+flexible curve tuning. The tool should solve one routine task fast, without
+turning into a heavyweight editor.
+
+## The Outcome
+
+Eight installs in the Figma Community. The audience is narrow — designers
+building a Radix-based design system specifically in Figma — and the number
+reflects that honestly.
+
+{/* TODO: the real outcome isn't installs, it's my own projects. Which design
+    systems were assembled with the plugin and how many variables they hold —
+    that's what should close this case. */}
+
+Development stopped on purpose. The absence of editing isn't an unfinished
+feature, it's a boundary: stretching it inside an importer would mean ending up
+with a bad editor instead of a good importer. The next step is a separate
+product: editing the token matrix, flexible Radix scale tuning, and adding your
+own swatches.

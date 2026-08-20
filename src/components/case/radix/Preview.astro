@@ -1,0 +1,100 @@
+---
+// Живое превью плагина Radix Colors to Variables: его собственные ui.html и
+// code.js из репозитория плагина, склеенные со стаб-песочницей в
+// public/embeds/radix-colors-to-variables/index.html
+// (`node scripts/build-radix-preview.mjs`).
+//
+// Интерфейс настоящий, логика — тоже: парсер CSS, валидация, сборка токенов и
+// тексты статусов исполняются тем же code.js, что и в Figma. Разница одна —
+// переменные создаются в памяти вкладки, а не в файле. Поэтому «Generate
+// variables» честно отвечает, сколько переменных собралось из выбора, но после
+// перезагрузки страницы от них ничего не остаётся.
+//
+// Кадр — 564 px, ровно ширина окна плагина (`figma.showUI` в code.ts). Она не
+// меняется никогда: ужать окно значит соврать про реальный размер интерфейса.
+// На узких экранах превью уезжает в горизонтальный скролл — тем же правилом,
+// что и схемы (docs/mobile-media-fit.md), включая концевой отступ, чтобы правый
+// край докручивался до края контейнера, а не замирал у экрана.
+//
+// Высота идёт за контентом, как окно плагина в Figma: стаб пересылает сюда
+// высоту из `figma.ui.resize`, скрипт ниже кладёт её на iframe. Стартовое
+// значение — высота вкладки Radix Library (796 px), чтобы до первого сообщения
+// кадр не прыгал.
+//
+// Без `sandbox`: документ свой и лежит на своём же домене, а мост UI↔песочница
+// держится на `postMessage` внутри одного окна — песочница браузера тут ничего
+// не защищает, зато ломает мост.
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props as Props;
+
+const WIDTH = 564;
+const INITIAL_HEIGHT = 796;
+---
+
+<div class="plugin-preview not-prose">
+  <iframe
+    src="/embeds/radix-colors-to-variables/index.html"
+    title={title}
+    width={WIDTH}
+    height={INITIAL_HEIGHT}
+    loading="lazy"></iframe>
+</div>
+
+<script>
+  // Высота приходит из стаба внутри iframe (см. build-radix-preview.mjs).
+  // Источник сверяем с окном самого кадра: страница слушает `message` глобально,
+  // и любой другой фрейм не должен уметь тянуть её вёрстку.
+  //
+  // Слушатель вешается на window один раз за сессию, а кадр ищется в DOM в
+  // момент сообщения: при клиентской навигации (ClientRouter) модуль повторно не
+  // исполняется, и захваченный при первом запуске список iframe указывал бы на
+  // элементы уже выброшенной страницы.
+  if (!document.documentElement.dataset.radixPreviewBound) {
+    document.documentElement.dataset.radixPreviewBound = 'true';
+
+    window.addEventListener('message', (event) => {
+      const data = event.data;
+      if (!data || data.type !== 'radix-preview-resize') return;
+
+      const height = Number(data.height);
+      if (!(height > 0)) return;
+
+      const frames = document.querySelectorAll<HTMLIFrameElement>(
+        '.plugin-preview iframe',
+      );
+      for (const frame of frames) {
+        if (frame.contentWindow === event.source) frame.height = String(height);
+      }
+    });
+  }
+</script>
+
+<style>
+  .plugin-preview {
+    --preview-width: 564px;
+    /* max-content, чтобы концевой отступ попал в область скролла Breakout:
+       у блока по ширине контейнера он бы просто схлопнулся. */
+    width: max-content;
+    /* Появляется ровно тогда, когда кадр шире контейнера. */
+    padding-inline-end: clamp(
+      0px,
+      calc(var(--preview-width) + 1.25rem - 100%),
+      1.25rem
+    );
+  }
+
+  .plugin-preview iframe {
+    display: block;
+    width: var(--preview-width);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background-color: #bdbdbd;
+    /* UI плагина существует только в светлой теме (одна растяжка токенов,
+       см. ui.html) — не даём тёмной теме сайта перекрашивать форм-контролы
+       внутри кадра. */
+    color-scheme: light;
+  }
+</style>

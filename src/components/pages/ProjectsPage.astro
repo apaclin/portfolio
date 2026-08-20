@@ -87,11 +87,18 @@ const {
 
 const isGames = variant === 'games';
 
-// Резюме под игровой вариант — отдельный документ, но ссылка одна на обе
-// локали, как и у общего резюме.
-const resumeHref = isGames
-  ? 'https://docs.google.com/document/d/1hxyxdCMhaicSGwf47sa_F8ka9x6TNzEx9MqgoDPccB0/edit?usp=sharing'
-  : 'https://docs.google.com/document/d/1e_xussfmk_DTICCzpA5pLb9ZqeRFfBTKdJ7fnYEnZ8k/edit?tab=t.0#heading=h.5x0d5h95i329';
+// Резюме: четыре разных документа — игровое и общее, каждое на своём языке.
+// Английское и русское ведутся отдельно, поэтому ссылка выбирается по локали,
+// а не одна на всех.
+const resumeHref: Record<Locale, string> = isGames
+  ? {
+      en: 'https://docs.google.com/document/d/1p598b4mabh9iXP4C0_VWH1-8nbP-9wKU6vju05c4J0M/edit?tab=t.0#heading=h.5x0d5h95i329',
+      ru: 'https://docs.google.com/document/d/1hxyxdCMhaicSGwf47sa_F8ka9x6TNzEx9MqgoDPccB0/edit?tab=t.0#heading=h.xinslzuavs1d',
+    }
+  : {
+      en: 'https://docs.google.com/document/d/1euljQs8shjMqjV6zm9RnrBgW-7aJkRCsClHolRBlvvs/edit?tab=t.0#heading=h.5x0d5h95i329',
+      ru: 'https://docs.google.com/document/d/1YNz4EceIuJb3XWb2HBYgc6JKpGGa0Thoesb_y2Jztkc/edit?tab=t.0#heading=h.5x0d5h95i329',
+    };
 
 const localized: Record<Locale, ProjectsContent> = {
   en: {
@@ -106,7 +113,7 @@ const localized: Record<Locale, ProjectsContent> = {
     contactLinks: [
       {
         label: 'Resume',
-        href: resumeHref,
+        href: resumeHref.en,
         external: true,
       },
       {
@@ -143,7 +150,7 @@ const localized: Record<Locale, ProjectsContent> = {
     contactLinks: [
       {
         label: 'Резюме',
-        href: resumeHref,
+        href: resumeHref.ru,
         external: true,
       },
       {
@@ -176,7 +183,7 @@ const { contactLinks } = content;
 // Pet-проекты живут в той же коллекции кейсов (страница у них устроена так же),
 // но на главной относятся к своей секции, а не к B2B-сервисам. Держим список
 // слагов здесь: карточка такого кейса собирается вручную ниже, в `petProjects`.
-const petCaseSlugs = new Set(['monoscript']);
+const petCaseSlugs = new Set(['monoscript', 'radix-colors-to-variables']);
 
 const collectionName = locale === 'ru' ? 'casesRu' : 'casesEn';
 const rawCases = await getCollection(collectionName);
@@ -312,8 +319,7 @@ const petProjects: Record<Locale, ProjectItem[]> = {
     {
       title: 'Radix Colors to Variables',
       subtitle: 'Color scale generator',
-      href: 'https://www.figma.com/community/plugin/1636766593436362521',
-      external: true,
+      href: '/cases/radix-colors-to-variables',
       image: radixCover,
       imageAlt: 'Radix Colors to Variables plugin cover',
     },
@@ -329,8 +335,7 @@ const petProjects: Record<Locale, ProjectItem[]> = {
     {
       title: 'Radix Colors to Variables',
       subtitle: 'Генератор цветовых растяжек',
-      href: 'https://www.figma.com/community/plugin/1636766593436362521',
-      external: true,
+      href: '/ru/cases/radix-colors-to-variables',
       image: radixCover,
       imageAlt: 'Обложка плагина Radix Colors to Variables',
     },

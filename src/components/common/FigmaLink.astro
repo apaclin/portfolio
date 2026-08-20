@@ -1,0 +1,65 @@
+---
+// Ссылка на Figma с логотипом перед текстом — так же, как Notion показывает
+// вставленную ссылку на файл Figma: фавикон в фирменных цветах, подчёркнут
+// только текст.
+//
+// Логотип — плашки самого бренда, поэтому цвета заданы явно и не берут
+// currentColor: перекрашенный логотип Figma перестаёт читаться как логотип.
+// Размер в em, чтобы иконка ехала за кеглем строки, а не жила в своём масштабе.
+//
+// Подчёркивание снято с самой ссылки и висит на тексте: у `.prose a`
+// подчёркивание сплошное, и линия под логотипом смотрелась бы как опечатка.
+//
+// В MDX компонент писать В ОДНУ СТРОКУ (`<FigmaLink href="…">Текст</FigmaLink>`):
+// у переноса текста-ребёнка на отдельную строку слот приходит пустым, и от
+// ссылки остаётся один логотип.
+interface Props {
+  href: string;
+  class?: string;
+}
+
+const { href, class: className } = Astro.props as Props;
+---
+
+<a
+  class:list={['figma-link', className]}
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer"
+><svg
+    class="figma-link__mark"
+    viewBox="0 0 24 24"
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path fill="#0ACF83" d="M8 24a4 4 0 0 0 4-4v-4H8a4 4 0 0 0 0 8Z"></path>
+    <path fill="#A259FF" d="M4 12a4 4 0 0 1 4-4h4v8H8a4 4 0 0 1-4-4Z"></path>
+    <path fill="#F24E1E" d="M4 4a4 4 0 0 1 4-4h4v8H8a4 4 0 0 1-4-4Z"></path>
+    <path fill="#FF7262" d="M12 0h4a4 4 0 0 1 0 8h-4V0Z"></path>
+    <path fill="#1ABCFE" d="M20 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"></path>
+  </svg><span class="figma-link__label"><slot /></span></a>
+
+<style>
+  .figma-link {
+    text-decoration: none;
+  }
+
+  .figma-link__mark {
+    /* Общий сброс делает svg блочным — иконка уезжала бы на свою строку. */
+    display: inline-block;
+    /* Логотип уже 2:3, поэтому кадр 1em × 1em оставляет по бокам воздух —
+       иконка не жмётся к букве, а отступ добавляется только справа. */
+    margin-inline-end: 0.3em;
+    vertical-align: -0.14em;
+  }
+
+  .figma-link__label {
+    /* Повторяет `.prose a` из global.css: ссылка живёт в абзаце кейса, значит
+       подчёркнута всегда и с общей для сайта отбивкой 4px. */
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+</style>

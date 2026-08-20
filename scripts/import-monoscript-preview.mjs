@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = resolve(
-  process.argv[2] ?? '/Users/alexpaclin/Documents/Code/my-scripter/dist/dev-harness.html',
+  process.argv[2] ?? '/Users/alexpaclin/Code/my-scripter/dist/dev-harness.html',
 );
 const target = resolve(projectRoot, 'public/embeds/monoscript/index.html');
 
