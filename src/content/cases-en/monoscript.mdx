@@ -35,9 +35,13 @@ Feel free to test the prototype above to see how the UI works, or try the fully 
 
 <p><FigmaLink href="https://www.figma.com/community/plugin/1671268452807081514">Open in Figma Community</FigmaLink></p>
 
-## Why Build This
+## Why: 0% hallucinations
 
-There’s a whole class of tasks in Figma that usually get solved either manually or using AI via MCP. The AI route requires a paid subscription, while manual labor drains valuable time and cognitive energy that are far better spent on actual system design. Here are a few examples:
+There's a class of tasks in Figma you either do by hand or hand off to AI — the built-in chat now, or any LLM over MCP. By hand: slow, and it burns cognitive effort that's better spent on design. Through AI: you need a paid subscription, and it redoes the work from scratch every time — which means it can get it wrong every time.
+
+A script is a result you check once and stop thinking about. It won't skip a layer ten levels deep, won't invent an API property that doesn't exist, and does the exact same thing on icon 9,000 as it did on icon 1. An LLM over MCP, by the way, writes the same kind of code — just new every time, and none of it sticks around. AI is good when the task is different every time; a script is good when it's the same task, every time.
+
+Here are some examples of that kind of task.
 
 ### Icons
 - Recolor 9,000 Phosphor icons in one go.
@@ -103,14 +107,14 @@ The open and closed folder icons share the exact same vector path command sequen
   <FolderMorph caption="The same glyph used in the sidebar: enlarged on the left, actual 16&nbsp;px size on the right." />
 </Breakout>
 
-### Empty State
-Designed a custom illustration for the zero state when all scripts are deleted.
+### Empty state
+The library almost always has something in it — default scripts or your own — and after a delete, auto-select immediately jumps to the next one. The only time the screen is actually empty is when everything's gone. That's when the illustration shows up: a sleeping window, four shortcuts, and a New script button.
 
 <Breakout maxWidth="960px">
   <Image
     src={emptyStateNoScripts}
-    alt="Plugin with no scripts: empty sidebar and 'No scripts yet' screen showing a sleeping window illustration, four shortcuts, and a New script button"
-    caption="When the library is completely empty: custom illustration, four core shortcuts, and the primary action button to get started."
+    alt="The plugin with zero scripts: an empty sidebar and a 'No scripts yet' screen — a sleeping-window illustration, four shortcuts, and a New script button"
+    caption="A sleeping window, shortcuts, and the button that starts things over."
     maxWidth={940}
   />
 </Breakout>
