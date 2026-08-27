@@ -1,9 +1,9 @@
 ---
-title: "Matchpoint | Exception workflow for AP teams"
+title: "Matchpoint | Accounts payable automation"
 cardTitle: "Matchpoint"
 cardSubtitle: "Accounts payable automation"
 description: "How I turned invoice discrepancies from a long manual investigation into a manageable workflow inside the product."
-meta: "My role: Product designer · Focus: AP workflow, exception handling, data validation"
+meta: "My role: product designer · Focus: AP workflow, exception handling, data validation"
 subtitle: "How I turned invoice discrepancies from a long manual investigation into a manageable workflow inside the product."
 date: 2026-06-25
 order: 1
@@ -41,183 +41,192 @@ import Statuses4 from "../../components/case/matchpoint/statuses-4.astro";
 
 <CaseHero
   src={Cover}
-  alt="Matchpoint cover"
+  alt="Matchpoint case cover"
   maxWidth="42rem"
   class="w-full h-auto object-contain mx-auto"
 />
 
-## 1. Context
+## 1. Context: **a discrepancy is not a broken cell, it is a work item**
 
 Matchpoint is a service for teams that process vendor invoices.
 
-In the ideal scenario, everything is simple: the invoice matches the purchase order and the goods receipt, so it can be paid. In practice, the real work begins when the data does not line up.
+In the ideal scenario everything is simple: the invoice matches the purchase order and the goods receipt, and it can be paid. In practice the real work starts where the data does not line up.
 
-The problem is not the discrepancy itself. The problem is that the system usually shows only a red flag and does not explain what exactly went wrong.
+There can be many reasons for that:
 
-Competitors such as Bill.com, Tipalti and Coupa optimize the happy path and treat exceptions as warnings: the system raises a flag, while the person has to find the cause, owner and next step. I built Matchpoint from the opposite premise: a discrepancy is not an error in a table, but a managed object with a lifecycle: Detect → Diagnose → Route → Resolve → Trace. The scope of this case is Detect and Diagnose, the weakest part competitors still leave to the user.
+- the price changed after the purchase order was issued;
+- the invoice covers the full order, but only part of the shipment arrived;
+- extra costs or terms never made it into the purchase order;
+- plain mistakes.
+
+The problem is not the discrepancy itself, but the fact that the system usually shows a red flag and never explains what exactly went wrong.
+
+Competitors — Bill.com, Tipalti and Coupa — optimize the happy path and treat exceptions as warnings: the system raises a flag, while the person is left to find the cause, the owner and the next step. I built Matchpoint from the opposite premise: here a discrepancy is not a broken cell in a table but a managed object with a lifecycle — Detect → Diagnose → Route → Resolve → Trace. The scope of this case is Detect and Diagnose, the exact part competitors leave to the user.
 
 <Breakout maxWidth="700px" align="content">
   <Flows lang="en" />
 </Breakout>
 
-Domain. The primary user is an AP specialist processing 200–500 invoices per month across 50–100 vendors. Each invoice goes through 3-way matching: invoice vs. purchase order (PO) vs. goods receipt. An exception is any place where those three documents do not match.
+**Domain.** The primary user is an accounts payable specialist (AP specialist) who processes 200–500 invoices a month from 50–100 vendors. Every invoice goes through three-way matching: invoice against purchase order against goods receipt. An exception is any place where the three documents disagree.
 
-### What Success Means
+### Success metrics
 
-The “why” has two layers. Metrics for specific design decisions are covered separately in section 10.
-
-- **Business.** DPO, cost per processed invoice, share of payments made on time, late-payment penalties, audit readiness.
-  - Operational breakdown: exception time-to-resolve, share of exceptions closed without escalation, false positive rate of flags, share of exceptions closed in bulk.
-- **User.** AP resolves the exception without leaving the product: quickly understand what differs, who should own it and which action closes it, without manual comparison across three windows and side-channel messages.
+- **Business metrics:** days payable outstanding (DPO), cost per processed invoice, share of payments made on time, late-payment penalties, audit readiness.
+  - **Operational metrics:** exception resolution time, share of exceptions closed without escalation, share of false alarms, share of exceptions closed in bulk.
+- **User metrics:** share of discrepancies that can be resolved without leaving the system; time it takes an AP specialist to understand the cause of a discrepancy; share of discrepancies with an obvious owner from the start.
 
 ### Users
 
-- **AP specialist** investigates exceptions every day. The main pain is constant switching between documents and systems.
-- **Manager** joins when the amount is high or the decision is risky.
-- **Procurement and warehouse teams** do not work in the product all the time, but receive questions when the issue is related to the PO or receipt.
+- **AP specialist** — works through exceptions every day. The main pain is constant switching between documents and systems.
+- **Manager** — steps in when the amount is high or the decision is risky.
+- **Procurement and warehouse** — do not live in the system, but get the questions whenever the issue comes from the order or the receipt.
 
-## 2. Constraints and Scope
+## 2. Constraints and scope: **two exception types, no real data**
 
-This is a solo concept without real data or live users, so every baseline value needs validation in a pilot.
+A concept, built solo, without real data or live users — every baseline value here needs validation in a pilot.
 
-The scope includes two exception types: purchase order mismatch and possible duplicate invoice. Out of scope: stuck approvals, SLAs, escalations and document recognition quality.
+In scope: a purchase order mismatch and a possible duplicate invoice. Out of scope: stuck approvals, SLAs (service level agreements) and escalations.
 
 <Breakout maxWidth="544px" align="content">
   <Problems lang="en" />
 </Breakout>
 
-## 3. Discovery
+## 3. Discovery: **the system finds the discrepancy, the person finds the cause**
 
-I started with desk research: reviews of Bill.com, Coupa and Tipalti, public AP automation case studies and discussions among AP specialists. The same problem repeated across sources: the system finds a mismatch, but the person still has to identify the cause, owner and next step.
+I started with desk research: reviews of Bill.com, Tipalti and Coupa, public material on accounts payable automation and discussions among AP specialists. One problem repeated across sources: the system finds the discrepancy, and from there the person still works out the cause, the owner and the next step on their own.
 
-### Key Insights
+### Key insights
 
-- **A flag without an explanation.**  
-  The system says the invoice “does not match,” but does not provide enough context: which line caused the problem, what exactly it differs from and who should fix it. AP, procurement and warehouse teams then resolve these cases manually through email, chats and calls.
-
-- **Automation is not trusted without confidence.**  
-  If the system simply raises a flag but does not explain how reliable that flag is, the user starts checking everything manually. This is especially important for unusual templates, new vendors and disputed data.
-
-- **Context leaks out of the system.**  
-  When the decision moves into email and messengers, history is quickly lost: who checked what, what they decided and why they accepted or rejected the invoice. At month-end, this makes audit harder and slows period close.
-
-- **Delay costs money.**  
-  Stuck exceptions directly affect the business: payments are late, the vendor waits for an answer, relationships suffer and some contracts can introduce penalties for each day of delay.
+- **A flag with no explanation.** The system reports that the invoice "does not match" but shows too little context: which line caused the problem, what exactly it differs from and who is supposed to fix it. AP, procurement and the warehouse end up resolving such cases by hand — through email, chats and calls.
+- **Automation is not trusted unless confidence is explained.** When the system only raises a flag without showing how reliable the signal is, the user starts rechecking everything manually. This matters most for unusual templates, new vendors and disputed data.
+- **Context leaks out of the system.** Once the decision moves into email and messengers, the history is lost fast: who checked what, what they decided and why the invoice was approved or rejected. At month-end this makes the audit harder and slows the close.
+- **Delay costs money.** Stuck exceptions hit the business directly: payments slip, the vendor waits for an answer, the relationship suffers, and some contracts add a penalty for every day of delay.
 
 <Breakout maxWidth="1264px">
   <FlowsAsIs lang="en" />
 </Breakout>
 
-## 4. Assumptions
+## 4. Assumptions: **three assumptions in place of the missing data**
 
-Without access to real data, I made the assumptions explicit: what I assumed, why, and how I would validate it.
+Without access to real data I made the assumptions explicit: what I assumed, why, and how I would check it.
 
-- **Price and quantity are the most common mismatches.** I assumed this based on desk research, so I built the main screen around line-level deltas. With data access, I would validate it through exception-type analytics.
-- **Automation gets bypassed without confidence explanations.** I assumed AP manually rechecks a flag when they cannot see why it is reliable, so I made confidence a persistent signal. I would validate it through adoption and the share of users disabling automation.
-- **A new vendor has no baseline.** I assumed the first exception has no history to compare against, so I designed an honest cold-start state instead of false certainty. I would validate it on the first invoices from real new vendors.
+- **Price and quantity are the most common mismatches.** I assumed this from desk research, so I built the main screen around a line-by-line comparison. With data access I would check it against the distribution of exception types.
+- **Automation gets switched off when confidence is not explained.** I assumed an AP specialist rechecks a flag manually when the system does not show how well founded it is. That is why the confidence estimate is visible at every stage of working with an exception. I would test this through the share of users who keep the automatic check running versus the share who turn it off.
+- **A new vendor comes with no baseline.** I assumed the first exception has nothing to compare against, so I designed an honest cold-start state instead of false certainty. I would check this on the first invoices from new vendors.
 
-## 5. Scenarios
+## 5. Scenarios: **three situations where a discrepancy gets expensive**
 
-### Critical mismatch before a deadline
+<Breakout maxWidth="1264px">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col"></th>
+        <th scope="col">1. Critical mismatch before a deadline</th>
+        <th scope="col">2. Bulk handling of similar exceptions</th>
+        <th scope="col">3. First invoice from a new vendor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">Situation</th>
+        <td>Friday, 3:30 PM. The invoice has to be paid on Monday.</td>
+        <td>End of the workday. The queue holds 34 identical exceptions.</td>
+        <td>The first invoice from a new vendor arrives.</td>
+      </tr>
+      <tr>
+        <th scope="row">Problem</th>
+        <td>A $2,580 invoice does not match a $2,100 purchase order. The system shows only that a mismatch exists.</td>
+        <td>The system does not group similar discrepancies. Every invoice has to be checked separately.</td>
+        <td>The system detects a deviation, but there is no vendor history yet.</td>
+      </tr>
+      <tr>
+        <th scope="row">What the user does</th>
+        <td>Compares documents by hand across several windows and messages procurement.</td>
+        <td>Repeats the same workflow 34 times.</td>
+        <td>Either sends the invoice through an unnecessary approval or decides blindly.</td>
+      </tr>
+      <tr>
+        <th scope="row">Consequence</th>
+        <td>A missed payment deadline, a penalty and a delayed next shipment.</td>
+        <td>More than 100 minutes of routine work, or the risk of missing a real anomaly.</td>
+        <td>Extra approvals, or the risk of locking in wrong data as the new normal.</td>
+      </tr>
+    </tbody>
+  </table>
+</Breakout>
 
-<table>
-  <tbody>
-    <tr>
-      <td><strong>Situation</strong></td>
-      <td>Friday, 3:30 PM. The invoice must be paid on Monday.</td>
-    </tr>
-    <tr>
-      <td><strong>Problem</strong></td>
-      <td>A $2,580 invoice does not match a $2,100 purchase order. The system shows only that a mismatch exists.</td>
-    </tr>
-    <tr>
-      <td><strong>What the user does</strong></td>
-      <td>Manually compares documents in several windows and messages procurement.</td>
-    </tr>
-    <tr>
-      <td><strong>Consequence</strong></td>
-      <td>Missed payment deadline, penalty and delayed next shipment.</td>
-    </tr>
-  </tbody>
-</table>
+## 6. Prioritization: **all three scenarios converge on one screen**
 
-### Bulk handling of similar exceptions
+I prioritized the scenarios along two axes: **frequency** and **cost of an error or a delay**. On top of that I looked at whether a single solution could close several problems at once.
 
-<table>
-  <tbody>
-    <tr>
-      <td><strong>Situation</strong></td>
-      <td>End of the workday. The queue contains 34 identical exceptions.</td>
-    </tr>
-    <tr>
-      <td><strong>Problem</strong></td>
-      <td>The system does not group similar mismatches. Each invoice must be checked separately.</td>
-    </tr>
-    <tr>
-      <td><strong>What the user does</strong></td>
-      <td>Repeats the same workflow 34 times.</td>
-    </tr>
-    <tr>
-      <td><strong>Consequence</strong></td>
-      <td>More than 100 minutes of routine work, or the risk of missing a real anomaly.</td>
-    </tr>
-  </tbody>
-</table>
+- **Scenario 1** — rare, but expensive per case: one missed payment turns into a penalty and a delayed shipment.
+- **Scenario 2** — frequent and cheap per case, but 34 repetitions add up to 100+ minutes of routine work.
+- **Scenario 3** — not about frequency, but about the risk of deciding without history.
 
-### First invoice from a new vendor
+All three converge on one task: helping the specialist work through a single exception quickly and with confidence. That is why the main screen became the **exception detail** — the screen where you can see the discrepancy between the invoice, the order and the receipt, understand why the system flagged it, and pick the next action.
 
-<table>
-  <tbody>
-    <tr>
-      <td><strong>Situation</strong></td>
-      <td>The first invoice from a new vendor arrives.</td>
-    </tr>
-    <tr>
-      <td><strong>Problem</strong></td>
-      <td>The system detects a deviation, but there is no historical vendor profile yet.</td>
-    </tr>
-    <tr>
-      <td><strong>What the user does</strong></td>
-      <td>Either sends the invoice for unnecessary approval or makes a decision blindly.</td>
-    </tr>
-    <tr>
-      <td><strong>Consequence</strong></td>
-      <td>Extra approvals, or the risk of accepting incorrect data as the new normal.</td>
-    </tr>
-  </tbody>
-</table>
+This screen solves the first scenario directly, becomes the basis for handling similar cases in bulk, and lowers the risk of working with a new vendor. Bulk handling removes the repetition in the second scenario, and the vendor profile adds the missing context in the third.
 
-## 6. Prioritization
+## 7. Problem statement: **the system shows the fact, not the source**
 
-I prioritized scenarios across frequency × cost.
+- **An AP specialist cannot quickly identify the cause of a discrepancy**, because the system shows the mismatch without pointing to its source. This leads to reconciling the invoice, the order and the receipt by hand across three windows, and to the risk of a late payment.
+- **An AP specialist cannot close similar exceptions in one action**, because the system does not recognize them as one type. This leads to long stretches of routine work and the risk of missing a real deviation.
+- **An AP specialist cannot assess the risk of a new vendor**, because the system has no history of their invoices. This leads to unnecessary approvals, or to locking in wrong data as the new normal.
 
-- Scenario 1 is rare but expensive per case: one missed payment can turn into a penalty and delayed shipment.
-- Scenario 2 is frequent and cheap per case, but 34 repetitions add up to 100+ minutes of routine work.
-- Scenario 3 is less about frequency and more about decision risk without history.
+## 8. Solution: **the explanation next to the data, not in another window**
 
-All three converge on one thing: diagnosing a single exception. If that is strong, it also serves scenario 2 (the same diagnosis × N through bulk actions) and reduces risk in scenario 3. That is why the product core is the Exception Detail hero screen, not a generic invoice list.
+Everything that explains a discrepancy stays on the same screen as the data itself: the likely cause sits at the line, the vendor's history and terms sit in the panel on the right, and the available actions are right there. The specialist never has to assemble the picture from three systems and a mail thread. The visual language follows from that: a single white background with no brand color, color carrying status semantics only, and discrepancies marked with weight rather than fills — the attention goes to the data and the explanation, not to the styling.
 
-## 7. Problem Statement
+### Signal model
 
-- **AP cannot quickly identify the source of a mismatch**, because the system flags non-matching data without attribution, which leads to manual reconciliation across three windows and a missed payment deadline.
-- **AP cannot close similar exceptions in bulk**, because the queue does not recognize them as one type, which leads to 100+ minutes of routine work and the risk of missing a real anomaly.
-- **AP cannot assess risk for a new vendor**, because there is no baseline, which leads to unnecessary approvals or accepting an error as the norm.
-
-## 8. Solution
-
-The whole interface sits on a single white background without branded color: color carries only status semantics (tomato / amber / jade), while mismatches are emphasized with weight rather than fills.
-
-### Signal Model
-
-I kept only the signals that help make a decision and change meaningfully depending on the seriousness of the warning: confidence, severity, vendor status, exception type, resolution state, cause and detection method.
+I kept only the signals that help make a decision and that read differently depending on how serious the discrepancy is: system confidence, severity, vendor status, exception type, resolution stage, cause and detection method.
 
 <Breakout maxWidth="700px" align="content">
   <Statuses4 lang="en" />
 </Breakout>
 
-### Screen 1. Exception Queue and Bulk Handling
+### Screen 1. Exception detail
 
-The queue separates problematic invoices from the normal flow. A mismatch should be found before the specialist begins manual checking. I keep the screen dense but not overloaded: there are many invoices, so the user needs a quick overview of what requires attention now, with search and filters for people arriving with a specific question.
+The main screen for working through a discrepancy. The main area shows which fields do not match, and the explanation sits right at the specific line: the cause has to be visible next to the data, not looked up in another window. The system points at the likely source: a vendor price change, an error in the purchase order or an error at receiving.
+
+**Hypothesis:** showing the likely cause right at the line cuts the time it takes to understand it, because the specialist no longer has to reconstruct the picture from several documents by hand.
+
+On the right is a panel with vendor context: average invoice amount, how often discrepancies happened before, contract terms and related documents. It makes the discrepancy assessable without leaving the screen.
+
+<Walkthrough
+  theme="light"
+  entryMode="button"
+  aspectRatio="1440 / 1535"
+  lastStepAlign="bottom"
+  src={exceptionDetail1}
+  alternateSrc={exceptionDetailPopover}
+  alternateStep={2}
+  alt="Exception detail screen with document comparison"
+  title="Anatomy of an exception"
+  description="Every block on this screen answers a question the AP specialist would otherwise chase across tabs, emails and side channels."
+  zones={walkthroughZones}
+  maxWidth="1440px"
+/>
+
+By default I show a table with the differing fields only. The full comparison of invoice, order and receipt is available on request, and the original document can be checked by opening the invoice scan with its recognition results. The tooltip on the confidence indicator explains why the system flagged the discrepancy: it shows the trigger, the supporting signals and the rule that detected it.
+
+<Carousel
+  label="Exception detail screens"
+  items={[
+    {
+      src: exceptionDetail3,
+      alt: "Exception detail screen with invoice data comparison",
+    },
+    {
+      src: exceptionDetail2,
+      alt: "Exception detail screen with vendor context",
+    },
+  ]}
+/>
+
+### Screen 2. Exception queue and bulk handling
+
+The queue separates problem invoices from the normal flow: a discrepancy has to be visible before the specialist starts checking anything by hand. The screen is dense but not overloaded: there are many invoices, so what it owes the user is a fast overview of what needs attention now. Search and filters serve the people who arrive with a specific question.
 
 <Carousel
   label="Exception queue views"
@@ -228,111 +237,83 @@ The queue separates problematic invoices from the normal flow. A mismatch should
     },
     {
       src: exceptionQueueGrouped,
-      alt: "Exception queue grouped by confidence for triage",
+      alt: "Exception queue grouped by confidence level",
     },
   ]}
 />
 
-Similar exceptions can be closed in bulk. The grouping is strict: five attributes must match at once: vendor, type, variance direction (above or below PO), variance range and specific field. Outliers are automatically excluded from the batch and remain visible individually. A batch above $50k or larger than 20 exceptions goes to approval.
+Similar exceptions can be closed in one action. The grouping is strict: five attributes have to match at once — vendor, discrepancy type, direction of the variance from the purchase order, variance range and the specific field. Outliers are excluded from the batch automatically and stay visible on their own. A batch above $50k or larger than 20 exceptions goes to approval.
 
-Hypothesis: strict bulk grouping reduces total time-to-resolve in scenario 2 without increasing the risk of closing an anomaly together with routine cases.
-
-<Breakout maxWidth="960px">
-  <Image src={exceptionQueue2} alt="Exception queue with similar exceptions grouped for bulk resolution, outliers excluded" class="w-full h-auto object-contain mx-auto" />
-</Breakout>
-
-### Screen 2. Diagnosis
-
-The main diagnosis screen. Documents are shown side by side, and the mismatch is explained directly at the affected line. The cause should be visible next to the documents, not searched for in another window. The system attributes the source: vendor pricing change, PO error or receipt error.
-
-Hypothesis: if attribution appears directly at the line, time-to-understand cause drops because the specialist no longer reconstructs the reason manually.
-
-On the right is vendor context: average invoice size, frequency of past mismatches, contract terms and related documents. Vendor context must live on the diagnosis screen itself, otherwise the decision moves back into side-channel communication.
-
-<Walkthrough
-  theme="light"
-  entryMode="button"
-  aspectRatio="1440 / 1535"
-  lastStepAlign="bottom"
-  src={exceptionDetail1}
-  alternateSrc={exceptionDetailPopover}
-  alternateStep={2}
-  alt="Exception detail screen with side-by-side document comparison"
-  title="Anatomy of an exception"
-  description="Every block on this screen answers one question the AP specialist would otherwise chase across tabs, emails and side channels."
-  zones={walkthroughZones}
-  maxWidth="1440px"
-/>
-
-By default, I show the diff table: only the fields that differ. The full three-column comparison (invoice ↔ PO ↔ receipt) is available on request, and the scan modal lets the user check the original recognized invoice. A confidence popover opens the reasoning behind the flag.
-
-<Carousel
-  label="Exception detail screenshots"
-  items={[
-    {
-      src: exceptionDetail3,
-      alt: "Exception detail screen with invoice comparison",
-    },
-    {
-      src: exceptionDetail2,
-      alt: "Exception detail screen with vendor context",
-    },
-  ]}
-/>
-
-### Screen 3. Vendor Profile
-
-The vendor profile covers the scenario where one invoice is not enough. A new vendor has no history yet, and the interface honestly shows the lack of baseline (cold start) instead of pretending to be certain. Here the AP specialist sees the working context: how much the company usually pays this vendor, how often mismatches happen, whether there are open exceptions and whether anything changed recently.
+**Hypothesis:** strict grouping and bulk handling cut the total resolution time in the second scenario without raising the risk of closing an important deviation along with the routine cases.
 
 <Breakout maxWidth="960px">
-  <Image src={vendor} alt="Vendor profile with payment and exception context" class="w-full h-auto object-contain mx-auto" lightboxFit="width" />
+  <Image
+    src={exceptionQueue2}
+    alt="Queue with similar exceptions grouped; outliers excluded from the batch"
+    class="w-full h-auto object-contain mx-auto"
+  />
 </Breakout>
 
-The profile brings together data that users usually have to search for in different places:
+### Screen 3. Vendor profile
+
+The profile covers the scenario where a single invoice is not enough. A new vendor has no history yet, and the interface says honestly that there is nothing to compare against, instead of manufacturing a false sense of certainty. Here the AP specialist sees the working context: how much the company usually pays this vendor, how often discrepancies come up, whether any exceptions are open and whether anything changed recently.
+
+<Breakout maxWidth="960px">
+  <Image
+    src={vendor}
+    alt="Vendor profile with payment context and exception history"
+    class="w-full h-auto object-contain mx-auto"
+    lightboxFit="width"
+  />
+</Breakout>
+
+The profile brings together the data that usually has to be hunted down in different places:
 
 - vendor status and primary contacts;
-- typical invoice size and payment cycle;
+- typical invoice size and payment terms;
 - discrepancy frequency;
-- open balance and open exceptions;
+- current balance and open exceptions;
 - banking details and contract terms;
-- recent vendor activity.
+- recent activity on the vendor.
 
-This helps the user understand whether the problem is in the specific invoice or in the vendor’s behavior. From here, they can also message the vendor, download history, update banking details or flag the vendor for review.
+This makes it faster to tell whether the problem is in this particular invoice or in how the vendor works in general. From here the specialist can also message the vendor, download the history, update banking details or flag the vendor for extra review.
+
+### Core actions
 
 <Breakout maxWidth="704px" align="content">
   <Actions lang="en" />
 </Breakout>
 
-### Core Actions
-
-- Update the PO if the invoice is correct but the PO price is outdated.
-- Request a corrected invoice if the error is on the vendor side.
-- Approve as is if the variance is acceptable and should be paid.
+- **Update the order** — when the invoice is right and the price on the order is out of date.
+- **Request a corrected invoice** — when the error is on the vendor's side.
+- **Approve as is** — when the discrepancy is acceptable and has to go through.
 
 <Carousel
-  label="Resolution action modals"
+  label="Core action modals"
   items={[
     {
       src: UpdatePoToNewPrice,
-      alt: "Update PO price modal",
+      alt: "Modal for updating the price on the purchase order",
     },
     {
       src: RequestCorrectedInvoice,
-      alt: "Request corrected invoice modal",
+      alt: "Modal for requesting a corrected invoice",
     },
     {
       src: ApproveAsIs,
-      alt: "Approve as is modal",
+      alt: "Modal for approving the invoice as is",
     },
   ]}
 />
 
-- Approve part of the amount if only part of the shipment is confirmed.
-- Reject the invoice if it is a duplicate or a clear error.
-- Assign an owner if procurement, warehouse or a manager should resolve it. The owner is not chosen blindly: the system suggests the owner based on the problem type: price mismatch → Procurement Manager, quantity mismatch in receipt → Receiving Supervisor.
+- **Approve part of the amount** — when only part of the shipment is confirmed.
+- **Reject the invoice** — when it is a duplicate or a clear error.
+- **Assign an owner** — when procurement, the warehouse or a manager should resolve it.
+
+The owner does not have to be picked blindly: the system suggests the right person based on the type of discrepancy. A price discrepancy goes to the procurement manager, a quantity discrepancy at receiving goes to the receiving supervisor.
 
 <Carousel
-  label="Additional resolution modals"
+  label="Additional action modals"
   items={[
     {
       src: PartialApproval,
@@ -348,41 +329,26 @@ This helps the user understand whether the problem is in the specific invoice or
     },
     {
       src: AssignOwner2,
-      alt: "Suggested owner modal",
+      alt: "Modal with a suggested owner",
     },
   ]}
 />
 
 ### Tolerances
 
-Small discrepancies should not look like serious problems. The rule is simple: the system looks at the absolute amount, not only the percentage. A 30-cent difference should not block payment even if the percentage looks large. Currency, tax and shipping issues show the reason separately, so the user does not have to calculate it mentally or look up exchange rates in another system.
+Small discrepancies should not look like a serious problem. The rule is simple: the system looks at the absolute amount rather than the percentage — a 30-cent difference does not block a payment even when the percentage looks large. For currency, tax and shipping the reason is shown separately, so the user does not have to do the math in their head or look up a rate in another system.
 
-## 9. Trade-offs
+## 9. Trade-off: **confidence as an explicit status**
 
-**Diff table by default.** I considered a diff table (only fields that differ) versus showing the full three-column comparison immediately. I chose the diff table for density and focus. The trade-off is that audit mode is not the default. That is acceptable: the full view is available on request, and whether full 3-column mode should be shown immediately is an open validation question.
+I weighed a separate status with an expandable explanation against a plain flag. I chose the explicit status. The trade-off: it takes up screen space and adds a layer of interpretation where a binary signal would have done. Without an explanation of confidence, the automatic check gets switched off — a direct finding from the research, and a question of regular use rather than decoration.
 
-**Confidence as an explicit status.** I considered an explicit confidence status with a popover versus a simple flag. I chose the explicit status. It costs screen space and adds complexity. That is acceptable: without confidence explanations, users disable automation. This is an adoption issue, not decoration.
+## 10. **How I would measure success**
 
-**Strict bulk grouping.** I considered strict grouping (five criteria + auto-excluded outliers) versus a softer approach. I chose strict grouping. The trade-off is that some exceptions will not enter the batch. That is acceptable: strictness protects against closing anomalies together with routine cases, while outliers remain visible individually.
+The baseline is honestly unknown — I would measure it in a pilot. Targets here are orders of magnitude, not final numbers.
 
-## 10. How I Would Measure Success
-
-The baseline is honestly unknown. I would measure it in a pilot. Targets are given as an order of magnitude, not final numbers.
-
-- **Time-to-understand cause** — how long it takes to understand the reason for the mismatch.
-- **Correct-action rate** — how often the user chooses the correct action.
-- **False positive rate** — the share of unnecessary flags.
+- **Time to understand the cause** — how long it takes to make sense of a discrepancy.
+- **Correct-action rate** — how often the right action is chosen.
+- **False-positive rate** — how many flags turned out to be unnecessary.
 - **Share closed in bulk** — how much routine work bulk handling removes.
 
-Bridge to business: these per-solution metrics are leading indicators; operational metrics such as time-to-resolve and escalation rate are what they convert into.
-
-## 11. What’s Next
-
-Outside this iteration: the full list of all invoices, default full three-column audit mode, stuck approvals and approval chains, and document recognition quality.
-
-What I would validate next:
-
-1. Main flow validation: open exception → understand cause → choose action.
-2. Readability of line-level deltas without training or hints.
-3. Empty, loading and error states.
-4. Bulk handling on real data.
+Bridge to the business: these solution-level metrics are leading indicators; the operational ones (time to close, share of escalations) are what they convert into.

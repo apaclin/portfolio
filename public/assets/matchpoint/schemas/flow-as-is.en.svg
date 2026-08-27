@@ -6,11 +6,11 @@
 <text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="555.458" y="168.091">Invoice arrives: manual </tspan><tspan x="550.618" y="189.091">upload, OCR, manual PO </tspan><tspan x="606.522" y="210.091">tagging</tspan></text>
 <rect x="976" y="42" width="16" height="16" rx="8" fill="#FDF0ED"/>
 <rect x="976" y="42" width="16" height="16" rx="8" stroke="#F2C8BD" stroke-dasharray="4 4"/>
-<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1071.49" y="54.7273"> &#x2014; a step where the </tspan><tspan x="1000" y="74.7273">process breaksor leaves the system </tspan><tspan x="1000" y="94.7273">becausecontext or tools are missing</tspan></text>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1071.49" y="54.7273"> &#x2014; a step where the </tspan><tspan x="1000" y="74.7273">process breaks or leaves the system </tspan><tspan x="1000" y="94.7273">because context or tools are missing</tspan></text>
 <text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="600" letter-spacing="0em"><tspan x="1000" y="54.7273">Break point</tspan></text>
 <rect x="976" y="118" width="16" height="16" rx="8" fill="#FFF6DD"/>
 <rect x="976" y="118" width="16" height="16" rx="8" stroke="#EDD6A2" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1080.4" y="130.727"> &#x2014; A step that gives no </tspan><tspan x="1000" y="150.727">visible signal; the issue appears </tspan><tspan x="1000" y="170.727">later, without a warning</tspan></text>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" letter-spacing="0em"><tspan x="1080.4" y="130.727"> &#x2014; a step that gives no </tspan><tspan x="1000" y="150.727">visible signal; the issue appears </tspan><tspan x="1000" y="170.727">later, without a warning</tspan></text>
 <text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="13" font-weight="600" letter-spacing="0em"><tspan x="1000" y="130.727">Hidden state</tspan></text>
 <path d="M632 250.323L632 307" stroke="#D8D6CF" stroke-linecap="round"/>
 <path d="M632.54 310.911L634.886 307.137C635.158 306.698 634.915 306.136 634.457 306.021C634.345 305.993 634.228 306.02 634.12 306.059L632 306.823L629.88 306.059C629.771 306.02 629.655 305.993 629.543 306.021C629.092 306.135 628.847 306.683 629.105 307.122L631.328 310.895C631.602 311.361 632.254 311.37 632.54 310.911Z" fill="#D8D6CF"/>
@@ -34,7 +34,7 @@
 <text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="587.643" y="1755.59">Amount grew </tspan><tspan x="586.33" y="1776.59">relative to the </tspan><tspan x="618.965" y="1797.59">PO?</tspan></text>
 <g clip-path="url(#clip0_1140_35461)">
 <rect x="289" y="1188" width="224" height="128" rx="8" fill="#F7F6F3"/>
-<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="335.744" y="1236.09">&#x41d;&#x435;&#x442; framework &#x434;&#x43b;&#x44f; </tspan><tspan x="336.1" y="1257.09">&#x43f;&#x440;&#x438;&#x43d;&#x44f;&#x442;&#x438;&#x44f; &#x440;&#x435;&#x448;&#x435;&#x43d;&#x438;&#x44f; </tspan><tspan x="344.426" y="1278.09">&#x432;&#x43d;&#x443;&#x442;&#x440;&#x438; &#x441;&#x438;&#x441;&#x442;&#x435;&#x43c;&#x44b;</tspan></text>
+<text fill="#37352F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="323.369" y="1246.59">No decision framework</tspan><tspan x="342.406" y="1267.59">inside the system</tspan></text>
 </g>
 <rect x="289" y="1188" width="224" height="128" rx="8" stroke="#D8D6CF"/>
 <rect x="40" y="1480" width="224" height="128" rx="8" fill="#F7F6F3"/>
@@ -56,7 +56,7 @@
 <path d="M580 1912C580 1907.58 583.582 1904 588 1904H796C800.418 1904 804 1907.58 804 1912V2024C804 2028.42 800.418 2032 796 2032H588C583.582 2032 580 2028.42 580 2024V1912Z" stroke="#F2C8BD" stroke-dasharray="4 4"/>
 <g clip-path="url(#clip2_1140_35461)">
 <rect x="268" y="348" width="224" height="128" rx="8" fill="#FDF0ED"/>
-<text fill="#9F341F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="300.512" y="385.591">Warning without contex </tspan><tspan x="327.876" y="406.591">&#x2014; unclear what </tspan><tspan x="298.495" y="427.591">mismatched and by how </tspan><tspan x="361.468" y="448.591">much</tspan></text>
+<text fill="#9F341F" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="14" font-weight="500" letter-spacing="0em"><tspan x="298.224" y="385.591">Warning without context </tspan><tspan x="327.876" y="406.591">&#x2014; unclear what </tspan><tspan x="298.495" y="427.591">mismatched and by how </tspan><tspan x="361.468" y="448.591">much</tspan></text>
 </g>
 <rect x="268" y="348" width="224" height="128" rx="8" stroke="#F2C8BD" stroke-dasharray="4 4"/>
 <g clip-path="url(#clip3_1140_35461)">

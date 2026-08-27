@@ -1,10 +1,12 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
+import { unified } from '@astrojs/markdown-remark';
 import react from '@astrojs/react';
 import keystatic from '@keystatic/astro';
 import tailwindcss from '@tailwindcss/vite';
 import { defaultLocale, locales } from './src/lib/i18n.ts';
+import rehypeNoHangingWords from './src/lib/rehypeNoHangingWords.ts';
 
 // Keystatic-админка — это серверные роуты (React-приложение + local API).
 // Чтобы прод-сборка оставалась ЧИСТЫМ SSG (без адаптера и без React в бандле
@@ -29,6 +31,13 @@ export default defineConfig({
       // В Astro 6 он имеет смысл только при prefixDefaultLocale: true;
       // при false он приводит к циклу редиректов.
     },
+  },
+
+  // Типографика заголовков: предлоги и союзы не висят в конце строки.
+  // MDX наследует markdown-конфиг, поэтому плагин достаточно объявить здесь.
+  // Плагины идут через unified({...}): markdown.rehypePlugins устарели.
+  markdown: {
+    processor: unified({ rehypePlugins: [rehypeNoHangingWords] }),
   },
 
   // MDX подключается как интеграция Astro.

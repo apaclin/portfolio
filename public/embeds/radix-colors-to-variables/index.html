@@ -680,6 +680,8 @@ const CORNER_SMOOTHING = 0.4;
 const CHECKER_SIZE = 24;
 const CHECKER_LIGHT = { r: 0.97, g: 0.97, b: 0.97 };
 const CHECKER_DARK = { r: 0.86, g: 0.88, b: 0.9 };
+const CHECKER_DARK_THEME_LIGHT = { r: 17 / 255, g: 17 / 255, b: 17 / 255 };
+const CHECKER_DARK_THEME_DARK = { r: 40 / 255, g: 40 / 255, b: 40 / 255 };
 
 const PREFS_KEY = "radix-colors-to-variables/prefs";
 
@@ -1044,7 +1046,10 @@ async function createVariablesFromTokens(options) {
 
   const plural = tokens.length === 1 ? "variable" : "variables";
   const canvasSuffix = options.addToCanvas ? " Canvas preview added." : "";
-  return `Created ${tokens.length} ${plural} in "${collection.name}".${canvasSuffix}`;
+  const modeSuffix = modeSetup.droppedMode
+    ? ` ${modeSetup.droppedMode} theme skipped: this collection is limited to one mode.`
+    : "";
+  return `Created ${tokens.length} ${plural} in "${collection.name}".${canvasSuffix}${modeSuffix}`;
 }
 
 function buildTokensFromLibrarySelection(selectedScales, includeAlphas, modePreference) {
@@ -1156,12 +1161,39 @@ function configureModes(collection, detectedModes, isNewCollection) {
       return defaultModeId;
     }
 
-    return collection.addMode(name);
+    try {
+      return collection.addMode(name);
+    } catch (error) {
+      // Free Figma plans cap a collection at a single mode. Report the miss
+      // instead of throwing, so the caller can drop a theme and still import.
+      return null;
+    }
   }
 
   if (hasLight && hasDark) {
     const lightModeId = getOrCreateModeId(lightMode, "Light", isNewCollection);
+
+    // No room for a second mode: keep one theme rather than failing the import.
+    // Light wins because it is the mode a fresh collection already starts in.
+    if (lightModeId === null) {
+      return {
+        hasLight: true,
+        hasDark: false,
+        lightModeId: defaultModeId,
+        droppedMode: "Dark"
+      };
+    }
+
     const darkModeId = getOrCreateModeId(darkMode, "Dark", false);
+    if (darkModeId === null) {
+      return {
+        hasLight: true,
+        hasDark: false,
+        lightModeId,
+        droppedMode: "Dark"
+      };
+    }
+
     return {
       hasLight: true,
       hasDark: true,
@@ -1175,7 +1207,8 @@ function configureModes(collection, detectedModes, isNewCollection) {
     return {
       hasLight: false,
       hasDark: true,
-      darkModeId
+      // Nowhere to add a mode, so write into the one the collection has.
+      darkModeId: darkModeId === null ? defaultModeId : darkModeId
     };
   }
 
@@ -1183,7 +1216,7 @@ function configureModes(collection, detectedModes, isNewCollection) {
   return {
     hasLight: true,
     hasDark: false,
-    lightModeId
+    lightModeId: lightModeId === null ? defaultModeId : lightModeId
   };
 }
 
@@ -1235,6 +1268,8 @@ function buildPreviewFrame(variables, collectionName, label) {
   preview.fills = [];
   preview.clipsContent = false;
 
+  const isDarkTheme = label === "Dark";
+
   const groups = new Map();
 
   for (const variable of variables) {
@@ -1266,7 +1301,7 @@ function buildPreviewFrame(variables, collectionName, label) {
     let localWidth = RECT_WIDTH;
 
     if (group.opaque.length > 0) {
-      const opaqueRow = createColorRow(group.opaque, scaleName, false);
+      const opaqueRow = createColorRow(group.opaque, scaleName, false, isDarkTheme);
       opaqueRow.x = 0;
       opaqueRow.y = localY;
       scaleFrame.appendChild(opaqueRow);
@@ -1279,7 +1314,7 @@ function buildPreviewFrame(variables, collectionName, label) {
         localY += RECT_GAP;
       }
 
-      const alphaRow = createColorRow(group.alpha, `${scaleName}A`, true);
+      const alphaRow = createColorRow(group.alpha, `${scaleName}A`, true, isDarkTheme);
       alphaRow.x = 0;
       alphaRow.y = localY;
       scaleFrame.appendChild(alphaRow);
@@ -1308,7 +1343,7 @@ function compareVariables(left, right) {
   return leftStep - rightStep;
 }
 
-function createColorRow(variables, rowName, showCheckerboard) {
+function createColorRow(variables, rowName, showCheckerboard, isDarkTheme) {
   const frame = figma.createFrame();
   frame.name = rowName;
   frame.fills = [];
@@ -1316,7 +1351,7 @@ function createColorRow(variables, rowName, showCheckerboard) {
 
   for (let index = 0; index < variables.length; index += 1) {
     const variable = variables[index];
-    const swatch = createSwatchNode(variable, showCheckerboard);
+    const swatch = createSwatchNode(variable, showCheckerboard, isDarkTheme);
     swatch.x = index * (RECT_WIDTH + RECT_GAP);
     swatch.y = 0;
     frame.appendChild(swatch);
@@ -1327,7 +1362,7 @@ function createColorRow(variables, rowName, showCheckerboard) {
   return frame;
 }
 
-function createSwatchNode(variable, showCheckerboard) {
+function createSwatchNode(variable, showCheckerboard, isDarkTheme) {
   if (!showCheckerboard) {
     const rect = figma.createRectangle();
     rect.name = variable.name;
@@ -1346,6 +1381,9 @@ function createSwatchNode(variable, showCheckerboard) {
   frame.cornerRadius = CORNER_RADIUS;
   frame.cornerSmoothing = CORNER_SMOOTHING;
 
+  const checkerLight = isDarkTheme ? CHECKER_DARK_THEME_LIGHT : CHECKER_LIGHT;
+  const checkerDark = isDarkTheme ? CHECKER_DARK_THEME_DARK : CHECKER_DARK;
+
   for (let row = 0; row < RECT_HEIGHT / CHECKER_SIZE; row += 1) {
     for (let column = 0; column < RECT_WIDTH / CHECKER_SIZE; column += 1) {
       const tile = figma.createRectangle();
@@ -1355,7 +1393,7 @@ function createSwatchNode(variable, showCheckerboard) {
       tile.fills = [
         {
           type: "SOLID",
-          color: (row + column) % 2 === 0 ? CHECKER_LIGHT : CHECKER_DARK
+          color: (row + column) % 2 === 0 ? checkerLight : checkerDark
         }
       ];
       frame.appendChild(tile);
@@ -2129,7 +2167,7 @@ if (typeof module !== "undefined") {
       <section id="panel-library" class="panel active" role="tabpanel" aria-labelledby="tab-library">
         <div class="stack">
           <div>
-            <label class="field-label" for="library-collection-name">Group Name</label>
+            <label class="field-label" for="library-collection-name">Group name</label>
             <input id="library-collection-name" class="text-input" type="text" value="Color" placeholder="Color" />
           </div>
 
@@ -2138,8 +2176,8 @@ if (typeof module !== "undefined") {
             <div class="modes-toolbar">
               <div id="mode-filters" class="mode-chips"></div>
               <div class="toolbar-actions">
-                <button id="library-select-all" class="text-button" type="button">Select All</button>
-                <button id="library-clear-all" class="text-button" type="button">Clear All</button>
+                <button id="library-select-all" class="text-button" type="button">Select all</button>
+                <button id="library-clear-all" class="text-button" type="button">Clear all</button>
               </div>
             </div>
           </div>
@@ -2168,7 +2206,7 @@ if (typeof module !== "undefined") {
       <section id="panel-paste" class="panel" role="tabpanel" aria-labelledby="tab-paste">
         <div class="stack">
           <div>
-            <label class="field-label" for="paste-collection-name">Group Name</label>
+            <label class="field-label" for="paste-collection-name">Group name</label>
             <input id="paste-collection-name" class="text-input" type="text" value="Color" placeholder="Color" />
           </div>
 
