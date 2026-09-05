@@ -192,13 +192,17 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
     };
 
     // ── Перекрытие контентом ──
-    // Полоса TOC живёт в правом поле страницы. Колонка текста туда не достаёт
-    // никогда (уже при 860px поле шире полосы), а полноширинные медиа — схемы,
-    // скриншоты, сцены разборов — достают, и полоса ложится поверх них.
-    // Поэтому прячем её кроссфейдом ровно на то время, пока под ней контент.
+    // Полоса TOC живёт в правом поле страницы. Правило жёсткое: под полосой не
+    // должно оказаться НИКАКОГО видимого контента — оказался, прячем полосу
+    // кроссфейдом на всё время перекрытия.
+    //
+    // Раньше здесь был список селекторов (img, svg, сцены разборов), и всё,
+    // чего в нём нет, полосу не убирало: широкая таблица в <Breakout> ложилась
+    // под полосу и оставалась перечёркнутой. Списка больше нет — кандидаты
+    // ищутся обходом дерева, см. collectContent.
+    //
     // Порог входа меньше порога выхода: гистерезис не даёт полосе мигать,
-    // когда край медиа идёт впритык к полосе.
-    const COLLIDE_SELECTOR = 'img, svg, .carousel__track, .walkthrough__stage, .incw__stage';
+    // когда край контента идёт впритык к полосе.
     const ENTER_PAD = 8;
     const EXIT_PAD = 28;
     let obstructed = false;
@@ -221,15 +225,64 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
       return out;
     };
 
-    const collidables = [
-      ...article.querySelectorAll<HTMLElement>('.full-bleed, .breakout'),
-    ]
-      .flatMap((root) => [...root.querySelectorAll<HTMLElement>(COLLIDE_SELECTOR)])
-      .map((el) => ({ el, clippers: clippersOf(el) }));
+    // Видимый кадр контента ≠ его обёртка. `.prose` — грид во всю ширину
+    // страницы, `.full-bleed` / `.breakout` — тоже, а рисуется внутри них узкий
+    // `.breakout__inner` или `.walkthrough__stage-wrap`. Поэтому спускаемся
+    // сквозь всё, что растянуто во всю ширину статьи, и останавливаемся на
+    // первом элементе, который уже: он и есть кадр. Так в набор сами собой
+    // попадают и таблица, и схема, и сцена разбора — без перечисления типов.
+    // Замена этого обхода списком селекторов возвращает исходный баг.
+    const TERMINAL = new Set(['svg', 'img', 'video', 'canvas', 'iframe', 'picture', 'table', 'pre']);
+    const SKIP = new Set(['script', 'style', 'template', 'br']);
+    const MAX_DEPTH = 8;
+
+    const collectContent = () => {
+      const full = article.getBoundingClientRect().width - 1;
+      const out: { el: Element; clippers: HTMLElement[] }[] = [];
+
+      const walk = (parent: Element, depth: number) => {
+        for (const child of Array.from(parent.children)) {
+          if (SKIP.has(child.localName)) continue;
+
+          const style = getComputedStyle(child);
+          if (style.display === 'none' || style.visibility === 'hidden') continue;
+
+          const rect = child.getBoundingClientRect();
+          // Иконки, разделители и схлопнутое в ноль полосе не мешают.
+          if (rect.width < 64 || rect.height < 24) continue;
+
+          const isWrapper =
+            rect.width >= full &&
+            child.childElementCount > 0 &&
+            !TERMINAL.has(child.localName) &&
+            depth < MAX_DEPTH;
+
+          if (isWrapper) {
+            walk(child, depth + 1);
+          } else {
+            out.push({ el: child, clippers: clippersOf(child as HTMLElement) });
+          }
+        }
+      };
+
+      walk(article, 0);
+      return out;
+    };
+
+    // Горизонтальная геометрия меняется только от ресайза и от панорамирования
+    // внутренних скроллеров, поэтому набор пересобираем по этим событиям, а не
+    // каждый кадр: обход дерева на длинном кейсе стоит дороже, чем проверка.
+    let collidables = collectContent();
+    let needsRecollect = false;
 
     const updateObstruction = () => {
       // Панель раскрыта — пользователь в ней, не выдёргиваем из-под курсора.
       if (tocRoot.matches(':hover, :focus-within')) return;
+
+      if (needsRecollect) {
+        needsRecollect = false;
+        collidables = collectContent();
+      }
 
       const r = rail.getBoundingClientRect();
       if (!r.height) return;
@@ -244,8 +297,8 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
           top = Math.max(top, c.top);
           bottom = Math.min(bottom, c.bottom);
         }
-        // Иконки внутри разборов и обрезанное в ноль полосе не мешают.
-        if (right - left < 64 || bottom - top < 24) return false;
+        // Обрезанное скроллером в ноль полосе не мешает.
+        if (right - left < 1 || bottom - top < 1) return false;
         return (
           right > r.left - pad &&
           left < r.right + pad &&
@@ -310,8 +363,23 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
       lockToClicked = false;
     };
 
+    const invalidateCollidables = () => {
+      needsRecollect = true;
+      requestActiveUpdate();
+    };
+
     window.addEventListener('scroll', requestActiveUpdate, { passive: true, signal });
-    window.addEventListener('resize', requestActiveUpdate, { passive: true, signal });
+    window.addEventListener('resize', invalidateCollidables, { passive: true, signal });
+    // Прокрутка внутреннего скроллера (панорамирование широкой схемы или
+    // карусели) не всплывает до window, но двигает контент под полосой по
+    // горизонтали — ловим её в фазе перехвата и пересобираем набор.
+    window.addEventListener(
+      'scroll',
+      (event) => {
+        if (event.target instanceof Element) invalidateCollidables();
+      },
+      { capture: true, passive: true, signal },
+    );
     // Only real user-driven scrolling should hand control back to scroll-spy.
     window.addEventListener('wheel', releaseLock, { passive: true, signal });
     window.addEventListener('touchmove', releaseLock, { passive: true, signal });

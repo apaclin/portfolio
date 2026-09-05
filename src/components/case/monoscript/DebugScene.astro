@@ -288,7 +288,14 @@ const config = { frame, geometry, stage: STAGE, pane: PANE, chat: CHAT };
         timer = window.setTimeout(done, ms);
       });
 
-    const reset = () => {
+    // `keepFade` — только для кроссфейда в конце круга: там состояние снимается
+    // ровно под погашенным стейджем, и гасить его должен тот же прогон, что и
+    // зажжёт. Во всех остальных вызовах гашение снимается обязательно: иначе
+    // остановка посреди фейда (сцена уехала из кадра — например, вверх, к
+    // прототипу) оставляла стейдж прозрачным навсегда, и следующий прогон
+    // отыгрывал сценарий в пустоту — со стороны это «видео перестало играть».
+    const reset = ({ keepFade = false } = {}) => {
+      if (!keepFade) stageEl.classList.remove('is-fading');
       camera.style.transitionDuration = '0ms';
       cursor.style.transitionDuration = '0ms';
       setCamera(SHOTS.wide, 0);
@@ -328,7 +335,7 @@ const config = { frame, geometry, stage: STAGE, pane: PANE, chat: CHAT };
     const fadeToStart = async (stale) => {
       stageEl.classList.add('is-fading');
       if (!(await hold(520, stale))) return;
-      reset();
+      reset({ keepFade: true });
       if (!(await hold(80, stale))) return;
       stageEl.classList.remove('is-fading');
       await hold(520, stale);
@@ -451,8 +458,14 @@ const config = { frame, geometry, stage: STAGE, pane: PANE, chat: CHAT };
     // Стейдж 672 CSS-пикселя, но колонка бывает уже — вписываем целиком, чтобы
     // сцена не уезжала в горизонтальный скролл: в отличие от схемы, читать тут
     // нужно не подписи, а движение, и оно переживает уменьшение.
+    //
+    // Нулевую ширину пропускаем: она бывает, пока страница ещё не разложена (и
+    // в фоновой вкладке, где раскладки нет вовсе), а масштаб 0 схлопывает сцену
+    // в полоску в два пикселя — и остаётся таким, пока ширина не поменяется
+    // снова, то есть навсегда.
     const fit = () => {
       const width = root.clientWidth;
+      if (!width) return;
       root.style.setProperty('--dscene-fit', String(Math.min(1, width / stage.width)));
     };
     new ResizeObserver(fit).observe(root);
@@ -469,12 +482,27 @@ const config = { frame, geometry, stage: STAGE, pane: PANE, chat: CHAT };
     // кадр — окно плагина целиком.
     const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (!calm.matches) {
+      let inView = false;
       new IntersectionObserver(
         (entries) => {
-          entries.forEach((entry) => (entry.isIntersecting ? start() : stop()));
+          entries.forEach((entry) => {
+            inView = entry.isIntersecting;
+            inView ? start() : stop();
+          });
         },
         { rootMargin: '50% 0px' },
       ).observe(root);
+
+      // В скрытой вкладке браузер не рисует кадры и не считает пересечения, а
+      // таймеры зажимает до секунды (и до минуты, если вкладка провисела в фоне
+      // пять минут). Прогон в это время продолжает щёлкать шагами вслепую, и на
+      // возврате сцена стоит посреди сценария с камерой не там, где ждёт шаг, —
+      // выглядит как замерший ролик. Поэтому на скрытии останавливаемся, а на
+      // возврате начинаем круг заново, если сцена всё ещё в кадре.
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stop();
+        else if (inView) start();
+      });
     }
   })();
 </script>

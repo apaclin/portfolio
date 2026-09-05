@@ -1,0 +1,13 @@
+---
+// Иконки вкладки — один набор на все страницы. Раньше BaseLayout объявлял
+// ico + png, а VisualCasePage (bergström, filmaze) — только favicon.svg. Тот
+// файл, во-первых, другой по рисунку (сиреневая «A» вместо тёмной «AP»), а
+// во-вторых, Safari SVG-фавиконки не поддерживает: на этих двух страницах
+// иконка просто пропадала. Ставить набор надо в оба <head>, поэтому он здесь.
+---
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
