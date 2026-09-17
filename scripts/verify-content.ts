@@ -10,6 +10,7 @@ import {
 import { fileURLToPath } from 'node:url';
 
 import { resolveCasePathPlan } from '../src/lib/case-routing.ts';
+import { headingSlugsFromMarkdown } from '../src/lib/caseHeadingAnchors.ts';
 
 type Locale = 'en' | 'ru';
 
@@ -346,6 +347,42 @@ async function validateLocaleParity(casesByLocale: Record<Locale, Map<string, Ca
   return allSlugs;
 }
 
+/**
+ * Якорь раздела берётся из английского файла и сопоставляется русскому по
+ * ПОРЯДКУ заголовков (см. docs/case-section-anchors.md). Разошлась структура —
+ * ссылки на русской странице молча уехали бы на чужие разделы или свалились в
+ * кириллицу, поэтому проверяем счёт здесь, а не в рантайме сборки.
+ */
+async function validateHeadingParity(
+  casesByLocale: Record<Locale, Map<string, CaseFile>>,
+) {
+  let checked = 0;
+
+  for (const [slug, en] of casesByLocale.en) {
+    const ru = casesByLocale.ru.get(slug);
+    if (!ru) continue;
+
+    const [enSource, ruSource] = await Promise.all([
+      readFile(en.file, 'utf8'),
+      readFile(ru.file, 'utf8'),
+    ]);
+    const enSlugs = headingSlugsFromMarkdown(enSource);
+    const ruCount = headingSlugsFromMarkdown(ruSource).length;
+
+    if (enSlugs.length !== ruCount) {
+      errors.push(
+        `${displayPath(ru.file)}: ${ruCount} headings vs ${enSlugs.length} in EN; ` +
+          'section anchors are matched by order, so both locales must keep the same heading structure',
+      );
+      continue;
+    }
+
+    checked += enSlugs.length;
+  }
+
+  return checked;
+}
+
 function routeFor(locale: Locale, slug: string): string {
   return `/${locale === 'ru' ? 'ru/' : ''}cases/${slug}`;
 }
@@ -421,6 +458,7 @@ async function main() {
   const [enCases, ruCases] = await Promise.all([loadCases('en'), loadCases('ru')]);
   const casesByLocale = { en: enCases, ru: ruCases };
   const allSlugs = await validateLocaleParity(casesByLocale);
+  const checkedHeadings = await validateHeadingParity(casesByLocale);
   await validateFallbackRouting(casesByLocale);
 
   if (warnings.length > 0) {
@@ -436,6 +474,7 @@ async function main() {
   }
 
   console.log(`  ✓ Locale parity: ${allSlugs.size} slugs across EN and RU`);
+  console.log(`  ✓ Section anchors: ${checkedHeadings} headings aligned EN↔RU`);
   console.log(`  ✓ Asset resolution: ${checkedAssetReferences} direct references`);
   console.log(`  ✓ MDX import safety: ${checkedImports} imports across ${allMdxFiles.length} files`);
   console.log('  ✓ Fallback routing: EN-primary and RU-prefixed route generators');

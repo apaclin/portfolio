@@ -8,3 +8,9 @@ Before changing lightbox sizing, zoomable image metadata, or image-entry
 rendering, read and follow
 [`docs/lightbox-image-pattern.md`](docs/lightbox-image-pattern.md). Tall UI
 screens must retain their readable logical width and scroll vertically.
+
+Before changing case section headings, heading ids, or the case table of
+contents, read and follow
+[`docs/case-section-anchors.md`](docs/case-section-anchors.md). A section link
+carries only the text before the colon, and both locales share the English
+anchor.

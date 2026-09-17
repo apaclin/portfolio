@@ -7,6 +7,7 @@ import keystatic from '@keystatic/astro';
 import tailwindcss from '@tailwindcss/vite';
 import { defaultLocale, locales } from './src/lib/i18n.ts';
 import rehypeNoHangingWords from './src/lib/rehypeNoHangingWords.ts';
+import rehypeCaseHeadingIds from './src/lib/rehypeCaseHeadingIds.ts';
 
 // Keystatic-админка — это серверные роуты (React-приложение + local API).
 // Чтобы прод-сборка оставалась ЧИСТЫМ SSG (без адаптера и без React в бандле
@@ -34,10 +35,14 @@ export default defineConfig({
   },
 
   // Типографика заголовков: предлоги и союзы не висят в конце строки.
-  // MDX наследует markdown-конфиг, поэтому плагин достаточно объявить здесь.
+  // Якоря разделов кейса: короткие, латиницей, одинаковые в en и ru —
+  // см. docs/case-section-anchors.md.
+  // MDX наследует markdown-конфиг, поэтому плагины достаточно объявить здесь.
   // Плагины идут через unified({...}): markdown.rehypePlugins устарели.
   markdown: {
-    processor: unified({ rehypePlugins: [rehypeNoHangingWords] }),
+    processor: unified({
+      rehypePlugins: [rehypeNoHangingWords, rehypeCaseHeadingIds],
+    }),
   },
 
   // MDX подключается как интеграция Astro.

@@ -54,12 +54,25 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
     const article = document.querySelector<HTMLElement>('article.prose') ?? document.body;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+    // Подпись и якорь раздела считает сборка (src/lib/rehypeCaseHeadingIds.ts):
+    // берётся часть заголовка ДО двоеточия, якорь — общий для en и ru.
+    // Здесь остаётся только запасной путь для заголовков вне этого конвейера.
+    const shortLabel = (text: string) => {
+      const raw = text.replace(/\s+/gu, ' ').trim();
+      const match = /^([^:]+):(?=\s|$)/u.exec(raw);
+      return match?.[1]?.trim() || raw;
+    };
+
     const slugify = (text: string) =>
       text
         .trim()
         .toLowerCase()
+        .replace(/['\u2019\u02bc]/gu, '')
         .replace(/[^\p{Letter}\p{Number}]+/gu, '-')
         .replace(/^-+|-+$/g, '');
+
+    const headingLabel = (heading: HTMLElement) =>
+      heading.dataset.tocText?.trim() || shortLabel(heading.textContent ?? '');
 
     const ensureHeadingId = (heading: HTMLElement, usedIds: Set<string>) => {
     if (heading.id) {
@@ -67,7 +80,7 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
       return heading.id;
     }
 
-    const base = slugify(heading.textContent ?? '') || 'section';
+    const base = slugify(headingLabel(heading)) || 'section';
     let id = base;
     let index = 2;
 
@@ -120,7 +133,7 @@ const title = locale === 'en' ? 'On this page' : 'Содержание';
     .filter((heading) => !heading.closest('.not-prose'))
     .map((heading) => ({
       id: ensureHeadingId(heading, usedIds),
-      text: heading.textContent?.trim() ?? '',
+      text: headingLabel(heading),
       level: Number(heading.tagName.slice(1)),
       heading,
     }))
